@@ -1,0 +1,522 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block vendorCSS %}
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/typeahead-js/typeahead.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+{% endblock %}
+{% block pageCSS %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+	/* Custom CSS for Card Padding */
+	.card {
+	padding: 5px; /* Adjust the padding value as per your design */
+	}
+</style>
+<style>               /*top card*/
+	.card-title {
+	font-size: 2rem; /* Adjust the size as needed */
+	font-weight: bold;
+	}
+</style>
+<style> /* Custom CSS for fixed buttons (+ and ai) */
+	.fixed-buttons {
+	position: fixed;
+	top: 100px; /* Adjust distance from top */
+	right: 10px; /* Adjust distance from right */
+	z-index: 1000; /* Ensure it's above other content */
+	display: flex;
+	flex-direction: column;
+	gap: 10px; /* Adjust spacing between buttons */
+	}
+	.fixed-buttons button {
+	width: 50px; /* Adjust size of the button */
+	height: 50px; /* Adjust size of the button */
+	border-radius: 50%; /* Make it a circle */
+	font-size: 24px; /* Adjust size of the icons */
+	}
+</style>
+<style> /* Status classes */
+	.status-online {
+	background-color: #6cb975; /* Green */
+	color: #fff; /* White text */
+	}
+	.status-away {
+	background-color: #ffc107; /* Yellow */
+	color: #fff; /* White text */
+	}
+	.status-offline {
+	background-color: #6c757d; /* Dark Gray */
+	color: #fff; /* White text */
+	}
+	/* Adjust spacing and alignment */
+	.dropdown-toggle {
+	padding: 8px 16px; /* Adjust padding for a more compact size */
+	display: flex;
+	align-items: center; /* Center align items vertically */
+	}
+	.custom-dropdown .dropdown-menu {
+    min-width: auto !important; /* Set minimum width to auto */
+    max-width: 100% !important; /* Set maximum width to 100% */
+	}
+	.dropdown-toggle .status-text {
+	margin-left: 5px; /* Add margin to the left of the status text */
+	}
+</style>
+{% endblock %}
+{% block content %}
+<div class="layout-wrapper layout-content-navbar">
+<div class="layout-container">
+	{% include 'sidebar.html' %}
+	<div class="layout-page">
+		{% include 'navbar.html' %}
+		<div class="content-wrapper">
+			<div class="container-xxl flex-grow-1 container-p-y">
+				<!-- Content -->
+				<!-- Content -->
+				<div class="content-wrapper">
+					<!-- main card -->
+					<div class="container-xxl flex-grow-1 container-p-y">
+						<div class="card mb-3">
+							<!-- top card -->
+							<div class="card-body">
+								<div class="d-flex justify-content-between align-items-center">
+									<div id="userPageInfo">
+										<!-- The dynamic content will be inserted here -->
+										<h5 class="card-title"></h5>
+									</div>
+									<!-- Right side content -->
+									<div class="dropdown custom-dropdown">
+										<button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="statusDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+											<i class="ti ti-user-check"></i> <!-- Icon -->
+											<span class="status-text">Online</span> <!-- Status text with margin for spacing -->
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="statusDropdownButton">
+											<li><a class="dropdown-item status-item status-online" href="#" data-status="online"><i class="ti ti-user-check"></i> Online</a></li>
+											<li><a class="dropdown-item status-item status-away" href="#" data-status="away"><i class="ti ti-user-minus"></i> Away</a></li>
+											<li><a class="dropdown-item status-item status-offline" href="#" data-status="offline"><i class="ti ti-user-off"></i> Offline</a></li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<!-- Static Buttons-->
+							<div class="container">
+								<div class="row">
+									<div class="col">
+										<!-- Fixed Buttons -->
+										<div class="fixed-buttons">
+											<!-- Add New Ticket Button -->
+											<button type="button" class="btn btn-primary create-new" data-bs-toggle="offcanvas" data-bs-target="#add-new-record">
+											<i class="ti ti-plus"></i>
+											</button>
+											<!-- AI Button -->
+											<button type="button" class="btn btn-info btn-floating ai-button" data-bs-toggle="offcanvas" data-bs-target="#ask-ai">
+												AI
+												<!-- <i class="ti ti-star"></i> -->
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- Add New Ticket Modal-->
+							<div class="offcanvas offcanvas-end" id="add-new-record">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="exampleModalLabel">Add New Ticket</h5>
+									<button
+										type="button"
+										class="btn-close text-reset"
+										data-bs-dismiss="offcanvas"
+										aria-label="Close"
+										></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="add-new-record pt-0 row g-2" id="form-add-new-record" onsubmit="return false">
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketSubject">Subject</label>
+											<div class="input-group input-group-merge">
+												<span id="ticketSubject2" class="input-group-text"><i class="ti ti-tag"></i></span>
+												<input
+													type="text"
+													id="ticketSubject"
+													name="ticketSubject"
+													class="form-control dt-subject"
+													placeholder="Issue with login"
+													aria-label="Issue with login"
+													aria-describedby="ticketSubject2"
+												/>
+											</div>
+										</div>
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketDescription">Description</label>
+											<textarea
+												id="ticketDescription"
+												name="ticketDescription"
+												class="form-control dt-description"
+												placeholder="Enter ticket description"
+												aria-label="Enter ticket description"
+												rows="5"
+											></textarea>
+										</div>
+								
+										<div class="col-sm-12 mb-3">
+											<button type="submit" class="btn btn-primary data-submit me-sm-3 me-1">Submit</button>
+											<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>									
+							</div>
+							<!-- AI Input Offcanvas -->
+							<div class="offcanvas offcanvas-end" id="ask-ai">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="aiModalLabel">Ask AI</h5>
+									<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="ai-question-form pt-0">
+										<div class="mb-3">
+											<label for="aiQuestion" class="form-label">Your Question</label>
+											<textarea class="form-control" id="aiQuestion" rows="5" placeholder="Ask your question..."></textarea>
+										</div>
+										<div class="d-grid gap-2">
+											<button type="button" class="btn btn-primary">Ask</button>
+											<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+
+						<!-- Graphs -->
+						<div class="card mb-3">
+							<div class="row">
+						
+								<!-- Radial Bar Chart -->
+								<div class="col-md-6 mb-4 d-flex align-items-stretch">
+									<div class="card flex-grow-1">
+										<div class="card-header d-flex align-items-center justify-content-between">
+											<div>
+												<h5 class="card-title mb-0">Ticket Tracker</h5>
+											</div>
+						
+
+										</div>
+										<div class="card-body">
+											<div class="row">
+												<div class="col-12 col-sm-4 col-md-12 col-lg-4">
+													<div class="mt-lg-4 mt-lg-2 mb-lg-4 mb-2 pt-1">
+														<h1 class="mb-0">16</h1>
+														<p class="mb-0">Total Tickets</p>
+													</div>
+													<ul class="p-0 m-0">
+														<li class="d-flex gap-3 align-items-center mb-lg-3 pt-2 pb-1">
+															<div class="badge rounded bg-label-primary p-1"><i class="ti ti-ticket ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">New Tickets</h6>
+																<small class="text-muted">9</small>
+															</div>
+														</li>
+														<li class="d-flex gap-3 align-items-center mb-lg-3 pb-1">
+															<div class="badge rounded bg-label-info p-1"><i class="ti ti-circle-check ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">Open Tickets</h6>
+																<small class="text-muted">4</small>
+															</div>
+														</li>
+														<li class="d-flex gap-3 align-items-center pb-1">
+															<div class="badge rounded bg-label-warning p-1"><i class="ti ti-clock ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">Average Response Time</h6>
+																<small class="text-muted">1 Day</small>
+															</div>
+														</li>
+													</ul>
+												</div>
+												<div class="col-12 col-sm-8 col-md-12 col-lg-8">
+													<div id="supportTracker"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- Radial Bar Chart -->
+								
+								<!-- Line Chart -->
+								<div class="col-md-6 mb-4 d-flex align-items-stretch">
+									<div class="card flex-grow-1">
+										<div class="card-header d-flex align-items-center justify-content-between">
+											<div>
+												<h5 class="card-title mb-0">Total Tickets Assigned Trend</h5>
+											</div>
+
+										</div>
+										<div class="card-body">
+											<div id="lineChart"></div>
+										</div>
+									</div>
+								</div>
+								<!-- /Line Chart -->
+
+							</div>
+							
+						</div>
+						<!-- Graphs -->
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+{% block vendorJS %}
+<script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+{% endblock %}
+{% block pageJS %}   
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include DataTables JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<!-- Include DataTables Buttons JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.9/css/buttons.dataTables.min.css">
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.flash.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.colVis.min.js"></script>
+<!-- Include Flatpickr JS and CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- Include FormValidation JS -->
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/formValidation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Trigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/AutoFocus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/SubmitButton.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/DefaultSubmit.min.js"></script>
+<!-- Include Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JavaScript -->
+<script>  //dynamic page info
+	document.addEventListener('DOMContentLoaded', function () {
+	  // Function to update card title dynamically
+	  function updateCardTitle() {
+	    const currentUrl = window.location.href;
+	    const urlParts = currentUrl.split('/');
+	    const user = urlParts[urlParts.length - 3];  // Assuming user is the third last part
+	    const page = urlParts[urlParts.length - 2];  // Assuming page is the second last part
+	
+	    const cardTitle = `HMS - ${user.charAt(0).toUpperCase() + user.slice(1)} / ${page.charAt(0).toUpperCase() + page.slice(1)}`;
+	    document.querySelector('#userPageInfo h5').textContent = cardTitle;
+	  }
+	
+	  // Call the functions on page load
+	  updateCardTitle();
+	
+	});
+</script>
+<!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> -->
+<!-- <script>
+	$(document).ready(function() {
+	  $('.status-item').click(function(e) {
+	    e.preventDefault();
+	    var status = $(this).data('status');
+	    
+	    // Update button text and add appropriate classes
+	    var iconClass = $(this).find('i').attr('class');
+	    var statusText = $(this).text().trim();
+	    $('#statusDropdownButton').html('<i class="ti ' + iconClass + '"></i> <span class="status-text">' + statusText + '</span>').removeClass().addClass('btn btn-secondary dropdown-toggle d-flex align-items-center').addClass('status-' + status);
+	    
+	    // Close the dropdown menu
+	    $('.dropdown-menu').removeClass('show');
+	    $('#statusDropdownButton').attr('aria-expanded', 'false');
+	  });
+	});
+</script> -->
+
+	
+	<!-- <script src="assets/vendor/libs/apex-charts/apexcharts.js "></script>    -->
+      <!-- for tickets charts -->
+    
+    <!-- <script src="../../assets/js/charts-apex.js"></script> -->
+	<script src="js/agent_dashboard_charts-apexcharts.js"></script>
+      <!-- for donut -->
+
+    <!-- Page JS -->
+    <script src="admin-scripts.js"></script>
+
+	<!-- Line Chart -->
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+		  var options = {
+			chart: {
+			  type: 'line',
+			  height: 300
+			},
+			series: [{
+			  name: 'Tickets Created',
+			  data: [5, 11, 8, 6, 10, 16, 4, 3, 9] // Sample data
+			}],
+			xaxis: {
+			  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep']
+			},
+			colors: ['#6cb975'], // Use the preferred color for the line
+			dataLabels: {
+			  enabled: false
+			},
+			stroke: {
+			  curve: 'smooth'
+			},
+			tooltip: {
+			  y: {
+				formatter: function (val) {
+				  return val + " tickets"
+				}
+			  }
+			}
+		  };
+	
+		  var chart = new ApexCharts(document.querySelector("#lineChart"), options);
+		  chart.render();
+		});
+	  </script>
+	<!-- Line Chart -->
+	
+	<!-- Donut Chart -->
+	<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+	<script>
+		document.addEventListener('DOMContentLoaded', function () {
+			var options = {
+				chart: {
+					type: 'donut',
+					height: 300 // Adjust the height to make the chart smaller
+				},
+				series: [30, 50, 20], // Replace with actual data
+				labels: ['Low', 'Medium', 'High'],
+				colors: ['#6c757d', '#17a2b8', '#ff5e5e'],
+				responsive: [{
+					breakpoint: 480,
+					options: {
+						chart: {
+							width: 150, // Adjust the width to make it smaller on small screens
+							height: 150 // Adjust the height to match the width on small screens
+						},
+						legend: {
+							position: 'bottom'
+						}
+					}
+				}]
+			};
+	
+			var chart = new ApexCharts(document.querySelector("#donutChart"), options);
+			chart.render();
+		});
+	</script>
+	
+	<!-- Donut Chart -->
+	
+	<!-- Radial Bar Chart2 -->
+	<script>
+		document.addEventListener('DOMContentLoaded', function() {
+			const supportTrackerEl = document.querySelector('#supportTracker'),
+				supportTrackerOptions = {
+					series: [86],
+					labels: ['Completed Task'],
+					chart: {
+						height: 500, // Adjust the height to make the chart smaller
+						type: 'radialBar'
+					},
+					plotOptions: {
+						radialBar: {
+							offsetY: 10,
+							startAngle: -140,
+							endAngle: 130,
+							hollow: {
+								size: '65%'
+							},
+							track: {
+								background: '#f2f2f2',
+								strokeWidth: '100%'
+							},
+							dataLabels: {
+								name: {
+									offsetY: -20,
+									color: '#888',
+									fontSize: '13px',
+									fontWeight: '400',
+									fontFamily: 'Public Sans'
+								},
+								value: {
+									offsetY: 10,
+									color: '#333',
+									fontSize: '38px',
+									fontWeight: '600',
+									fontFamily: 'Public Sans'
+								}
+							}
+						}
+					},
+					colors: ['#008FFB'],
+					fill: {
+						type: 'gradient',
+						gradient: {
+							shade: 'dark',
+							shadeIntensity: 0.5,
+							gradientToColors: ['#008FFB'],
+							inverseColors: true,
+							opacityFrom: 1,
+							opacityTo: 0.6,
+							stops: [30, 70, 100]
+						}
+					},
+					stroke: {
+						dashArray: 10
+					},
+					grid: {
+						padding: {
+							top: -20,
+							bottom: 5
+						}
+					},
+					states: {
+						hover: {
+							filter: {
+								type: 'none'
+							}
+						},
+						active: {
+							filter: {
+								type: 'none'
+							}
+						}
+					},
+					responsive: [
+						{
+							breakpoint: 1025,
+							options: {
+								chart: {
+									height: 180 // Adjust the height for this breakpoint
+								}
+							}
+						},
+						{
+							breakpoint: 769,
+							options: {
+								chart: {
+									height: 150 // Adjust the height for this breakpoint
+								}
+							}
+						}
+					]
+				};
+	
+			if (supportTrackerEl !== null) {
+				const supportTracker = new ApexCharts(supportTrackerEl, supportTrackerOptions);
+				supportTracker.render();
+			}
+		});
+	</script>
+	
+	<!-- Radial Bar Chart -->
+	<!-- -->
+{% endblock %}

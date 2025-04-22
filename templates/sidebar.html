@@ -1,0 +1,40 @@
+<aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme" style="background-color: #bae1ff !important;">
+  <div class="app-brand demo">
+    
+    <a class="app-brand-link"></a>
+      <span class="app-brand-logo demo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="icon icon-tabler icons-tabler-outline icon-tabler-align-box-bottom-right">
+          <path stroke="none" d="M0 0h24v24H0z" fill="none" />
+          <path d="M3 3m0 2a2 2 0 0 1 2 -2h14a2 2 0 0 1 2 2v14a2 2 0 0 1 -2 2h-14a2 2 0 0 1 -2 -2z" />
+          <path d="M11 15v2" />
+          <path d="M14 11v6" />
+          <path d="M17 13v4" />
+        </svg>
+      </span>
+      <span class="app-brand-text demo menu-text fw-bold">
+        {% block side_title %}
+          Intern App
+        {% endblock %}
+      </span>
+    </a>
+
+    <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
+      <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i>
+      <i class="ti ti-x d-block d-xl-none ti-sm align-middle"></i>
+    </a>
+  </div>
+
+  <div class="menu-inner-shadow"></div>
+
+  <ul class="menu-inner py-1">
+    {% for item in sidebar_items %}
+      <li class="menu-item">
+        <a href="{% url item.url %}" class="menu-link">
+          <i class="menu-icon tf-icons ti {{ item.icon_class }} "></i>
+          <div data-i18n="{{ item.name }}">{{ item.name }}</div>
+        </a>
+      </li>
+    {% endfor %}
+  </ul>
+</aside>
+<!-- / Menu -->

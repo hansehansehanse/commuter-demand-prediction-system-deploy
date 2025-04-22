@@ -1,0 +1,731 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block vendorCSS %}
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/typeahead-js/typeahead.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+{% endblock %}
+{% block pageCSS %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+	/* Custom CSS for Card Padding */
+	.card {
+	padding: 5px; /* Adjust the padding value as per your design */
+	}
+</style>
+<style>               /*top card*/
+	.card-title {
+	font-size: 2rem; /* Adjust the size as needed */
+	font-weight: bold;
+	}
+</style>
+<style> /* Custom CSS for fixed buttons (+ and ai) */
+	.fixed-buttons {
+	position: fixed;
+	top: 100px; /* Adjust distance from top */
+	right: 10px; /* Adjust distance from right */
+	z-index: 1000; /* Ensure it's above other content */
+	display: flex;
+	flex-direction: column;
+	gap: 10px; /* Adjust spacing between buttons */
+	}
+	.fixed-buttons button {
+	width: 50px; /* Adjust size of the button */
+	height: 50px; /* Adjust size of the button */
+	border-radius: 50%; /* Make it a circle */
+	font-size: 24px; /* Adjust size of the icons */
+	}
+</style>
+<style> /* Status classes */
+	.status-online {
+	background-color: #6cb975; /* Green */
+	color: #fff; /* White text */
+	}
+	.status-away {
+	background-color: #ffc107; /* Yellow */
+	color: #fff; /* White text */
+	}
+	.status-offline {
+	background-color: #6c757d; /* Dark Gray */
+	color: #fff; /* White text */
+	}
+	/* Adjust spacing and alignment */
+	.dropdown-toggle {
+	padding: 8px 16px; /* Adjust padding for a more compact size */
+	display: flex;
+	align-items: center; /* Center align items vertically */
+	}
+	.custom-dropdown .dropdown-menu {
+	min-width: auto !important; /* Set minimum width to auto */
+	max-width: 100% !important; /* Set maximum width to 100% */
+	}
+	.dropdown-toggle .status-text {
+	margin-left: 5px; /* Add margin to the left of the status text */
+	}
+</style>
+{% endblock %}
+{% block content %}
+<div class="layout-wrapper layout-content-navbar">
+<div class="layout-container">
+	{% include 'sidebar.html' %}
+	<div class="layout-page">
+		{% include 'navbar.html' %}
+		<div class="content-wrapper">
+			<div class="container-xxl flex-grow-1 container-p-y">
+				<!-- Content -->
+				<!-- Content -->
+				<div class="content-wrapper">
+					<!-- main card -->
+					<div class="container-xxl flex-grow-1 container-p-y">
+						<div class="card mb-3">
+							<!-- top card -->
+							<div class="card-body">
+								<div class="d-flex justify-content-between align-items-center">
+									<div id="userPageInfo">
+										<!-- The dynamic content will be inserted here -->
+										<h5 class="card-title"></h5>
+									</div>
+									<!-- Right side content -->
+									<div class="dropdown custom-dropdown">
+										<button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="statusDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+											<i class="ti ti-user-check"></i> <!-- Icon -->
+											<span class="status-text">Online</span> <!-- Status text with margin for spacing -->
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="statusDropdownButton">
+											<li><a class="dropdown-item status-item status-online" href="#" data-status="online"><i class="ti ti-user-check"></i> Online</a></li>
+											<li><a class="dropdown-item status-item status-away" href="#" data-status="away"><i class="ti ti-user-minus"></i> Away</a></li>
+											<li><a class="dropdown-item status-item status-offline" href="#" data-status="offline"><i class="ti ti-user-off"></i> Offline</a></li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<!-- Static Buttons-->
+							<div class="container">
+								<div class="row">
+									<div class="col">
+										<!-- Fixed Buttons -->
+										<div class="fixed-buttons">
+											<!-- Add New Ticket Button -->
+											<button type="button" class="btn btn-primary create-new" data-bs-toggle="offcanvas" data-bs-target="#add-new-record">
+											<i class="ti ti-plus"></i>
+											</button>
+											<!-- AI Button -->
+											<button type="button" class="btn btn-info btn-floating ai-button" data-bs-toggle="offcanvas" data-bs-target="#ask-ai">
+												AI
+												<!-- <i class="ti ti-star"></i> -->
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- Add New Ticket Modal-->
+							<div class="offcanvas offcanvas-end" id="add-new-record">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="exampleModalLabel">Add New Ticket</h5>
+									<button
+										type="button"
+										class="btn-close text-reset"
+										data-bs-dismiss="offcanvas"
+										aria-label="Close"
+										></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="add-new-record pt-0 row g-2" id="form-add-new-record" onsubmit="return false">
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketSubject">Subject</label>
+											<div class="input-group input-group-merge">
+												<span id="ticketSubject2" class="input-group-text"><i class="ti ti-tag"></i></span>
+												<input
+													type="text"
+													id="ticketSubject"
+													name="ticketSubject"
+													class="form-control dt-subject"
+													placeholder="Issue with login"
+													aria-label="Issue with login"
+													aria-describedby="ticketSubject2"
+													/>
+											</div>
+										</div>
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketDescription">Description</label>
+											<textarea
+												id="ticketDescription"
+												name="ticketDescription"
+												class="form-control dt-description"
+												placeholder="Enter ticket description"
+												aria-label="Enter ticket description"
+												rows="5"
+												></textarea>
+										</div>
+										<div class="col-sm-12 mb-3">
+											<button type="submit" class="btn btn-primary data-submit me-sm-3 me-1">Submit</button>
+											<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>
+							</div>
+							<!-- AI Input Offcanvas -->
+							<div class="offcanvas offcanvas-end" id="ask-ai">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="aiModalLabel">Ask AI</h5>
+									<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="ai-question-form pt-0">
+										<div class="mb-3">
+											<label for="aiQuestion" class="form-label">Your Question</label>
+											<textarea class="form-control" id="aiQuestion" rows="5" placeholder="Ask your question..."></textarea>
+										</div>
+										<div class="d-grid gap-2">
+											<button type="button" class="btn btn-primary">Ask</button>
+											<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+						<!-- 1 -->
+						<div class="card mb-3">
+							<div class="container-xxl flex-grow-1 container-p-y">
+								<div class="container mt-5">
+									<div class="d-flex justify-content-between align-items-center mb-4">
+									  <h4 class="fw-semibold mb-0">Roles List</h4>
+									  <button class="btn btn-primary mb-0 text-nowrap add-new-role" data-bs-toggle="modal" data-bs-target="#addUserModal">
+										Add New User
+									  </button>
+									</div>
+									
+									<!-- Add New User Modal -->
+									<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+										<div class="modal-dialog">
+											<div class="modal-content">
+												<div class="modal-header border-bottom">
+													<h5 class="modal-title" id="addUserModalLabel">Add New User</h5>
+													<button type="button" class="btn-close text-reset" data-bs-dismiss="modal" aria-label="Close"></button>
+												</div>
+												<div class="modal-body flex-grow-1">
+													<form class="add-new-user pt-0 row g-2" id="form-add-new-user" onsubmit="return false">
+														<div class="col-sm-6 mb-3">
+															<label class="form-label" for="firstName">First Name</label>
+															<div class="input-group input-group-merge">
+																<span id="firstName2" class="input-group-text"><i class="ti ti-user"></i></span>
+																<input
+																	type="text"
+																	id="firstName"
+																	name="firstName"
+																	class="form-control"
+																	placeholder="Enter first name"
+																	aria-label="Enter first name"
+																	aria-describedby="firstName2"
+																/>
+															</div>
+														</div>
+														<div class="col-sm-6 mb-3">
+															<label class="form-label" for="lastName">Last Name</label>
+															<div class="input-group input-group-merge">
+																<span id="lastName2" class="input-group-text"><i class="ti ti-user"></i></span>
+																<input
+																	type="text"
+																	id="lastName"
+																	name="lastName"
+																	class="form-control"
+																	placeholder="Enter last name"
+																	aria-label="Enter last name"
+																	aria-describedby="lastName2"
+																/>
+															</div>
+														</div>
+														
+														<div class="col-sm-12 mb-3">
+															<label class="form-label" for="userEmail">Email</label>
+															<div class="input-group input-group-merge">
+																<span id="userEmail2" class="input-group-text"><i class="ti ti-mail"></i></span>
+																<input
+																	type="email"
+																	id="userEmail"
+																	name="userEmail"
+																	class="form-control"
+																	placeholder="Enter user email"
+																	aria-label="Enter user email"
+																	aria-describedby="userEmail2"
+																/>
+															</div>
+														</div>
+														<div class="col-sm-12 mb-3">
+															<label class="form-label" for="userRole">Role</label>
+															<select id="userRole" name="userRole" class="form-select">
+																<option value="admin">Admin</option>
+																<option value="support">Support</option>
+																<option value="agent">Agent</option>
+																<option value="user">User</option>
+															</select>
+														</div>
+														<div class="col-sm-12 mb-3">
+															<label class="form-label" for="userPhone">Phone Number</label>
+															<div class="input-group input-group-merge">
+																<span id="userPhone2" class="input-group-text"><i class="ti ti-mobile"></i></span>
+																<input
+																	type="text"
+																	id="userPhone"
+																	name="userPhone"
+																	class="form-control"
+																	placeholder="Enter phone number"
+																	aria-label="Enter phone number"
+																	aria-describedby="userPhone2"
+																/>
+															</div>
+														</div>
+														<div class="col-sm-12 mb-3">
+															<label class="form-label" for="userAddress">Address</label>
+															<textarea
+																id="userAddress"
+																name="userAddress"
+																class="form-control"
+																placeholder="Enter user address"
+																aria-label="Enter user address"
+																rows="3"
+															></textarea>
+														</div>
+														<div class="col-sm-12 mb-3">
+															<button type="submit" class="btn btn-primary data-submit me-sm-3 me-1">Submit</button>
+															<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+														</div>
+													</form>
+												</div>
+											</div>
+										</div>
+									</div>
+									
+
+								  </div>
+
+								<!-- Role cards -->
+								<div class="row g-4">
+									<div class="col-xl-4 col-lg-6 col-md-6">
+										<div class="card">
+											<div class="card-body">
+												<div class="d-flex justify-content-between">
+													<h6 class="fw-normal mb-2">Total 4 users</h6>
+												</div>
+												<div class="d-flex justify-content-between align-items-end mt-1">
+													<div class="d-flex justify-content-between align-items-end mt-1">
+														<div class="role-heading">
+															<h4 class="mb-1">
+																<a href="javascript:;" data-bs-toggle="modal" data-bs-target="#usersModal1" class="role-edit-modal text-decoration-none">
+																	Users
+																</a>
+															</h4>
+														</div>
+														<!-- <a href="javascript:void(0);" class="text-muted"><i class="ti ti-copy ti-md"></i></a> -->
+													</div>
+												</div>
+												<!-- Modal -->
+												<div class="modal fade" id="usersModal1" tabindex="-1" aria-labelledby="usersModalLabel1" aria-hidden="true">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h5 class="modal-title" id="usersModalLabel1">Users</h5>
+																<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body">
+																<!-- List of users with Edit and Delete buttons -->
+																<ul class="list-group">
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Christian Wood
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		D'Angelo Russell
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Bronny James
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		LeBron James
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																</ul>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+											</div>
+										</div>
+									</div>
+									
+									<div class="col-xl-4 col-lg-6 col-md-6">
+										<div class="card">
+											<div class="card-body">
+												<div class="d-flex justify-content-between">
+													<h6 class="fw-normal mb-2">Total 4 users</h6>
+												</div>
+												<div class="d-flex justify-content-between align-items-end mt-1">
+													<div class="d-flex justify-content-between align-items-end mt-1">
+														<div class="role-heading">
+															<h4 class="mb-1">
+																<a href="javascript:;" data-bs-toggle="modal" data-bs-target="#usersModal2" class="role-edit-modal text-decoration-none">
+																	Agent
+																</a>
+															</h4>
+														</div>
+														<!-- <a href="javascript:void(0);" class="text-muted"><i class="ti ti-copy ti-md"></i></a> -->
+													</div>
+												</div>
+												<!-- Modal -->
+												<div class="modal fade" id="usersModal2" tabindex="-1" aria-labelledby="usersModalLabel2" aria-hidden="true">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h5 class="modal-title" id="usersModalLabel2">Agents</h5>
+																<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body">
+																<!-- List of agents with Edit and Delete buttons -->
+																<ul class="list-group">
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Blake Hinson
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Skylar Mays
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Jarred Vanderbilt
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Gabe Vincent
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																</ul>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+											</div>
+										</div>
+									</div>
+									
+
+									<div class="col-xl-4 col-lg-6 col-md-6">
+										<div class="card">
+											<div class="card-body">
+												<div class="d-flex justify-content-between">
+													<h6 class="fw-normal mb-2">Total 4 users</h6>
+												</div>
+												<div class="d-flex justify-content-between align-items-end mt-1">
+													<div class="d-flex justify-content-between align-items-end mt-1">
+														<div class="role-heading">
+															<h4 class="mb-1">
+																<a href="javascript:;" data-bs-toggle="modal" data-bs-target="#usersModal3" class="role-edit-modal text-decoration-none">
+																	Support
+																</a>
+															</h4>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+												<div class="modal fade" id="usersModal3" tabindex="-1" aria-labelledby="usersModalLabel3" aria-hidden="true">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h5 class="modal-title" id="usersModalLabel3">Users</h5>
+																<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body">
+																<!-- List of users with Edit and Delete buttons -->
+																<ul class="list-group">
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		John Doe
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Jane Smith
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Michael Johnson
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Emily Davis
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																</ul>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+											</div>
+										</div>
+									</div>
+									
+									<div class="col-xl-4 col-lg-6 col-md-6">
+										<div class="card">
+											<div class="card-body">
+												<div class="d-flex justify-content-between">
+													<h6 class="fw-normal mb-2">Total 4 users</h6>
+												</div>
+												<div class="d-flex justify-content-between align-items-end mt-1">
+													<div class="d-flex justify-content-between align-items-end mt-1">
+														<div class="role-heading">
+															<h4 class="mb-1">
+																<a href="javascript:;" data-bs-toggle="modal" data-bs-target="#usersModal4" class="role-edit-modal text-decoration-none">
+																	Management
+																</a>
+															</h4>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+												<div class="modal fade" id="usersModal4" tabindex="-1" aria-labelledby="usersModalLabel4" aria-hidden="true">
+													<div class="modal-dialog">
+														<div class="modal-content">
+															<div class="modal-header">
+																<h5 class="modal-title" id="usersModalLabel4">Management</h5>
+																<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+															</div>
+															<div class="modal-body">
+																<!-- List of users with Edit and Delete buttons -->
+																<ul class="list-group">
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Rui Hachimura
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Dalton Knecht
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Jalen Hood-Schifino
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																	<li class="list-group-item d-flex justify-content-between align-items-center">
+																		Maxwell Lewis
+																		<div>
+																			<button class="btn btn-sm btn-primary me-2">Edit</button>
+																			<button class="btn btn-sm btn-danger">Delete</button>
+																		</div>
+																	</li>
+																</ul>
+															</div>
+															<div class="modal-footer">
+																<button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+															</div>
+														</div>
+													</div>
+												</div>
+												<!-- Modal -->
+											</div>
+										</div>
+									</div>
+									
+									
+									<!-- <div class="col-xl-4 col-lg-6 col-md-6">
+										<div class="card h-100">
+											<div class="row h-100 justify-content-center align-items-center">
+												<div class="col-sm-10">
+													<div class="card-body d-flex justify-content-center">
+														<button
+															data-bs-target="#addRoleModal"
+															data-bs-toggle="modal"
+															class="btn btn-primary mb-2 text-nowrap add-new-role"
+															>
+														Add New Role
+														</button>
+													</div>
+												</div>
+											</div>
+										</div>
+									</div> -->
+								</div>
+								<!--/ Role cards -->
+								<!-- Add Role Modal -->
+								<!-- Add Role Modal -->
+								<div class="modal fade" id="addRoleModal" tabindex="-1" aria-hidden="true">
+									<div class="modal-dialog modal-lg modal-dialog-centered modal-add-new-role">
+										<div class="modal-content p-3 p-md-5">
+											<button
+												type="button"
+												class="btn-close btn-pinned"
+												data-bs-dismiss="modal"
+												aria-label="Close"
+												></button>
+											<div class="modal-body">
+												<div class="text-center mb-4">
+													<h3 class="role-title mb-2">Add New Role</h3>
+													<p class="text-muted">Set role permissions</p>
+												</div>
+												<!-- Add role form -->
+												<form id="addRoleForm" class="row g-3" onsubmit="return false">
+													<div class="col-12 mb-4">
+														<label class="form-label" for="modalRoleName">Role Name</label>
+														<input
+															type="text"
+															id="modalRoleName"
+															name="modalRoleName"
+															class="form-control"
+															placeholder="Enter a role name"
+															tabindex="-1"
+															/>
+													</div>
+													<div class="col-12 text-center mt-4">
+														<button type="submit" class="btn btn-primary me-sm-3 me-1">Submit</button>
+														<button
+															type="reset"
+															class="btn btn-label-secondary"
+															data-bs-dismiss="modal"
+															aria-label="Close"
+															>
+														Cancel
+														</button>
+													</div>
+												</form>
+												<!--/ Add role form -->
+											</div>
+										</div>
+									</div>
+								</div>
+								<!--/ Add Role Modal -->
+							</div>
+						</div>
+						<!-- 1 -->
+
+						<!-- 2 -->
+						<div class="card mb-3">
+						</div>
+						<!-- 2 -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+{% block vendorJS %}
+<script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+{% endblock %}
+{% block pageJS %}   
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include DataTables JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<!-- Include DataTables Buttons JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.9/css/buttons.dataTables.min.css">
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.flash.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.colVis.min.js"></script>
+<!-- Include Flatpickr JS and CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- Include FormValidation JS -->
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/formValidation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Trigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/AutoFocus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/SubmitButton.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/DefaultSubmit.min.js"></script>
+<!-- Include Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JavaScript -->
+<script>  //dynamic page info
+	document.addEventListener('DOMContentLoaded', function () {
+	  // Function to update card title dynamically
+	  function updateCardTitle() {
+	    const currentUrl = window.location.href;
+	    const urlParts = currentUrl.split('/');
+	    const user = urlParts[urlParts.length - 3];  // Assuming user is the third last part
+	    const page = urlParts[urlParts.length - 2];  // Assuming page is the second last part
+	
+	    const cardTitle = `HMS - ${user.charAt(0).toUpperCase() + user.slice(1)} / User Management`;
+	    document.querySelector('#userPageInfo h5').textContent = cardTitle;
+	  }
+	
+	  // Call the functions on page load
+	  updateCardTitle();
+	
+	});
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script>
+	$(document).ready(function() {
+	  $('.status-item').click(function(e) {
+	    e.preventDefault();
+	    var status = $(this).data('status');
+	    
+	    // Update button text and add appropriate classes
+	    var iconClass = $(this).find('i').attr('class');
+	    var statusText = $(this).text().trim();
+	    $('#statusDropdownButton').html('<i class="ti ' + iconClass + '"></i> <span class="status-text">' + statusText + '</span>').removeClass().addClass('btn btn-secondary dropdown-toggle d-flex align-items-center').addClass('status-' + status);
+	    
+	    // Close the dropdown menu
+	    $('.dropdown-menu').removeClass('show');
+	    $('#statusDropdownButton').attr('aria-expanded', 'false');
+	  });
+	});
+</script>
+{% endblock %}

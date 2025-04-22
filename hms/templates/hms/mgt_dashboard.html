@@ -1,0 +1,829 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block vendorCSS %}
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/typeahead-js/typeahead.css' %}" />
+<link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
+{% endblock %}
+{% block pageCSS %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+	/* Custom CSS for Card Padding */
+	.card {
+	padding: 5px; /* Adjust the padding value as per your design */
+	}
+</style>
+<style>               /*top card*/
+	.card-title {
+	font-size: 2rem; /* Adjust the size as needed */
+	font-weight: bold;
+	}
+</style>
+<style> /* Custom CSS for fixed buttons (+ and ai) */
+	.fixed-buttons {
+	position: fixed;
+	top: 100px; /* Adjust distance from top */
+	right: 10px; /* Adjust distance from right */
+	z-index: 1000; /* Ensure it's above other content */
+	display: flex;
+	flex-direction: column;
+	gap: 10px; /* Adjust spacing between buttons */
+	}
+	.fixed-buttons button {
+	width: 50px; /* Adjust size of the button */
+	height: 50px; /* Adjust size of the button */
+	border-radius: 50%; /* Make it a circle */
+	font-size: 24px; /* Adjust size of the icons */
+	}
+</style>
+<style> /* Status classes */
+	.status-online {
+	background-color: #6cb975; /* Green */
+	color: #fff; /* White text */
+	}
+	.status-away {
+	background-color: #ffc107; /* Yellow */
+	color: #fff; /* White text */
+	}
+	.status-offline {
+	background-color: #6c757d; /* Dark Gray */
+	color: #fff; /* White text */
+	}
+	/* Adjust spacing and alignment */
+	.dropdown-toggle {
+	padding: 8px 16px; /* Adjust padding for a more compact size */
+	display: flex;
+	align-items: center; /* Center align items vertically */
+	}
+	.custom-dropdown .dropdown-menu {
+	min-width: auto !important; /* Set minimum width to auto */
+	max-width: 100% !important; /* Set maximum width to 100% */
+	}
+	.dropdown-toggle .status-text {
+	margin-left: 5px; /* Add margin to the left of the status text */
+	}
+</style>
+<style>	/* top 3 cards css */
+	.exclusive-card {
+	height: 100%;
+	}
+	.exclusive-card .exclusive-chart {
+	height: 100%;
+	}
+</style>
+{% endblock %}
+{% block content %}
+<div class="layout-wrapper layout-content-navbar">
+<div class="layout-container">
+	{% include 'sidebar.html' %}
+	<div class="layout-page">
+		{% include 'navbar.html' %}
+		<div class="content-wrapper">
+			<div class="container-xxl flex-grow-1 container-p-y">
+				<!-- Content -->
+				<!-- Content -->
+				<div class="content-wrapper">
+					<!-- main card -->
+					<div class="container-xxl flex-grow-1 container-p-y">
+						<div class="card mb-3">
+							<!-- top card -->
+							<div class="card-body">
+								<div class="d-flex justify-content-between align-items-center">
+									<div id="userPageInfo">
+										<!-- The dynamic content will be inserted here -->
+										<h5 class="card-title"></h5>
+									</div>
+									<!-- Right side content -->
+									<div class="dropdown custom-dropdown">
+										<button class="btn btn-secondary dropdown-toggle d-flex align-items-center" type="button" id="statusDropdownButton" data-bs-toggle="dropdown" aria-expanded="false">
+											<i class="ti ti-user-check"></i> <!-- Icon -->
+											<span class="status-text">Online</span> <!-- Status text with margin for spacing -->
+										</button>
+										<ul class="dropdown-menu" aria-labelledby="statusDropdownButton">
+											<li><a class="dropdown-item status-item status-online" href="#" data-status="online"><i class="ti ti-user-check"></i> Online</a></li>
+											<li><a class="dropdown-item status-item status-away" href="#" data-status="away"><i class="ti ti-user-minus"></i> Away</a></li>
+											<li><a class="dropdown-item status-item status-offline" href="#" data-status="offline"><i class="ti ti-user-off"></i> Offline</a></li>
+										</ul>
+									</div>
+								</div>
+							</div>
+							<!-- Static Buttons-->
+							<div class="container">
+								<div class="row">
+									<div class="col">
+										<!-- Fixed Buttons -->
+										<div class="fixed-buttons">
+											<!-- Add New Ticket Button -->
+											<button type="button" class="btn btn-primary create-new" data-bs-toggle="offcanvas" data-bs-target="#add-new-record">
+											<i class="ti ti-plus"></i>
+											</button>
+											<!-- AI Button -->
+											<button type="button" class="btn btn-info btn-floating ai-button" data-bs-toggle="offcanvas" data-bs-target="#ask-ai">
+												AI
+												<!-- <i class="ti ti-star"></i> -->
+											</button>
+										</div>
+									</div>
+								</div>
+							</div>
+							<!-- Add New Ticket Modal-->
+							<div class="offcanvas offcanvas-end" id="add-new-record">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="exampleModalLabel">Add New Ticket</h5>
+									<button
+										type="button"
+										class="btn-close text-reset"
+										data-bs-dismiss="offcanvas"
+										aria-label="Close"
+										></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="add-new-record pt-0 row g-2" id="form-add-new-record" onsubmit="return false">
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketSubject">Subject</label>
+											<div class="input-group input-group-merge">
+												<span id="ticketSubject2" class="input-group-text"><i class="ti ti-tag"></i></span>
+												<input
+													type="text"
+													id="ticketSubject"
+													name="ticketSubject"
+													class="form-control dt-subject"
+													placeholder="Issue with login"
+													aria-label="Issue with login"
+													aria-describedby="ticketSubject2"
+													/>
+											</div>
+										</div>
+										<div class="col-sm-12 mb-3">
+											<label class="form-label" for="ticketDescription">Description</label>
+											<textarea
+												id="ticketDescription"
+												name="ticketDescription"
+												class="form-control dt-description"
+												placeholder="Enter ticket description"
+												aria-label="Enter ticket description"
+												rows="5"
+												></textarea>
+										</div>
+										<div class="col-sm-12 mb-3">
+											<button type="submit" class="btn btn-primary data-submit me-sm-3 me-1">Submit</button>
+											<button type="reset" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>
+							</div>
+							<!-- AI Input Offcanvas -->
+							<div class="offcanvas offcanvas-end" id="ask-ai">
+								<div class="offcanvas-header border-bottom">
+									<h5 class="card-title" id="aiModalLabel">Ask AI</h5>
+									<button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+								</div>
+								<div class="offcanvas-body flex-grow-1">
+									<form class="ai-question-form pt-0">
+										<div class="mb-3">
+											<label for="aiQuestion" class="form-label">Your Question</label>
+											<textarea class="form-control" id="aiQuestion" rows="5" placeholder="Ask your question..."></textarea>
+										</div>
+										<div class="d-grid gap-2">
+											<button type="button" class="btn btn-primary">Ask</button>
+											<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="offcanvas">Cancel</button>
+										</div>
+									</form>
+								</div>
+							</div>
+						</div>
+						<!-- Charts -->
+						<div class="card mb-3">
+							<div class="row">
+								<!-- Radial Bar Chart -->
+								<div class="col-md-6 mb-4 d-flex align-items-stretch">
+									<div class="card flex-grow-1">
+										<div class="card-header d-flex align-items-center justify-content-between">
+											<div>
+												<h5 class="card-title mb-0">Ticket Tracker</h5>
+											</div>
+										</div>
+										<div class="card-body">
+											<div class="row">
+												<div class="col-12 col-sm-4 col-md-12 col-lg-4">
+													<div class="mt-lg-4 mt-lg-2 mb-lg-4 mb-2 pt-1">
+														<h1 class="mb-0">81</h1>
+														<p class="mb-0">Total System Tickets</p>
+													</div>
+													<ul class="p-0 m-0">
+														<li class="d-flex gap-3 align-items-center mb-lg-3 pt-2 pb-1">
+															<div class="badge rounded bg-label-primary p-1"><i class="ti ti-ticket ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">Total New Tickets</h6>
+																<small class="text-muted">21</small>
+															</div>
+														</li>
+														<li class="d-flex gap-3 align-items-center mb-lg-3 pb-1">
+															<div class="badge rounded bg-label-info p-1"><i class="ti ti-circle-check ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">Total Open Tickets</h6>
+																<small class="text-muted">11</small>
+															</div>
+														</li>
+														<li class="d-flex gap-3 align-items-center pb-1">
+															<div class="badge rounded bg-label-warning p-1"><i class="ti ti-clock ti-sm"></i></div>
+															<div>
+																<h6 class="mb-0 text-nowrap">System Average Response Time</h6>
+																<small class="text-muted">1 Day</small>
+															</div>
+														</li>
+													</ul>
+												</div>
+												<div class="col-12 col-sm-8 col-md-12 col-lg-8">
+													<div id="supportTracker2"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- Radial Bar Chart -->
+								<!-- Line Chart -->
+								<div class="col-md-6 mb-4 d-flex align-items-stretch">
+									<div class="card flex-grow-1">
+										<div class="card-header d-flex align-items-center justify-content-between">
+											<div>
+												<h5 class="card-title mb-0">Tickets Assigned Trend</h5>
+											</div>
+										</div>
+										<div class="card-body">
+											<div id="lineChart2"></div>
+										</div>
+									</div>
+								</div>
+								<!-- /Line Chart -->
+							</div>
+							<div class="row">
+								<!-- Radial Chart -->
+								<div class="col-md-4 mb-4">
+									<div class="card h-100 exclusive-card">
+										<div class="card-header d-flex align-items-center justify-content-between">
+											<div>
+												<h5 class="card-title mb-0">SLA Target Today</h5>
+											</div>
+										</div>
+										<div class="card-body">
+											<div class="row justify-content-center">
+												<div class="col-12 d-flex justify-content-center">
+													<div id="supportTracker" style="width: 100%;"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- Radial Chart -->
+								<!-- Line Chart -->
+								<div class="col-md-4 mb-4">
+									<div class="card h-100 exclusive-card">
+										<div class="card-body pb-0">
+											<h5 class="card-title mb-0 mt-2">101</h5>
+											<small>Active SLA Tickets</small>
+										</div>
+										<div id="revenueGenerated" class="exclusive-chart"></div>
+									</div>
+								</div>
+								<!-- Line Chart -->
+								<!-- Bar Chart -->
+								<div class="col-md-4 mb-4">
+									<div class="card h-100 exclusive-card">
+										<div class="card-header">
+											<div class="d-flex justify-content-between">
+												<small class="d-block mb-1 text-muted">Total SLA Tickets this month</small>
+												<!-- <p class="card-text text-success">+5.2%</p> -->
+											</div>
+											<h4 class="card-title mb-1">204</h4>
+										</div>
+										<div class="card-body">
+											<div class="row">
+												<div class="col-4">
+													<div class="d-flex gap-2 align-items-center mb-2">
+														<span class="badge bg-label-info p-1 rounded"><i class="ti ti-thumb-up ti-xs"></i></span>
+														<p class="mb-0">Unbreached</p>
+													</div>
+													<h5 class="mb-0 pt-1 text-nowrap">91%</h5>
+													<small class="text-muted">91.91</small>
+												</div>
+												<div class="col-4">
+													<div class="divider divider-vertical">
+														<div class="divider-text">
+															<span class="badge-divider-bg bg-label-secondary">VS</span>
+														</div>
+													</div>
+												</div>
+												<div class="col-4 text-end">
+													<div class="d-flex gap-2 justify-content-end align-items-center mb-2">
+														<p class="mb-0">Breached</p>
+														<span class="badge bg-label-primary p-1 rounded"><i class="ti ti-thumb-down ti-xs"></i></span>
+													</div>
+													<h5 class="mb-0 pt-1 text-nowrap ms-lg-n3 ms-xl-0">9%</h5>
+													<small class="text-muted">9.09</small>
+												</div>
+											</div>
+											<div class="d-flex align-items-center mt-4">
+												<div class="progress w-100" style="height: 8px">
+													<div class="progress-bar bg-info" style="width: 70%" role="progressbar" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100"></div>
+													<div class="progress-bar bg-primary" style="width: 30%" role="progressbar" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100"></div>
+												</div>
+											</div>
+										</div>
+									</div>
+								</div>
+								<!-- Bar Chart -->
+							</div>
+							<div class="row">
+								<!-- Bar Chart2 -->
+								<div class="col-12 mb-4">
+									<div class="card-header d-flex align-items-center justify-content-between">
+										<div>
+											<h5 class="card-title mb-0">SLA Achieved (Month)</h5>
+										</div>
+									</div>
+									<div class="card-body">
+										<div id="barChart2"></div>
+									</div>
+								</div>
+								<!-- Bar Chart2 -->
+							</div>
+						</div>
+						<!-- Charts -->
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+{% block vendorJS %}
+<script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
+{% endblock %}
+{% block pageJS %}   
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<!-- Include DataTables JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.11.5/css/jquery.dataTables.min.css">
+<script src="https://cdn.datatables.net/1.11.5/js/jquery.dataTables.min.js"></script>
+<!-- Include DataTables Buttons JS and CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/buttons/2.2.9/css/buttons.dataTables.min.css">
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/dataTables.buttons.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.html5.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.print.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.flash.min.js"></script>
+<script src="https://cdn.datatables.net/buttons/2.2.9/js/buttons.colVis.min.js"></script>
+<!-- Include Flatpickr JS and CSS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<!-- Include FormValidation JS -->
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/formValidation.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Bootstrap5.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/Trigger.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/AutoFocus.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/SubmitButton.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/formvalidation/dist/umd/plugins/DefaultSubmit.min.js"></script>
+<!-- Include Bootstrap JS -->
+<script src="https://stackpath.bootstrapcdn.com/bootstrap/5.1.3/js/bootstrap.bundle.min.js"></script>
+<!-- Custom JavaScript -->
+<script>  //dynamic page info
+	document.addEventListener('DOMContentLoaded', function () {
+	  // Function to update card title dynamically
+	  function updateCardTitle() {
+	    const currentUrl = window.location.href;
+	    const urlParts = currentUrl.split('/');
+	    const user = urlParts[urlParts.length - 3];  // Assuming user is the third last part
+	    const page = urlParts[urlParts.length - 2];  // Assuming page is the second last part
+	
+	    const cardTitle = `HMS - Management / ${page.charAt(0).toUpperCase() + page.slice(1)}`;
+	    document.querySelector('#userPageInfo h5').textContent = cardTitle;
+	  }
+	
+	  // Call the functions on page load
+	  updateCardTitle();
+	
+	});
+</script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script> //status
+	$(document).ready(function() {
+	  $('.status-item').click(function(e) {
+	    e.preventDefault();
+	    var status = $(this).data('status');
+	    
+	    // Update button text and add appropriate classes
+	    var iconClass = $(this).find('i').attr('class');
+	    var statusText = $(this).text().trim();
+	    $('#statusDropdownButton').html('<i class="ti ' + iconClass + '"></i> <span class="status-text">' + statusText + '</span>').removeClass().addClass('btn btn-secondary dropdown-toggle d-flex align-items-center').addClass('status-' + status);
+	    
+	    // Close the dropdown menu
+	    $('.dropdown-menu').removeClass('show');
+	    $('#statusDropdownButton').attr('aria-expanded', 'false');
+	  });
+	});
+</script>
+<!-- Radial Bar Chart -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	  const supportTrackerEl = document.querySelector('#supportTracker'),
+	      supportTrackerOptions = {
+	          series: [94],
+		labels: ['Percentage'],
+	          chart: {
+	              height: 300, // Adjust the height to make the chart smaller
+	              type: 'radialBar'
+	          },
+	          plotOptions: {
+	              radialBar: {
+	                  offsetY: 10,
+	                  startAngle: -140,
+	                  endAngle: 130,
+	                  hollow: {
+	                      size: '65%'
+	                  },
+	                  track: {
+	                      background: '#f2f2f2',
+	                      strokeWidth: '100%'
+	                  },
+	                  dataLabels: {
+	                      name: {
+	                          offsetY: -20,
+	                          color: '#888',
+	                          fontSize: '13px',
+	                          fontWeight: '400',
+	                          fontFamily: 'Public Sans'
+	                      },
+	                      value: {
+	                          offsetY: 10,
+	                          color: '#333',
+	                          fontSize: '38px',
+	                          fontWeight: '600',
+	                          fontFamily: 'Public Sans'
+	                      }
+	                  }
+	              }
+	          },
+	          colors: ['#008FFB'],
+	          fill: {
+	              type: 'gradient',
+	              gradient: {
+	                  shade: 'dark',
+	                  shadeIntensity: 0.5,
+	                  gradientToColors: ['#008FFB'],
+	                  inverseColors: true,
+	                  opacityFrom: 1,
+	                  opacityTo: 0.6,
+	                  stops: [30, 70, 100]
+	              }
+	          },
+	          stroke: {
+	              dashArray: 10
+	          },
+	          grid: {
+	              padding: {
+	                  top: -20,
+	                  bottom: 5
+	              }
+	          },
+	          states: {
+	              hover: {
+	                  filter: {
+	                      type: 'none'
+	                  }
+	              },
+	              active: {
+	                  filter: {
+	                      type: 'none'
+	                  }
+	              }
+	          },
+	          responsive: [
+	              {
+	                  breakpoint: 1025,
+	                  options: {
+	                      chart: {
+	                          height: 180 // Adjust the height for this breakpoint
+	                      }
+	                  }
+	              },
+	              {
+	                  breakpoint: 769,
+	                  options: {
+	                      chart: {
+	                          height: 150 // Adjust the height for this breakpoint
+	                      }
+	                  }
+	              }
+	          ]
+	      };
+	
+	  if (supportTrackerEl !== null) {
+	      const supportTracker = new ApexCharts(supportTrackerEl, supportTrackerOptions);
+	      supportTracker.render();
+	  }
+	});
+	
+</script>
+<!-- Radial Bar Chart -->
+<!-- Line Chart -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const revenueGeneratedEl = document.querySelector('#revenueGenerated');
+	
+		if (revenueGeneratedEl !== null) {
+			const revenueGeneratedConfig = {
+				chart: {
+					height: 130,
+					type: 'area',
+					parentHeightOffset: 0,
+					toolbar: {
+						show: false
+					},
+					sparkline: {
+						enabled: true
+					}
+				},
+				markers: {
+					colors: 'transparent',
+					strokeColors: 'transparent'
+				},
+				grid: {
+					show: false
+				},
+				colors: ['#1abc9c'], // Replace with your desired color
+				fill: {
+					type: 'gradient',
+					gradient: {
+						shade: 'dark',
+						shadeIntensity: 0.8,
+						opacityFrom: 0.6,
+						opacityTo: 0.1
+					}
+				},
+				dataLabels: {
+					enabled: false
+				},
+				stroke: {
+					width: 2,
+					curve: 'smooth'
+				},
+				series: [
+					{
+						data: [100, 250, 330, 480, 540, 600, 780] // Adjust your data points
+					}
+				],
+				xaxis: {
+					show: true,
+					lines: {
+						show: false
+					},
+					labels: {
+						show: false
+					},
+					stroke: {
+						width: 0
+					},
+					axisBorder: {
+						show: false
+					}
+				},
+				yaxis: {
+					stroke: {
+						width: 0
+					},
+					show: false
+				},
+				tooltip: {
+					enabled: false
+				}
+			};
+	
+			const revenueGeneratedChart = new ApexCharts(revenueGeneratedEl, revenueGeneratedConfig);
+			revenueGeneratedChart.render();
+		}
+	});
+</script>
+<!-- Line Chart -->
+<!-- Bar Chart2 -->
+<script src="https://cdn.jsdelivr.net/npm/apexcharts@3.29.0/dist/apexcharts.min.js"></script>
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+	    const verticalBarChartEl = document.querySelector('#barChart2');
+	    const borderColor = '#ddd'; // Replace with actual borderColor value
+	    const labelColor = '#333'; // Replace with actual labelColor value
+	    const config = {
+	        colors: {
+	            info: ['#6cb975', '#ffc107', '#f76767', '#3498db', '#e74c3c', '#9b59b6'] // Colors for series
+	        }
+	    };
+	
+	    const verticalBarChartConfig = {
+	        chart: {
+	            height: 300,
+	            type: 'bar',
+	            toolbar: {
+	                show: false
+	            }
+	        },
+	        plotOptions: {
+	            bar: {
+	                horizontal: false,
+	                columnWidth: '30%',
+	                startingShape: 'rounded',
+	                borderRadius: 8
+	            }
+	        },
+	        grid: {
+	            borderColor: borderColor,
+	            xaxis: {
+	                lines: {
+	                    show: true
+	                }
+	            },
+	            padding: {
+	                top: -20,
+	                bottom: -12
+	            }
+	        },
+	        colors: config.colors.info,
+	        dataLabels: {
+	            enabled: false
+	        },
+	        series: [{
+	            data: [10, 12, 9, 15, 12, 10, 10, 13] // Add more data points
+	        }],
+	        xaxis: {
+	            categories: ['John', 'Emily', 'David', 'Sophia', 'Michael', 'Emma', 'James', 'Olivia'], // Replace with names
+	            axisBorder: {
+	                show: false
+	            },
+	            axisTicks: {
+	                show: false
+	            },
+	            labels: {
+	                style: {
+	                    colors: labelColor,
+	                    fontSize: '13px'
+	                }
+	            }
+	        },
+	        yaxis: {
+	            title: {
+	                text: 'SLA Achieved (Month)'
+	            },
+	            labels: {
+	                style: {
+	                    colors: labelColor,
+	                    fontSize: '13px'
+	                }
+	            }
+	        }
+	    };
+	
+	    if (verticalBarChartEl) {
+	        const verticalBarChart = new ApexCharts(verticalBarChartEl, verticalBarChartConfig);
+	        verticalBarChart.render();
+	    }
+	});
+</script>
+<!-- Bar Chart2 -->
+<!-- Line Chart2 -->
+<script>
+	document.addEventListener('DOMContentLoaded', function () {
+	  var options = {
+		chart: {
+		  type: 'line',
+		  height: 300
+		},
+		series: [{
+		  name: 'Tickets Created',
+		  data: [15, 21, 18, 26, 25, 16, 14, 23, 19] // Sample data
+		}],
+		xaxis: {
+		  categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep']
+		},
+		colors: ['#6cb975'], // Use the preferred color for the line
+		dataLabels: {
+		  enabled: false
+		},
+		stroke: {
+		  curve: 'smooth'
+		},
+		tooltip: {
+		  y: {
+			formatter: function (val) {
+			  return val + " tickets"
+			}
+		  }
+		}
+	  };
+	
+	  var chart = new ApexCharts(document.querySelector("#lineChart2"), options);
+	  chart.render();
+	});
+	 
+</script>
+<!-- Line Chart -->
+<!-- Radial Bar Chart -->
+<script>
+	document.addEventListener('DOMContentLoaded', function() {
+		const supportTrackerEl = document.querySelector('#supportTracker2'),
+			supportTrackerOptions = {
+				series: [83],
+				labels: ['Completed Task'],
+				chart: {
+					height: 300, // Adjust the height to make the chart smaller
+					type: 'radialBar'
+				},
+				plotOptions: {
+					radialBar: {
+						offsetY: 10,
+						startAngle: -140,
+						endAngle: 130,
+						hollow: {
+							size: '65%'
+						},
+						track: {
+							background: '#f2f2f2',
+							strokeWidth: '100%'
+						},
+						dataLabels: {
+							name: {
+								offsetY: -20,
+								color: '#888',
+								fontSize: '13px',
+								fontWeight: '400',
+								fontFamily: 'Public Sans'
+							},
+							value: {
+								offsetY: 10,
+								color: '#333',
+								fontSize: '38px',
+								fontWeight: '600',
+								fontFamily: 'Public Sans'
+							}
+						}
+					}
+				},
+				colors: ['#008FFB'],
+				fill: {
+					type: 'gradient',
+					gradient: {
+						shade: 'dark',
+						shadeIntensity: 0.5,
+						gradientToColors: ['#008FFB'],
+						inverseColors: true,
+						opacityFrom: 1,
+						opacityTo: 0.6,
+						stops: [30, 70, 100]
+					}
+				},
+				stroke: {
+					dashArray: 10
+				},
+				grid: {
+					padding: {
+						top: -20,
+						bottom: 5
+					}
+				},
+				states: {
+					hover: {
+						filter: {
+							type: 'none'
+						}
+					},
+					active: {
+						filter: {
+							type: 'none'
+						}
+					}
+				},
+				responsive: [
+					{
+						breakpoint: 1025,
+						options: {
+							chart: {
+								height: 180 // Adjust the height for this breakpoint
+							}
+						}
+					},
+					{
+						breakpoint: 769,
+						options: {
+							chart: {
+								height: 150 // Adjust the height for this breakpoint
+							}
+						}
+					}
+				]
+			};
+	
+		if (supportTrackerEl !== null) {
+			const supportTracker = new ApexCharts(supportTrackerEl, supportTrackerOptions);
+			supportTracker.render();
+		}
+	});
+</script>
+{% endblock %}
