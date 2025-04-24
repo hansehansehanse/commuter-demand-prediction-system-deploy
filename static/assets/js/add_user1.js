@@ -7,61 +7,7 @@ function getCSRFToken() {
     }
     return tokenInput.value;
 }
-
-// document.addEventListener("DOMContentLoaded", function () {
-//     const submitBtn = document.getElementById("submitUserBtn");
-//     alert("hi 1")
-//     if (submitBtn) {
-//         submitBtn.addEventListener("click", function () {
-//             console.log("🔘 Submit button clicked");
-
-//             const firstName = document.getElementById("first_name").value;
-//             const lastName = document.getElementById("last_name").value;
-//             const email = document.getElementById("email").value;
-//             const phoneNumber = document.getElementById("phone_number").value;
-//             const accessLevel = document.getElementById("access_level").value;
-//             const verified = document.getElementById("verified").checked;
-//             const password = document.getElementById("password").value;
-
-//             const userData = {
-//                 first_name: firstName,
-//                 last_name: lastName,
-//                 email: email,
-//                 phone_number: phoneNumber,
-//                 access_level: accessLevel,
-//                 verified: verified,
-//                 password: password,
-//             };
-
-//             console.log("📦 User data:", userData);
-
-//             console.log("firstName value:", document.getElementById("first_name").value);
-
-//             alert("hi 2")
-//         //     fetch("/cdps/admin/accountManagement/add-user/", {
-//         //         method: "POST",
-//         //         headers: {
-//         //             "Content-Type": "application/json",
-//         //             "X-CSRFToken": getCSRFToken(),
-//         //         },
-//         //         body: JSON.stringify(userData),
-//         //     })
-//         //         .then((response) => {
-//         //             if (response.ok) {
-//         //                 console.log("✅ User added successfully!");
-//         //                 location.reload(); // Refresh to see updated table
-//         //             } else {
-//         //                 console.error("❌ Failed to add user:", response.statusText);
-//         //             }
-//         //         })
-//         //         .catch((error) => {
-//         //             console.error("🚨 Error submitting user data:", error);
-//         //         });
-//         // });
-
-// });
-
-
+//-------------------------------------------------------------------------
 
 // static/assets/js/add_user1.js
 document.addEventListener("DOMContentLoaded", function () {
@@ -116,3 +62,82 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 });
+
+//-------------------------------------------------------------------------
+document.querySelectorAll("form[id^='editUserForm']").forEach((form) => {
+  form.addEventListener("submit", function (e) {
+      e.preventDefault();
+
+      const userId = this.id.replace("editUserForm", "");
+      const data = {
+          first_name: document.getElementById(`edit_first_name${userId}`).value,
+          last_name: document.getElementById(`edit_last_name${userId}`).value,
+          email: document.getElementById(`edit_email${userId}`).value,
+          phone_number: document.getElementById(`edit_phone_number${userId}`).value,
+          access_level: document.getElementById(`edit_access_level${userId}`).value,
+          verified: document.getElementById(`edit_verified${userId}`).checked,
+          password: document.getElementById(`edit_password${userId}`).value,
+          user_code: document.getElementById(`edit_user_code${userId}`).value,
+      };
+
+      const csrfToken = getCSRFToken();
+
+      fetch("/cdps/admin/accountManagement/edit-user/", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify(data),
+      })
+      .then(response => {
+          if (!response.ok) throw new Error("Network response was not ok");
+          return response.json();
+      })
+      .then(result => {
+          console.log("✅ Edit success:", result);
+          window.location.reload();  // Reload page after edit
+      })
+      .catch(error => {
+          console.error("❌ Edit error:", error);
+          const errorBox = document.getElementById(`error-message${userId}`);
+          if (errorBox) {
+              errorBox.innerText = "Error updating user.";
+              errorBox.style.display = "block";
+          }
+      });
+  });
+});
+
+//-------------------------------------------------------------------------
+document.querySelectorAll(".delete-user-btn").forEach((button) => {
+  button.addEventListener("click", function () {
+      const userId = this.getAttribute("data-user-id");
+      const userCode = document.getElementById(`delete_user_code${userId}`).value;
+      const csrfToken = getCSRFToken();
+
+      fetch("/cdps/admin/accountManagement/delete-user/", {
+          method: "POST",
+          headers: {
+              "Content-Type": "application/json",
+              "X-CSRFToken": csrfToken,
+          },
+          body: JSON.stringify({ user_code: userCode }),
+      })
+      .then(response => {
+          if (!response.ok) throw new Error("Delete failed");
+          return response.json();
+      })
+      .then(result => {
+          console.log("🗑️ User deleted:", result);
+          window.location.reload();
+      })
+      .catch(error => {
+          console.error("❌ Delete error:", error);
+          alert("Something went wrong. See console for details.");
+      });
+  });
+});
+
+//-------------------------------------------------------------------------
+//-------------------------------------------------------------------------

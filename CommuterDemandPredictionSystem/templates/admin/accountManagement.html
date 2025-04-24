@@ -358,10 +358,10 @@
                         <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
                         
                         <!-- Filter Dropdown (Verified/Unverified) -->
-                        <select class="form-select" aria-label="Filter by Verification Status">
+                        <!-- <select class="form-select" aria-label="Filter by Verification Status">
                           <option value="1">Verified</option>
                           <option value="0">Unverified</option>
-                        </select>
+                        </select> -->
                       </div>
                     </div>
                   </div>
@@ -392,8 +392,17 @@
                                 <td>{{ user.last_name }}</td>
                                 <td>{{ user.access_level }}</td>
                                 <td>{{ user.verified|yesno:"Yes,No" }}</td>
-                                <td>
-                                  <!-- Actions for editing and deleting can be added later -->
+                                <td class="text-nowrap">
+                                  <!-- Button to trigger the modal -->
+                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewUserModal{{ user.id }}">
+                                    <i class="ti ti-eye ti-xs"></i>
+                                </button>
+                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+                                    <i class="ti ti-pencil ti-xs"></i>
+                                  </button>
+                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                                    <i class="ti ti-trash ti-xs"></i>
+                                  </button>
                                 </td>
                               </tr>
                             {% empty %}
@@ -410,79 +419,217 @@
               </div>
               <!-- / Content -->
             
-<!-- Modal (Add User) -->
-<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-      </div>
-      <div class="modal-body">
-        <form id="addUserForm" method="post">
-          {% csrf_token %}
-          <div class="alert alert-danger" id="error-message" style="display:none;"></div>
-        
-          <!-- First Name -->
-          <div class="mb-3">
-            <label for="first_name" class="form-label">First Name</label>
-            <input type="text" class="form-control" id="first_name" required>
-          </div>
-        
-          <!-- Last Name -->
-          <div class="mb-3">
-            <label for="last_name" class="form-label">Last Name</label>
-            <input type="text" class="form-control" id="last_name" required>
-          </div>
-        
-          <!-- Email -->
-          <div class="mb-3">
-            <label for="email" class="form-label">Email</label>
-            <input type="email" class="form-control" id="email" required>
-          </div>
-        
-          <!-- Phone Number -->
-          <div class="mb-3">
-            <label for="phone_number" class="form-label">Phone Number</label>
-            <input type="text" class="form-control" id="phone_number" required
-                   pattern="^(09|\+639)\d{9}$"
-                   title="Phone number must start with 09 or +639 and be 11 digits long">
-            <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
-          </div>
-        
-          <!-- Access Level -->
-          <div class="mb-3">
-            <label for="access_level" class="form-label">Access Level</label>
-            <select class="form-select" id="access_level" required>
-              <option value="Admin">Admin</option>
-              <option value="Bus Manager">Bus Manager</option>
-            </select>
-          </div>
-        
-          <!-- Verified Checkbox (true/false) -->
-          <div class="mb-3 form-check">
-            <input type="checkbox" class="form-check-input" id="verified">
-            <label class="form-check-label" for="verified">Verified</label>
-          </div>
-        
-          <!-- Password -->
-          <div class="mb-3">
-            <label for="password" class="form-label">Temporary Password</label>
-            <input type="password" class="form-control" id="password" required>
-            <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
-          </div>
-        
-          <button type="submit" class="btn btn-primary">Add User</button>
-        </form>
-        
-      
-      </div>
-    </div>
-  </div>
-</div>
+                <!-- Modal (Add User) (Create) -->
+                <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+                  <div class="modal-dialog">
+                    <div class="modal-content">
+                      <div class="modal-header">
+                        <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <form id="addUserForm" method="post">
+                          {% csrf_token %}
+                          <div class="alert alert-danger" id="error-message" style="display:none;"></div>
+                        
+                          <!-- First Name -->
+                          <div class="mb-3">
+                            <label for="first_name" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="first_name" required>
+                          </div>
+                        
+                          <!-- Last Name -->
+                          <div class="mb-3">
+                            <label for="last_name" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="last_name" required>
+                          </div>
+                        
+                          <!-- Email -->
+                          <div class="mb-3">
+                            <label for="email" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="email" required>
+                          </div>
+                        
+                          <!-- Phone Number -->
+                          <div class="mb-3">
+                            <label for="phone_number" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="phone_number" required
+                                  pattern="^(09|\+639)\d{9}$"
+                                  title="Phone number must start with 09 or +639 and be 11 digits long">
+                            <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
+                          </div>
+                        
+                          <!-- Access Level -->
+                          <div class="mb-3">
+                            <label for="access_level" class="form-label">Access Level</label>
+                            <select class="form-select" id="access_level" required>
+                              <option value="Admin">Admin</option>
+                              <option value="Bus Manager">Bus Manager</option>
+                            </select>
+                          </div>
+                        
+                          <!-- Verified Checkbox (true/false) -->
+                          <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="verified">
+                            <label class="form-check-label" for="verified">Verified</label>
+                          </div>
+                        
+                          <!-- Password -->
+                          <div class="mb-3">
+                            <label for="password" class="form-label">Temporary Password</label>
+                            <input type="password" class="form-control" id="password" value="Temppass123"required>
+                            <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
+                          </div>
+                        
+                          <button type="submit" class="btn btn-primary">Add User</button>
+                        </form>
+                        
+                      
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <!-- / / -->
+                <!-- Modal (View User) (Read) -->
+                {% for user in users %}
+                    <div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1" aria-labelledby="viewUserModalLabel{{ user.id }}" aria-hidden="true">
+                        <div class="modal-dialog">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="viewUserModalLabel{{ user.id }}">User Info: {{ user.first_name }} {{ user.last_name }}</h5>
+                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                </div>
+                                <div class="modal-body">
+                                    <!-- User Information Display -->
+                                    <div class="mb-3">
+                                        <label for="view_first_name" class="form-label">First Name</label>
+                                        <input type="text" class="form-control" id="view_first_name" value="{{ user.first_name }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="view_last_name" class="form-label">Last Name</label>
+                                        <input type="text" class="form-control" id="view_last_name" value="{{ user.last_name }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="view_email" class="form-label">Email</label>
+                                        <input type="email" class="form-control" id="view_email" value="{{ user.email }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="view_phone_number" class="form-label">Phone Number</label>
+                                        <input type="text" class="form-control" id="view_phone_number" value="{{ user.phone_number }}" disabled>
+                                    </div>
+                                    <div class="mb-3">
+                                        <label for="view_access_level" class="form-label">Access Level</label>
+                                        <input type="text" class="form-control" id="view_access_level" value="{{ user.access_level }}" disabled>
+                                    </div>
+                                    <div class="mb-3 form-check">
+                                        <input type="checkbox" class="form-check-input" id="view_verified" {% if user.verified %} checked {% endif %} disabled>
+                                        <label class="form-check-label" for="view_verified">Verified</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+                <!-- / / -->
+                <!-- Modal (Edit User) (Update)-->
+                {% for user in users %}
+                <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
+                  <div class="modal-dialog">
+                      <div class="modal-content">
+                          <div class="modal-header">
+                              <h5 class="modal-title" id="editUserModalLabel{{ user.id }}">Edit User: {{ user.user_code }}</h5>
+                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          </div>
+                          <div class="modal-body">
+                              <form id="editUserForm{{ user.id }}" method="post">
+                                  {% csrf_token %}
+                                  <div class="alert alert-danger" id="error-message{{ user.id }}" style="display:none;"></div>
+
+                                  <!-- First Name -->
+                                  <div class="mb-3">
+                                      <label for="edit_first_name{{ user.id }}" class="form-label">First Name</label>
+                                      <input type="text" class="form-control" id="edit_first_name{{ user.id }}" value="{{ user.first_name }}" required>
+                                  </div>
+
+                                  <!-- Last Name -->
+                                  <div class="mb-3">
+                                      <label for="edit_last_name{{ user.id }}" class="form-label">Last Name</label>
+                                      <input type="text" class="form-control" id="edit_last_name{{ user.id }}" value="{{ user.last_name }}" required>
+                                  </div>
+
+                                  <!-- Email -->
+                                  <div class="mb-3">
+                                      <label for="edit_email{{ user.id }}" class="form-label">Email</label>
+                                      <input type="email" class="form-control" id="edit_email{{ user.id }}" value="{{ user.email }}" required>
+                                  </div>
+
+                                  <!-- Phone Number -->
+                                  <div class="mb-3">
+                                      <label for="edit_phone_number{{ user.id }}" class="form-label">Phone Number</label>
+                                      <input type="text" class="form-control" id="edit_phone_number{{ user.id }}" value="{{ user.phone_number }}" required
+                                            pattern="^(09|\+639)\d{9}$"
+                                            title="Phone number must start with 09 or +639 and be 11 digits long">
+                                      <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
+                                  </div>
+
+                                  <!-- Access Level -->
+                                  <div class="mb-3">
+                                      <label for="edit_access_level{{ user.id }}" class="form-label">Access Level</label>
+                                      <select class="form-select" id="edit_access_level{{ user.id }}" required>
+                                          <option value="Admin" {% if user.access_level == 'Admin' %} selected {% endif %}>Admin</option>
+                                          <option value="Bus Manager" {% if user.access_level == 'Bus Manager' %} selected {% endif %}>Bus Manager</option>
+                                      </select>
+                                  </div>
+
+                                  <!-- Verified Checkbox (true/false) -->
+                                  <div class="mb-3 form-check">
+                                      <input type="checkbox" class="form-check-input" id="edit_verified{{ user.id }}" {% if user.verified %} checked {% endif %}>
+                                      <label class="form-check-label" for="edit_verified{{ user.id }}">Verified</label>
+                                  </div>
+
+                                  <!-- Change Password -->
+                                  <div class="mb-3">
+                                      <label for="edit_password{{ user.id }}" class="form-label">Change Password</label>
+                                      <input type="password" class="form-control" id="edit_password{{ user.id }}">
+                                      <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
+                                  </div>
+
+                                  <input type="hidden" id="edit_user_code{{ user.id }}" value="{{ user.user_code }}">
 
 
-            
+
+                                  <button type="submit" class="btn btn-primary">Save Changes</button>
+                              </form>
+                          </div>
+                      </div>
+                  </div>
+                </div>
+                {% endfor %}
+                <!-- / / -->
+                <!-- Delete User Modal -->
+                {% for user in users %}
+                <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+                  <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                      <div class="modal-header bg-danger text-white">
+                        <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Delete User</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Are you sure you want to delete user <strong>{{ user.first_name }} {{ user.last_name }}</strong>?
+                      </div>
+                      <div class="modal-footer">
+                        <input type="hidden" id="delete_user_code{{ user.id }}" value="{{ user.user_code }}">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="button" class="btn btn-danger delete-user-btn" data-user-id="{{ user.id }}">Delete</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                {% endfor %}
+                <!-- / / -->
+
+                <!-- / / -->
               <div class="content-backdrop fade"></div>
             </div>
             

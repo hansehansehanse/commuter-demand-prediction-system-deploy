@@ -1,4 +1,15 @@
 from django.shortcuts import render
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
+from django.contrib.auth.hashers import make_password
+
+from .models import CustomUser
+
+import json
+import uuid
+
+import logging
 
 emp_sidebar_items = [
     {'url':'hris_emp_dashboard', 'icon_class':'ti-smart-home', 'name':'Dashboard'},
@@ -28,8 +39,9 @@ def cdps_admin_accountManagement(request):
 
 
 #-------------------------------------------------------------------------
-from django.shortcuts import render
-from .models import CustomUser
+#-------------------------------------------------------------------------
+# from django.shortcuts import render
+# from .models import CustomUser
 
 def user_list(request):
     print("✅ user_list being called")
@@ -37,55 +49,16 @@ def user_list(request):
     print(f"🧾 Users in DB: {users}")
     return render(request, 'admin/accountManagement.html', {'users': users})
 
-
-
+#-------------------------------------------------------------------------
 # from django.shortcuts import render
 # from django.http import JsonResponse
 # from .models import CustomUser
-# from django.contrib.auth.hashers import make_password
+# from django.contrib.auth.hashers import make_password  # To hash password before saving
 
-# def user_list(request):
-#     users = CustomUser.objects.all()
-#     return render(request, 'admin/accountManagement.html', {'users': users})
+# import json
+# import uuid
 
-#-------------------------------------------------------------------------
-# from django.views.decorators.csrf import csrf_exempt
-
-# @csrf_exempt
-# def add_user(request):
-#     if request.method == 'POST':
-#         first_name = request.POST.get('first_name')
-#         last_name = request.POST.get('last_name')
-#         email = request.POST.get('email')
-#         phone_number = request.POST.get('phone_number')
-#         access_level = request.POST.get('access_level')
-#         verified = request.POST.get('verified')
-#         password = request.POST.get('password')
-
-#         user = CustomUser(
-#             first_name=first_name,
-#             last_name=last_name,
-#             email=email,
-#             phone_number=phone_number,
-#             access_level=access_level,
-#             verified=verified,
-#             password=make_password(password),  # Hash the password before saving
-#         )
-#         user.save()
-
-#         return JsonResponse({'message': 'User successfully added!'}, status=200)
-#     return JsonResponse({'error': 'Invalid request method.'}, status=400)
-
-
-#-------------------------------------------------------------------------
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import CustomUser
-from django.contrib.auth.hashers import make_password  # To hash password before saving
-
-import json
-import uuid
-
+logger = logging.getLogger(__name__)
 
 def add_user(request):
     if request.method == 'POST':
@@ -108,12 +81,63 @@ def add_user(request):
 
         except Exception as e:
             print("❌ Exception:", e)
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+            logger.error(f"Error adding user: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'Error occurred while adding user.'}, status=500)
+        
 
+        
+        
 
 #-------------------------------------------------------------------------
+# from django.http import JsonResponse
+# from django.views.decorators.csrf import csrf_exempt
+# import json
+# from .models import CustomUser
+# from django.contrib.auth.hashers import make_password
+
+# @csrf_exempt  # only if you test without csrf token; otherwise keep csrf protection
+def edit_user(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            user_code = data.get("user_code")
+            user = CustomUser.objects.get(user_code=user_code)
+
+            # Update fields
+            user.first_name = data["first_name"]
+            user.last_name = data["last_name"]
+            user.email = data["email"]
+            user.phone_number = data["phone_number"]
+            user.access_level = data["access_level"]
+            user.verified = data["verified"]
+
+            if data["password"]:  # Only update if password is provided
+                user.password = make_password(data["password"])
+
+            user.save()
+            return JsonResponse({"message": "User updated successfully."})
+        except CustomUser.DoesNotExist:
+            return JsonResponse({"error": "User not found."}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=400)
+
+    return JsonResponse({"error": "Invalid request method."}, status=405)
 
 #-------------------------------------------------------------------------
+# from django.views.decorators.http import require_POST
+
+@require_POST
+def delete_user(request):
+    try:
+        data = json.loads(request.body)
+        user_code = data.get("user_code")
+        user = CustomUser.objects.get(user_code=user_code)
+        user.delete()
+        return JsonResponse({"message": "User deleted successfully."})
+    except CustomUser.DoesNotExist:
+        return JsonResponse({"error": "User not found."}, status=404)
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=400)
 
 #-------------------------------------------------------------------------
 

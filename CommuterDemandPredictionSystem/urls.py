@@ -12,10 +12,10 @@ urlpatterns = [
     
     path('admin/accountManagement/', views.user_list, name='account_management'),
     path('admin/accountManagement/add-user/', views.add_user, name='add_user'),
+    path('admin/accountManagement/edit-user/', views.edit_user, name='edit_user'),
+    path('admin/accountManagement/delete-user/', views.delete_user, name='delete_user'),
 
-    # path('add-user/', views.add_user, name='add_user'),
 
-    # path('users/', views.user_list, name='user_list'),
    
     
 ]
