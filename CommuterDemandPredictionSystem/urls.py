@@ -6,6 +6,9 @@ from . import views
 
 urlpatterns = [
 
+    path('login/', login_view, name='login'),
+
+
     path('admin/dashboard', cdps_admin_dashboard, name='cdps_admin_dashboard'),
     path('admin/dashboard2', cdps_admin_dashboard2, name='cdps_admin_dashboard2'),
     

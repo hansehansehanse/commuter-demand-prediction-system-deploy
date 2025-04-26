@@ -17,7 +17,7 @@ emp_sidebar_items = [
     {'url':'hris_emp_payroll', 'icon_class':'ti-file-dollar', 'name':'Payroll'},
     {'url':'hris_emp_leaves', 'icon_class':'ti-checkbox', 'name':'Leaves'},
 ]
-# Create your views here.
+
 
 #-------------------------------------------------------------------------
 def cdps_admin_dashboard(request):
@@ -36,6 +36,136 @@ def cdps_admin_accountManagement(request):
     # context = {'sidebar_items':emp_sidebar_items}
     context = {}
     return render(request, 'admin/accountManagement.html', context)
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+# from django.contrib.auth import get_user_model, login
+# from django.contrib.auth.hashers import check_password
+# from django.shortcuts import render, redirect
+# from django.urls import reverse
+
+# User = get_user_model()
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+
+#         # print("📨 Email entered:", email)
+#         # print("🔐 Password entered:", password)
+
+#         try:
+#             user = User.objects.get(email=email)
+#             print("👤 Match found in DB:", user)
+
+#             if check_password(password, user.password):
+#                 print("✅ Password matches!")
+#                 print("🔎 Access level from DB:", user.access_level)
+
+#                 login(request, user)
+
+#                 if user.access_level == 'Admin':
+#                     return redirect(reverse('account_management'))                  # !!!Update 
+#                 elif user.access_level == 'Bus Manager':
+#                     return redirect('cdps_admin_dashboard')                         # !!!Update
+#                 else:
+#                     print("❓ Unknown access level")
+#                     return render(request, 'login.html', {'error': 'Access level not recognized'})
+#             else:
+#                 print("❌ Password does not match.")
+#                 return render(request, 'login.html', {'error': 'Invalid password'})
+#         except User.DoesNotExist:
+#             print("❌ No user found with that email.")
+#             return render(request, 'login.html', {'error': 'Invalid email'})
+
+#     return render(request, 'login.html')
+
+from django.contrib.auth import login
+from django.contrib.auth.hashers import check_password
+from django.shortcuts import render, redirect
+from django.urls import reverse
+from django.contrib.auth import get_backends
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+def login_view(request):
+    if request.method == 'POST':
+        email = request.POST.get('email')
+        password = request.POST.get('password')
+
+        try:
+            user = User.objects.get(email=email)
+            print("👤 Match found in DB:", user)
+
+            if check_password(password, user.password):
+                print("✅ Password matches!")
+                print("🔎 Access level from DB:", user.access_level)
+
+                # Explicitly specify the backend to avoid ValueError
+                backend = get_backends()[0]
+                login(request, user, backend=backend.__class__.__module__ + "." + backend.__class__.__name__)
+
+                if user.access_level == 'Admin':
+                    return redirect(reverse('account_management'))
+                elif user.access_level == 'Bus Manager':
+                    return redirect('cdps_admin_dashboard')
+                else:
+                    print("❓ Unknown access level")
+                    return render(request, 'login.html', {'error': 'Access level not recognized'})
+            else:
+                print("❌ Password does not match.")
+                return render(request, 'login.html', {'error': 'Invalid password'})
+        except User.DoesNotExist:
+            print("❌ No user found with that email.")
+            return render(request, 'login.html', {'error': 'Invalid email'})
+
+    return render(request, 'login.html')
+
+
+
+#--
+
+
+#--
+# from django.core.validators import validate_email
+# from django.core.exceptions import ValidationError
+# from django.contrib.auth import authenticate, login
+
+
+# def login_view(request):
+#     if request.method == 'POST':
+#         email = request.POST.get('email')
+#         password = request.POST.get('password')
+
+#         # Validate email format
+#         try:
+#             validate_email(email)  # Validates the email format
+#         except ValidationError:
+#             return render(request, 'login.html', {'error': 'Invalid email format'})
+
+#         # Authenticate user
+#         user = authenticate(request, username=email, password=password)
+
+#         if user is not None:
+#             login(request, user)
+#             print(f"👤 Match found in DB: {user} ({user.user_code})")
+#             print("✅ Password matches!")
+
+#             if user.access_level == 'Admin':
+#                 return redirect(reverse('account_management'))
+#             elif user.access_level == 'Bus Manager':
+#                 return redirect(reverse('bus_manager_dashboard'))
+#             else:
+#                 print("❓ Unknown access level")
+#                 return render(request, 'login.html', {'error': 'Access level not recognized'})
+#         else:
+#             print("❌ No match or incorrect password")
+#             return render(request, 'login.html', {'error': 'Invalid email or password'})
+
+#     return render(request, 'login.html')
 
 
 #-------------------------------------------------------------------------
