@@ -1,704 +1,303 @@
-{% load static %}
-<!DOCTYPE html>
+{% extends 'admin_base.html' %}
 
-<html
-  lang="en"
-  class="dark-style layout-menu-fixed"
-  dir="ltr"
-  data-theme="theme-default"
-  data-assets-path="{% static 'assets/' %}"
-
-  data-template="vertical-menu-template-no-customizer-starter"
-  color-scheme="dark"
->
-  <head>
-    <meta charset="utf-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0"
-    />
-
-    <title>test</title>
-
-    <meta name="description" content="" />
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="{% static 'assets/img/favicon/favicon.ico' %}" />
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500;1,600;1,700&display=swap"
-      rel="stylesheet"
-    />
-
-    <!-- Icons -->
-    <link rel="stylesheet" href="{% static 'assets/vendor/fonts/fontawesome.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/fonts/tabler-icons.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/fonts/flag-icons.css' %}" />
-
-    <!-- Core CSS -->
-    <link rel="stylesheet" href="{% static 'assets/vendor/css/rtl/core.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/css/rtl/theme-default.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/css/demo.css' %}" />
-
-    <!-- Vendors CSS -->
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/node-waves/node-waves.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/typeahead-js/typeahead.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/apex-charts/apex-charts.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/swiper/swiper.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-bs5/datatables.bootstrap5.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.css' %}" />
-    <link rel="stylesheet" href="{% static 'assets/vendor/libs/datatables-checkboxes-jquery/datatables.checkboxes.css' %}" />
-    
-
-
-    <!-- Page CSS -->
-
-    <!-- Helpers -->
-    <script src="{% static 'assets/vendor/js/helpers.js' %}"></script>
-
-    <!--! Template customizer & Theme config files MUST be included after core stylesheets and helpers.js in the <head> section -->
-    <!--? Config:  Mandatory theme config file contain global vars & default theme options, Set your preferred theme option in this file.  -->
-    <script src="{% static 'assets/js/config.js' %}"></script>
-
-    <!-- <link rel="stylesheet" type="text/css" href="{% static 'assets/vendor/css/rtl/core-dark.css' %}" class="template-customizer-core-css"> -->
-    
-
-  
-  </head>
-
-  
-  <body>
-    <!-- Layout wrapper -->
-    <div class="layout-wrapper layout-content-navbar">
-        <div class="layout-container">
-
-          <!-- Menu -->
-  
-          <aside id="layout-menu" class="layout-menu menu-vertical menu bg-menu-theme">
-            <div class="app-brand demo">
-              <a href="index.html" class="app-brand-link">
-                <span class="app-brand-logo demo">
-                  <!-- Logo! -->
-                  <!-- <svg width="32" height="22" viewBox="0 0 32 22" fill="none" xmlns="http://www.w3.org/2000/svg"> -->
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M0.00172773 0V6.85398C0.00172773 6.85398 -0.133178 9.01207 1.98092 10.8388L13.6912 21.9964L19.7809 21.9181L18.8042 9.88248L16.4951 7.17289L9.23799 0H0.00172773Z"
-                      fill="#7367F0"
-                    />
-                    <path
-                      opacity="0.06"
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M7.69824 16.4364L12.5199 3.23696L16.5541 7.25596L7.69824 16.4364Z"
-                      fill="#161616"
-                    />
-                    <path
-                      opacity="0.06"
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M8.07751 15.9175L13.9419 4.63989L16.5849 7.28475L8.07751 15.9175Z"
-                      fill="#161616"
-                    />
-                    <path
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                      d="M7.77295 16.3566L23.6563 0H32V6.88383C32 6.88383 31.8262 9.17836 30.6591 10.4057L19.7824 22H13.6938L7.77295 16.3566Z"
-                      fill="#7367F0"
-                    />
-                  </svg>
-                </span>
-                <span class="app-brand-text demo menu-text fw-bold">CDPS</span>
-              </a>
-  
-              <a href="javascript:void(0);" class="layout-menu-toggle menu-link text-large ms-auto">
-                <i class="ti menu-toggle-icon d-none d-xl-block ti-sm align-middle"></i>
-                <i class="ti ti-x d-block d-xl-none ti-sm align-middle"></i>
-              </a>
-            </div>
-  
-            <div class="menu-inner-shadow"></div>
-  
-            <ul class="menu-inner py-1">
-  
-              <!-- Apps & Pages -->
-              <!-- <li class="menu-header small text-uppercase">
-                <span class="menu-header-text">Apps &amp; Pages</span>
-              </li> -->
-              <li class="menu-item">
-                <a href="dashboard" class="menu-link">
-                  <i class="menu-icon tf-icons ti ti-apps"></i>
-                  <div data-i18n="Dashboard">Dashboard</div>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a href="accountManagement" class="menu-link">
-                  <i class="menu-icon tf-icons ti ti-users"></i>
-                  <div data-i18n="Account Management">Account Management</div>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a href="app-calendar.html" class="menu-link">
-                  <i class="menu-icon tf-icons ti ti-calendar"></i>
-                  <div data-i18n="3">3</div>
-                </a>
-              </li>
-              <li class="menu-item">
-                <a href="app-kanban.html" class="menu-link">
-                  <i class="menu-icon tf-icons ti ti-layout-kanban"></i>
-                  <div data-i18n="4">4</div>
-                </a>
-              </li>
-            </ul>
-          </aside>
-          <!-- / Menu -->
-  
-          <!-- Layout container -->
-          <div class="layout-page">
-            <!-- Navbar -->
-  
-            <nav
-              class="layout-navbar container-xxl navbar navbar-expand-xl navbar-detached align-items-center bg-navbar-theme"
-              id="layout-navbar"
-            >
-              <div class="layout-menu-toggle navbar-nav align-items-xl-center me-3 me-xl-0 d-xl-none">
-                <a class="nav-item nav-link px-0 me-xl-4" href="javascript:void(0)">
-                  <i class="ti ti-menu-2 ti-sm"></i>
-                </a>
-              </div>
-  
-              <div class="navbar-nav-right d-flex align-items-center" id="navbar-collapse">
-                <!-- Search -->
-                <!-- <div class="navbar-nav align-items-center">
-                  <div class="nav-item navbar-search-wrapper mb-0">
-                    <a class="nav-item nav-link search-toggler d-flex align-items-center px-0" href="javascript:void(0);">
-                      <i class="ti ti-search ti-md me-2"></i>
-                      <span class="d-none d-md-inline-block text-muted">Search (Ctrl+/)</span>
-                    </a>
-                  </div>
-                </div> -->
-                <!-- /Search -->
-  
-                <ul class="navbar-nav flex-row align-items-center ms-auto">
- 
-
-                  <!-- Notification -->
-                  <li class="nav-item dropdown-notifications navbar-dropdown dropdown me-3 me-xl-1">
-                    <a
-                      class="nav-link dropdown-toggle hide-arrow"
-                      href="javascript:void(0);"
-                      data-bs-toggle="dropdown"
-                      data-bs-auto-close="outside"
-                      aria-expanded="false"
-                    >
-                      <i class="ti ti-bell ti-md"></i>
-                      <span class="badge bg-danger rounded-pill badge-notifications">2</span>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end py-0">
-                      <li class="dropdown-menu-header border-bottom">
-                        <div class="dropdown-header d-flex align-items-center py-3">
-                          <h5 class="text-body mb-0 me-auto">Notification</h5>
-                          <a
-                            href="javascript:void(0)"
-                            class="dropdown-notifications-all text-body"
-                            data-bs-toggle="tooltip"
-                            data-bs-placement="top"
-                            title="Mark all as read"
-                            ><i class="ti ti-mail-opened fs-4"></i
-                          ></a>
-                        </div>
-                      </li>
-                      <li class="dropdown-notifications-list scrollable-container">
-                        <ul class="list-group list-group-flush">
-                          <li class="list-group-item list-group-item-action dropdown-notifications-item">
-                            <div class="d-flex">
-                              <div class="flex-shrink-0 me-3">
-                                <div class="avatar">
-                                  <img src="{% static 'assets/img/avatars/1.png' %}"
-                                  alt class="h-auto rounded-circle" />
-                                </div>
-                              </div>
-                              <div class="flex-grow-1">
-                                <h6 class="mb-1">Congratulation Lettie 🎉</h6>
-                                <p class="mb-0">Won the monthly best seller gold badge</p>
-                                <small class="text-muted">1h ago</small>
-                              </div>
-                              <div class="flex-shrink-0 dropdown-notifications-actions">
-                                <a href="javascript:void(0)" class="dropdown-notifications-read"
-                                  ><span class="badge badge-dot"></span
-                                ></a>
-                                <a href="javascript:void(0)" class="dropdown-notifications-archive"
-                                  ><span class="ti ti-x"></span
-                                ></a>
-                              </div>
-                            </div>
-                          </li>
-
-                          <li class="list-group-item list-group-item-action dropdown-notifications-item marked-as-read">
-                            <div class="d-flex">
-                              <div class="flex-shrink-0 me-3">
-                                <div class="avatar">
-                                  <span class="avatar-initial rounded-circle bg-label-warning"
-                                    ><i class="ti ti-alert-triangle"></i
-                                  ></span>
-                                </div>
-                              </div>
-                              <div class="flex-grow-1">
-                                <h6 class="mb-1">CPU is running high</h6>
-                                <p class="mb-0">CPU Utilization Percent is currently at 88.63%,</p>
-                                <small class="text-muted">5 days ago</small>
-                              </div>
-                            </div>
-                          </li>
-                        </ul>
-                      </li>
-                      <li class="dropdown-menu-footer border-top">
-                        <a
-                          href="javascript:void(0);"
-                          class="dropdown-item d-flex justify-content-center text-primary p-2 h-px-40 mb-1 align-items-center"
-                        >
-                          View all notifications
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                  <!--/ Notification -->
-  
-                  <!-- User -->
-                  <li class="nav-item navbar-dropdown dropdown-user dropdown">
-                    <a class="nav-link dropdown-toggle hide-arrow" href="javascript:void(0);" data-bs-toggle="dropdown">
-                      <div class="avatar avatar-online">
-                        <img src="{% static 'assets/img/avatars/1.png' %}"
-                        alt class="h-auto rounded-circle" />
-                      </div>
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end">
-                      <li>
-                        <a class="dropdown-item" href="pages-account-settings-account.html">
-                          <div class="d-flex">
-                            <div class="flex-shrink-0 me-3">
-                              <div class="avatar avatar-online">
-                                <img src="{% static 'assets/img/avatars/1.png' %}" alt class="h-auto rounded-circle" />
-                              </div>
-                            </div>
-                            <div class="flex-grow-1">
-                              <span class="fw-semibold d-block">John Doe</span>
-                              <small class="text-muted">Admin</small>
-                            </div>
-                          </div>
-                        </a>
-                      </li>
-                      <li>
-                        <div class="dropdown-divider"></div>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="pages-profile-user.html">
-                          <i class="ti ti-user-check me-2 ti-sm"></i>
-                          <span class="align-middle">My Profile</span>
-                        </a>
-                      </li>
-                      <li>
-                        <a class="dropdown-item" href="pages-account-settings-account.html">
-                          <i class="ti ti-settings me-2 ti-sm"></i>
-                          <span class="align-middle">Settings</span>
-                        </a>
-                      </li>
-
-                      <li>
-                        <div class="dropdown-divider"></div>
-                      </li>
-
-                      <li>
-                        <a class="dropdown-item" href="auth-login-cover.html" target="_blank">
-                          <i class="ti ti-logout me-2 ti-sm"></i>
-                          <span class="align-middle">Log Out</span>
-                        </a>
-                      </li>
-                    </ul>
-                  </li>
-                  <!--/ User -->
-                </ul>
-              </div>
-  
-              <!-- Search Small Screens -->
-              <div class="navbar-search-wrapper search-input-wrapper d-none">
-                <input
-                  type="text"
-                  class="form-control search-input container-xxl border-0"
-                  placeholder="Search..."
-                  aria-label="Search..."
-                />
-                <i class="ti ti-x ti-sm search-toggler cursor-pointer"></i>
-              </div>
-            </nav>
-  
-            <!-- / Navbar -->
-  
-            <!-- --------------------- -->
-            <!-- Content wrapper -->
-
-            <div class="content-wrapper">
-              <!-- Content -->
-              <div class="container-xxl flex-grow-1 container-p-y">
-                <div class="row">
-                  <!-- Controls: Add User, Search, Filter -->
-                  <div class="col-12 mb-3">
-                    <div class="d-flex justify-content-between">
-                      <!-- Add User Button -->
-                      <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-                        <i class="ti ti-plus me-2"></i> Add User
-                      </button>
-                      
-                      <!-- Search Bar -->
-                      <div class="d-flex">
-                        <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
-                        
-                        <!-- Filter Dropdown (Verified/Unverified) -->
-                        <!-- <select class="form-select" aria-label="Filter by Verification Status">
-                          <option value="1">Verified</option>
-                          <option value="0">Unverified</option>
-                        </select> -->
-                      </div>
-                    </div>
-                  </div>
-              
-                  <!-- User Table -->
-                  <div class="col-12">
-                    <div class="card" style="min-height: 600px;">
-                      <div class="table-responsive card-datatable" style="overflow-x: auto;">
-                        <table class="table border-top w-100">
-                          <thead>
-                            <tr>
-                              
-                              <th>ID</th>
-                              <th>User Code</th>
-                              <th>First Name</th>
-                              <th>Last Name</th>
-                              <th>Access Level</th>
-                              <th>Verified</th>
-                              <th>Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {% for user in users %}
-                              <tr>
-                                <td>{{ user.id }}</td>
-                                <td>{{ user.user_code }}</td>
-                                <td>{{ user.first_name }}</td>
-                                <td>{{ user.last_name }}</td>
-                                <td>{{ user.access_level }}</td>
-                                <td>{{ user.verified|yesno:"Yes,No" }}</td>
-                                <td class="text-nowrap">
-                                  <!-- Button to trigger the modal -->
-                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewUserModal{{ user.id }}">
-                                    <i class="ti ti-eye ti-xs"></i>
-                                </button>
-                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
-                                    <i class="ti ti-pencil ti-xs"></i>
-                                  </button>
-                                  <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
-                                    <i class="ti ti-trash ti-xs"></i>
-                                  </button>
-                                </td>
-                              </tr>
-                            {% empty %}
-                              <tr>
-                                <td colspan="7">No users found.</td>
-                              </tr>
-                            {% endfor %}
-                          </tbody>
-                        </table>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <!-- / Content -->
+{% block content %}
+    <!-- Content -->
+  <div class="container-xxl flex-grow-1 container-p-y">
+      <div class="row">
+        <!-- Controls: Add User, Search, Filter -->
+        <div class="col-12 mb-3">
+          <div class="d-flex justify-content-between">
+            <!-- Add User Button -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+              <i class="ti ti-plus me-2"></i> Add User
+            </button>
             
-                <!-- Modal (Add User) (Create) -->
-                <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
-                  <div class="modal-dialog">
-                    <div class="modal-content">
+            <!-- Search Bar -->
+            <div class="d-flex">
+              <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
+              
+              <!-- Filter Dropdown (Verified/Unverified) -->
+              <!-- <select class="form-select" aria-label="Filter by Verification Status">
+                <option value="1">Verified</option>
+                <option value="0">Unverified</option>
+              </select> -->
+            </div>
+          </div>
+        </div>
+    
+        <!-- User Table -->
+        <div class="col-12">
+          <div class="card" style="min-height: 600px;">
+            <div class="table-responsive card-datatable" style="overflow-x: auto;">
+              <table class="table border-top w-100">
+                <thead>
+                  <tr>
+                    
+                    <th>ID</th>
+                    <th>User Code</th>
+                    <th>First Name</th>
+                    <th>Last Name</th>
+                    <th>Access Level</th>
+                    <th>Verified</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                    <tr>
+                      <td>{{ user.id }}</td>
+                      <td>{{ user.user_code }}</td>
+                      <td>{{ user.first_name }}</td>
+                      <td>{{ user.last_name }}</td>
+                      <td>{{ user.access_level }}</td>
+                      <td>{{ user.verified|yesno:"Yes,No" }}</td>
+                      <td class="text-nowrap">
+                        <!-- Button to trigger the modal -->
+                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewUserModal{{ user.id }}">
+                          <i class="ti ti-eye ti-xs"></i>
+                      </button>
+                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editUserModal{{ user.id }}">
+                          <i class="ti ti-pencil ti-xs"></i>
+                        </button>
+                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteUserModal{{ user.id }}">
+                          <i class="ti ti-trash ti-xs"></i>
+                        </button>
+                      </td>
+                    </tr>
+                  {% empty %}
+                    <tr>
+                      <td colspan="7">No users found.</td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- / Content -->
+  
+      <!-- Modal (Add User) (Create) -->
+      <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="addUserModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <form id="addUserForm" method="post">
+                {% csrf_token %}
+                <div class="alert alert-danger" id="error-message" style="display:none;"></div>
+
+              
+                <!-- First Name -->
+                <div class="mb-3">
+                  <label for="first_name" class="form-label">First Name</label>
+                  <input type="text" class="form-control" id="first_name" required>
+                </div>
+              
+                <!-- Last Name -->
+                <div class="mb-3">
+                  <label for="last_name" class="form-label">Last Name</label>
+                  <input type="text" class="form-control" id="last_name" required>
+                </div>
+              
+                <!-- Email -->
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control" id="email" required>
+                </div>
+              
+                <!-- Phone Number -->
+                <div class="mb-3">
+                  <label for="phone_number" class="form-label">Phone Number</label>
+                  <input type="text" class="form-control" id="phone_number" required
+                        pattern="^(09|\+639)\d{9}$"
+                        title="Phone number must start with 09 or +639 and be 11 digits long">
+                  <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
+                </div>
+              
+                <!-- Access Level -->
+                <div class="mb-3">
+                  <label for="access_level" class="form-label">Access Level</label>
+                  <select class="form-select" id="access_level" required>
+                    <option value="Bus Manager">Bus Manager</option>
+                    <option value="Admin">Admin</option>
+                    
+                  </select>
+                </div>
+              
+                <!-- Verified Checkbox (true/false) -->
+                <div class="mb-3 form-check">
+                  <input type="checkbox" class="form-check-input" id="verified">
+                  <label class="form-check-label" for="verified">Verified</label>
+                </div>
+              
+                <!-- Password -->
+                <div class="mb-3">
+                  <label for="password" class="form-label">Temporary Password</label>
+                  <input type="password" class="form-control" id="password" value="Temppass123"required>
+                  <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
+                </div>
+              
+                <div class="alert alert-danger" id="error-message" style="display:none;"></div>
+
+
+
+                <button type="submit" class="btn btn-primary">Add User</button>
+              </form>
+              
+            
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- / / -->
+      <!-- Modal (View User) (Read) -->
+      {% for user in users %}
+          <div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1" aria-labelledby="viewUserModalLabel{{ user.id }}" aria-hidden="true">
+              <div class="modal-dialog">
+                  <div class="modal-content">
                       <div class="modal-header">
-                        <h5 class="modal-title" id="addUserModalLabel">Add User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                          <h5 class="modal-title" id="viewUserModalLabel{{ user.id }}">User Info: {{ user.first_name }} {{ user.last_name }}</h5>
+                          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                       </div>
                       <div class="modal-body">
-                        <form id="addUserForm" method="post">
-                          {% csrf_token %}
-                          <div class="alert alert-danger" id="error-message" style="display:none;"></div>
-                        
-                          <!-- First Name -->
+                          <!-- User Information Display -->
                           <div class="mb-3">
-                            <label for="first_name" class="form-label">First Name</label>
-                            <input type="text" class="form-control" id="first_name" required>
+                              <label for="view_first_name" class="form-label">First Name</label>
+                              <input type="text" class="form-control" id="view_first_name" value="{{ user.first_name }}" disabled>
                           </div>
-                        
-                          <!-- Last Name -->
                           <div class="mb-3">
-                            <label for="last_name" class="form-label">Last Name</label>
-                            <input type="text" class="form-control" id="last_name" required>
+                              <label for="view_last_name" class="form-label">Last Name</label>
+                              <input type="text" class="form-control" id="view_last_name" value="{{ user.last_name }}" disabled>
                           </div>
-                        
-                          <!-- Email -->
                           <div class="mb-3">
-                            <label for="email" class="form-label">Email</label>
-                            <input type="email" class="form-control" id="email" required>
+                              <label for="view_email" class="form-label">Email</label>
+                              <input type="email" class="form-control" id="view_email" value="{{ user.email }}" disabled>
                           </div>
-                        
-                          <!-- Phone Number -->
                           <div class="mb-3">
-                            <label for="phone_number" class="form-label">Phone Number</label>
-                            <input type="text" class="form-control" id="phone_number" required
+                              <label for="view_phone_number" class="form-label">Phone Number</label>
+                              <input type="text" class="form-control" id="view_phone_number" value="{{ user.phone_number }}" disabled>
+                          </div>
+                          <div class="mb-3">
+                              <label for="view_access_level" class="form-label">Access Level</label>
+                              <input type="text" class="form-control" id="view_access_level" value="{{ user.access_level }}" disabled>
+                          </div>
+                          <div class="mb-3 form-check">
+                              <input type="checkbox" class="form-check-input" id="view_verified" {% if user.verified %} checked {% endif %} disabled>
+                              <label class="form-check-label" for="view_verified">Verified</label>
+                          </div>
+                      </div>
+                  </div>
+              </div>
+          </div>
+      {% endfor %}
+      <!-- / / -->
+      <!-- Modal (Edit User) (Update)-->
+      {% for user in users %}
+      <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="editUserModalLabel{{ user.id }}">Edit User: {{ user.user_code }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editUserForm{{ user.id }}" method="post">
+                        {% csrf_token %}
+                        <div class="alert alert-danger" id="error-message{{ user.id }}" style="display:none;"></div>
+
+                        <!-- First Name -->
+                        <div class="mb-3">
+                            <label for="edit_first_name{{ user.id }}" class="form-label">First Name</label>
+                            <input type="text" class="form-control" id="edit_first_name{{ user.id }}" value="{{ user.first_name }}" required>
+                        </div>
+
+                        <!-- Last Name -->
+                        <div class="mb-3">
+                            <label for="edit_last_name{{ user.id }}" class="form-label">Last Name</label>
+                            <input type="text" class="form-control" id="edit_last_name{{ user.id }}" value="{{ user.last_name }}" required>
+                        </div>
+
+                        <!-- Email -->
+                        <div class="mb-3">
+                            <label for="edit_email{{ user.id }}" class="form-label">Email</label>
+                            <input type="email" class="form-control" id="edit_email{{ user.id }}" value="{{ user.email }}" required>
+                        </div>
+
+                        <!-- Phone Number -->
+                        <div class="mb-3">
+                            <label for="edit_phone_number{{ user.id }}" class="form-label">Phone Number</label>
+                            <input type="text" class="form-control" id="edit_phone_number{{ user.id }}" value="{{ user.phone_number }}" required
                                   pattern="^(09|\+639)\d{9}$"
                                   title="Phone number must start with 09 or +639 and be 11 digits long">
                             <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
-                          </div>
-                        
-                          <!-- Access Level -->
-                          <div class="mb-3">
-                            <label for="access_level" class="form-label">Access Level</label>
-                            <select class="form-select" id="access_level" required>
-                              <option value="Admin">Admin</option>
-                              <option value="Bus Manager">Bus Manager</option>
-                            </select>
-                          </div>
-                        
-                          <!-- Verified Checkbox (true/false) -->
-                          <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="verified">
-                            <label class="form-check-label" for="verified">Verified</label>
-                          </div>
-                        
-                          <!-- Password -->
-                          <div class="mb-3">
-                            <label for="password" class="form-label">Temporary Password</label>
-                            <input type="password" class="form-control" id="password" value="Temppass123"required>
-                            <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
-                          </div>
-                        
-                          <button type="submit" class="btn btn-primary">Add User</button>
-                        </form>
-                        
-                      
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <!-- / / -->
-                <!-- Modal (View User) (Read) -->
-                {% for user in users %}
-                    <div class="modal fade" id="viewUserModal{{ user.id }}" tabindex="-1" aria-labelledby="viewUserModalLabel{{ user.id }}" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="viewUserModalLabel{{ user.id }}">User Info: {{ user.first_name }} {{ user.last_name }}</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <!-- User Information Display -->
-                                    <div class="mb-3">
-                                        <label for="view_first_name" class="form-label">First Name</label>
-                                        <input type="text" class="form-control" id="view_first_name" value="{{ user.first_name }}" disabled>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="view_last_name" class="form-label">Last Name</label>
-                                        <input type="text" class="form-control" id="view_last_name" value="{{ user.last_name }}" disabled>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="view_email" class="form-label">Email</label>
-                                        <input type="email" class="form-control" id="view_email" value="{{ user.email }}" disabled>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="view_phone_number" class="form-label">Phone Number</label>
-                                        <input type="text" class="form-control" id="view_phone_number" value="{{ user.phone_number }}" disabled>
-                                    </div>
-                                    <div class="mb-3">
-                                        <label for="view_access_level" class="form-label">Access Level</label>
-                                        <input type="text" class="form-control" id="view_access_level" value="{{ user.access_level }}" disabled>
-                                    </div>
-                                    <div class="mb-3 form-check">
-                                        <input type="checkbox" class="form-check-input" id="view_verified" {% if user.verified %} checked {% endif %} disabled>
-                                        <label class="form-check-label" for="view_verified">Verified</label>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
-                    </div>
-                {% endfor %}
-                <!-- / / -->
-                <!-- Modal (Edit User) (Update)-->
-                {% for user in users %}
-                <div class="modal fade" id="editUserModal{{ user.id }}" tabindex="-1" aria-labelledby="editUserModalLabel{{ user.id }}" aria-hidden="true">
-                  <div class="modal-dialog">
-                      <div class="modal-content">
-                          <div class="modal-header">
-                              <h5 class="modal-title" id="editUserModalLabel{{ user.id }}">Edit User: {{ user.user_code }}</h5>
-                              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                          </div>
-                          <div class="modal-body">
-                              <form id="editUserForm{{ user.id }}" method="post">
-                                  {% csrf_token %}
-                                  <div class="alert alert-danger" id="error-message{{ user.id }}" style="display:none;"></div>
 
-                                  <!-- First Name -->
-                                  <div class="mb-3">
-                                      <label for="edit_first_name{{ user.id }}" class="form-label">First Name</label>
-                                      <input type="text" class="form-control" id="edit_first_name{{ user.id }}" value="{{ user.first_name }}" required>
-                                  </div>
+                        <!-- Access Level -->
+                        <div class="mb-3">
+                            <label for="edit_access_level{{ user.id }}" class="form-label">Access Level</label>
+                            <select class="form-select" id="edit_access_level{{ user.id }}" required>
+                                <option value="Admin" {% if user.access_level == 'Admin' %} selected {% endif %}>Admin</option>
+                                <option value="Bus Manager" {% if user.access_level == 'Bus Manager' %} selected {% endif %}>Bus Manager</option>
+                            </select>
+                        </div>
 
-                                  <!-- Last Name -->
-                                  <div class="mb-3">
-                                      <label for="edit_last_name{{ user.id }}" class="form-label">Last Name</label>
-                                      <input type="text" class="form-control" id="edit_last_name{{ user.id }}" value="{{ user.last_name }}" required>
-                                  </div>
+                        <!-- Verified Checkbox (true/false) -->
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" class="form-check-input" id="edit_verified{{ user.id }}" {% if user.verified %} checked {% endif %}>
+                            <label class="form-check-label" for="edit_verified{{ user.id }}">Verified</label>
+                        </div>
 
-                                  <!-- Email -->
-                                  <div class="mb-3">
-                                      <label for="edit_email{{ user.id }}" class="form-label">Email</label>
-                                      <input type="email" class="form-control" id="edit_email{{ user.id }}" value="{{ user.email }}" required>
-                                  </div>
+                        <!-- Change Password -->
+                        <div class="mb-3">
+                            <label for="edit_password{{ user.id }}" class="form-label">Change Password</label>
+                            <input type="password" class="form-control" id="edit_password{{ user.id }}">
+                            <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
+                        </div>
 
-                                  <!-- Phone Number -->
-                                  <div class="mb-3">
-                                      <label for="edit_phone_number{{ user.id }}" class="form-label">Phone Number</label>
-                                      <input type="text" class="form-control" id="edit_phone_number{{ user.id }}" value="{{ user.phone_number }}" required
-                                            pattern="^(09|\+639)\d{9}$"
-                                            title="Phone number must start with 09 or +639 and be 11 digits long">
-                                      <small class="form-text text-muted">Format: 09123456789 or +639123456789</small>
-                                  </div>
-
-                                  <!-- Access Level -->
-                                  <div class="mb-3">
-                                      <label for="edit_access_level{{ user.id }}" class="form-label">Access Level</label>
-                                      <select class="form-select" id="edit_access_level{{ user.id }}" required>
-                                          <option value="Admin" {% if user.access_level == 'Admin' %} selected {% endif %}>Admin</option>
-                                          <option value="Bus Manager" {% if user.access_level == 'Bus Manager' %} selected {% endif %}>Bus Manager</option>
-                                      </select>
-                                  </div>
-
-                                  <!-- Verified Checkbox (true/false) -->
-                                  <div class="mb-3 form-check">
-                                      <input type="checkbox" class="form-check-input" id="edit_verified{{ user.id }}" {% if user.verified %} checked {% endif %}>
-                                      <label class="form-check-label" for="edit_verified{{ user.id }}">Verified</label>
-                                  </div>
-
-                                  <!-- Change Password -->
-                                  <div class="mb-3">
-                                      <label for="edit_password{{ user.id }}" class="form-label">Change Password</label>
-                                      <input type="password" class="form-control" id="edit_password{{ user.id }}">
-                                      <small class="form-text text-muted">This is the password for the user to log in with initially.</small>
-                                  </div>
-
-                                  <input type="hidden" id="edit_user_code{{ user.id }}" value="{{ user.user_code }}">
+                        <input type="hidden" id="edit_user_code{{ user.id }}" value="{{ user.user_code }}">
 
 
 
-                                  <button type="submit" class="btn btn-primary">Save Changes</button>
-                              </form>
-                          </div>
-                      </div>
-                  </div>
+                        <button type="submit" class="btn btn-primary">Save Changes</button>
+                    </form>
                 </div>
-                {% endfor %}
-                <!-- / / -->
-                <!-- Delete User Modal -->
-                {% for user in users %}
-                <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
-                  <div class="modal-dialog modal-dialog-centered">
-                    <div class="modal-content">
-                      <div class="modal-header bg-danger text-white">
-                        <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Delete User</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                      </div>
-                      <div class="modal-body">
-                        Are you sure you want to delete user <strong>{{ user.first_name }} {{ user.last_name }}</strong>?
-                      </div>
-                      <div class="modal-footer">
-                        <input type="hidden" id="delete_user_code{{ user.id }}" value="{{ user.user_code }}">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                        <button type="button" class="btn btn-danger delete-user-btn" data-user-id="{{ user.id }}">Delete</button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                {% endfor %}
-                <!-- / / -->
-
-                <!-- / / -->
-              <div class="content-backdrop fade"></div>
             </div>
-            
-            
-
-            <!-- Content wrapper -->
-            <!-- --------------------- -->
-
-          </div>
-          <!-- / Layout page -->
         </div>
-  
-        <!-- Overlay -->
-        <div class="layout-overlay layout-menu-toggle"></div>
-  
-        <!-- Drag Target Area To SlideIn Menu On Small Screens -->
-        <div class="drag-target"></div>
       </div>
-      <!-- / Layout wrapper -->
+      {% endfor %}
+      <!-- / / -->
+      <!-- Delete User Modal -->
+      {% for user in users %}
+      <div class="modal fade" id="deleteUserModal{{ user.id }}" tabindex="-1" aria-labelledby="deleteUserModalLabel{{ user.id }}" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+              <h5 class="modal-title" id="deleteUserModalLabel{{ user.id }}">Delete User</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              Are you sure you want to delete user <strong>{{ user.first_name }} {{ user.last_name }}</strong>?
+            </div>
+            <div class="modal-footer">
+              <input type="hidden" id="delete_user_code{{ user.id }}" value="{{ user.user_code }}">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+              <button type="button" class="btn btn-danger delete-user-btn" data-user-id="{{ user.id }}">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+      <!-- / / -->
 
+      <!-- / / -->
+    <div class="content-backdrop fade"></div>
+  </div>
+  
 
-
-
-
-
-    <!-- Core JS -->
-    <!-- build:js {% static 'assets/vendor/js/core.js' %} -->
-    <script src="{% static 'assets/vendor/libs/jquery/jquery.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/popper/popper.js' %}"></script>
-    <script src="{% static 'assets/vendor/js/bootstrap.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/perfect-scrollbar/perfect-scrollbar.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/node-waves/node-waves.js' %}"></script>
-
-    <script src="{% static 'assets/vendor/libs/hammer/hammer.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/i18n/i18n.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/typeahead-js/typeahead.js' %}"></script>
-
-    <script src="{% static 'assets/vendor/js/menu.js' %}"></script>
-
-    
-
-    <!-- endbuild -->
-
-    <!-- Vendors JS -->
-    <script src="{% static 'assets/js/add_user1.js' %}"></script>
-
-
-    <script src="{% static 'assets/vendor/libs/apex-charts/apexcharts.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables/jquery.dataTables.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-bs5/datatables-bootstrap5.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-responsive/datatables.responsive.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-responsive-bs5/responsive.bootstrap5.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-buttons/datatables-buttons.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-buttons-bs5/buttons.bootstrap5.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-buttons/buttons.html5.js' %}"></script>
-    <script src="{% static 'assets/vendor/libs/datatables-buttons/buttons.print.js' %}"></script>
-
-
-    
-
-    <!-- Main JS -->
-    <script src="{% static 'assets/js/main.js' %}"></script>
-
-    <!-- Page JS -->
-    
-    <script src="{% static 'assets/js/dashboards-ecommerce.js' %}"></script>
-
-    
-
-
-  </body>
-</html>
+  <!-- Content wrapper -->
+{% endblock %}

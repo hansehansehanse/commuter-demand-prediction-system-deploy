@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'CommuterDemandPredictionSystem',
-    'axes',
     'hms',
 ]
 
@@ -54,7 +53,6 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'axes.middleware.AxesMiddleware',
 ]
 
 ROOT_URLCONF = 'spProject.urls'
@@ -143,15 +141,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
 AUTHENTICATION_BACKENDS = (
-    'axes.backends.AxesStandaloneBackend',          # Axes first!
     'django.contrib.auth.backends.ModelBackend',    # Then Django's default
 )
 
 
-
-# django-axes settings
-AXES_FAILURE_LIMIT = 5  # Allow up to 5 failed login attempts
-AXES_COOLOFF_TIME = 1  # Cool-off period in hours
-AXES_LOCK_OUT_AT_FAILURE = False  # Lock account after max failures
-
-AXES_USE_IP = True  # Optional: Track login attempts by IP address

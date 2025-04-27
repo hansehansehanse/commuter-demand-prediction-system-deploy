@@ -40,3 +40,23 @@ class CustomUser(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.user_code})"
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from django.db import models
+import uuid
+
+class ActionLog(models.Model):
+    user_code = models.ForeignKey('CustomUser', on_delete=models.CASCADE, to_field='user_code')
+    action = models.CharField(max_length=255)  # Short action type (example: "Create User")
+    details = models.TextField(blank=True)     # Longer optional details
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.action} by {self.user_code} on {self.timestamp}"
+
+    class Meta:
+        ordering = ['-timestamp']
+

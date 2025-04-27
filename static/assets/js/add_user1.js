@@ -9,7 +9,63 @@ function getCSRFToken() {
 }
 //-------------------------------------------------------------------------
 
-// static/assets/js/add_user1.js
+// document.addEventListener("DOMContentLoaded", function () {
+//     // Grab the form by its ID
+//     const form = document.getElementById("addUserForm");
+
+//     if (!form) return;
+//     console.log("i see form");
+
+//     form.addEventListener("submit", function (e) {
+//         e.preventDefault();  // stop the normal POST
+
+//         // Collect all inputs by their IDs
+//         const data = {
+//             first_name: document.getElementById("first_name").value,
+//             last_name: document.getElementById("last_name").value,
+//             email: document.getElementById("email").value,
+//             phone_number: document.getElementById("phone_number").value,
+//             access_level: document.getElementById("access_level").value,
+//             verified: document.getElementById("verified").checked,  // fix: use .checked for checkbox
+//             password: document.getElementById("password").value,
+//         };
+
+//         console.log("🔘 Submit button clicked");
+//         console.log("📦 User data:", data);
+
+//         // Send it to Django using fetch
+//         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+//         fetch("/cdps/admin/accountManagement/add-user/", {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 "X-CSRFToken": csrfToken,
+//             },
+//             body: JSON.stringify(data)
+//         })
+//         .then(response => response.json()) // Parse the JSON response
+//         .then(result => {
+//             console.log("✅ Success:", result);
+            
+//             if (result.status === 'error') {
+//                 // If there's an error, show the error message from the server
+//                 alert(result.message || "An unknown error occurred. Please try again.");
+//             } else {
+//                 // If success, reload the page
+//                 alert("User added successfully!");
+//                 window.location.reload();
+//             }
+//         })
+//         .catch(error => {
+//             // Prevent generic error alert by handling errors here
+//             console.error("❌ Error:", error);
+//             // Optionally, you can log the error here without showing an alert
+//             // alert("An unexpected error occurred.");
+//         });
+//     });
+// });
+
 document.addEventListener("DOMContentLoaded", function () {
     // Grab the form by its ID
     const form = document.getElementById("addUserForm");
@@ -34,8 +90,6 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("🔘 Submit button clicked");
         console.log("📦 User data:", data);
 
-
-
         // Send it to Django using fetch
         const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
@@ -47,21 +101,30 @@ document.addEventListener("DOMContentLoaded", function () {
             },
             body: JSON.stringify(data)
         })
-        .then(response => {
-            if (!response.ok) throw new Error("Network response was not ok");
-            return response.json();
-        })
+        .then(response => response.json()) // Parse the JSON response
         .then(result => {
             console.log("✅ Success:", result);
-            // alert(result.message || "User added!");
-            window.location.reload();
+            
+            if (result.status === 'error') {
+                // If there's an error, show the error message from the server in the modal
+                const errorMessage = document.getElementById("error-message");
+                errorMessage.style.display = 'block'; // Make the error message visible
+                errorMessage.textContent = result.message || "An unknown error occurred. Please try again.";
+            } else {
+                // If success, reload the page or reset the form
+                alert("User added successfully!");
+                window.location.reload();
+            }
         })
         .catch(error => {
+            // Prevent generic error alert by handling errors here
             console.error("❌ Error:", error);
-            alert("Something went wrong. See console for details.");
+            // Optionally, you can log the error here without showing an alert
+            // alert("An unexpected error occurred.");
         });
     });
 });
+
 
 //-------------------------------------------------------------------------
 document.querySelectorAll("form[id^='editUserForm']").forEach((form) => {

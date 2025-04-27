@@ -1,3 +1,4 @@
+
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
@@ -11,6 +12,9 @@ import uuid
 
 import logging
 
+from .models import ActionLog  # Assuming log_action uses the ActionLog model.
+
+
 emp_sidebar_items = [
     {'url':'hris_emp_dashboard', 'icon_class':'ti-smart-home', 'name':'Dashboard'},
     {'url':'hris_emp_records', 'icon_class':'ti-file', 'name':'Records'},
@@ -20,15 +24,15 @@ emp_sidebar_items = [
 
 
 #-------------------------------------------------------------------------
-def cdps_admin_dashboard(request):
-    # context = {'sidebar_items':emp_sidebar_items}
-    context = {}
-    return render(request, 'admin/dashboard.html', context)
+# def cdps_admin_dashboard(request):
+#     # context = {'sidebar_items':emp_sidebar_items}
+#     context = {}
+#     return render(request, 'admin/dashboard.html', context)
 
-def cdps_admin_dashboard2(request):
-    # context = {'sidebar_items':emp_sidebar_items}
-    context = {}
-    return render(request, 'admin/dashboard2.html', context)
+# def cdps_admin_dashboard2(request):
+#     # context = {'sidebar_items':emp_sidebar_items}
+#     context = {}
+#     return render(request, 'admin/dashboard2.html', context)
 
 #-------------------------------------------------------------------------
 #admin
@@ -37,50 +41,14 @@ def cdps_admin_accountManagement(request):
     context = {}
     return render(request, 'admin/accountManagement.html', context)
 
+def cdps_admin_actionLog(request):
+    # context = {'sidebar_items':emp_sidebar_items}
+    context = {}
+    return render(request, 'admin/actionLog.html', context)
+
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-# from django.contrib.auth import get_user_model, login
-# from django.contrib.auth.hashers import check_password
-# from django.shortcuts import render, redirect
-# from django.urls import reverse
-
-# User = get_user_model()
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-
-#         # print("📨 Email entered:", email)
-#         # print("🔐 Password entered:", password)
-
-#         try:
-#             user = User.objects.get(email=email)
-#             print("👤 Match found in DB:", user)
-
-#             if check_password(password, user.password):
-#                 print("✅ Password matches!")
-#                 print("🔎 Access level from DB:", user.access_level)
-
-#                 login(request, user)
-
-#                 if user.access_level == 'Admin':
-#                     return redirect(reverse('account_management'))                  # !!!Update 
-#                 elif user.access_level == 'Bus Manager':
-#                     return redirect('cdps_admin_dashboard')                         # !!!Update
-#                 else:
-#                     print("❓ Unknown access level")
-#                     return render(request, 'login.html', {'error': 'Access level not recognized'})
-#             else:
-#                 print("❌ Password does not match.")
-#                 return render(request, 'login.html', {'error': 'Invalid password'})
-#         except User.DoesNotExist:
-#             print("❌ No user found with that email.")
-#             return render(request, 'login.html', {'error': 'Invalid email'})
-
-#     return render(request, 'login.html')
 
 from django.contrib.auth import login
 from django.contrib.auth.hashers import check_password
@@ -88,6 +56,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import get_backends
 from django.contrib.auth import get_user_model
+import datetime
 
 User = get_user_model()
 
@@ -102,16 +71,21 @@ def login_view(request):
 
             if check_password(password, user.password):
                 print("✅ Password matches!")
-                print("🔎 Access level from DB:", user.access_level)
+                print("🔎 Access level from DB:", user.access_level)              
+
 
                 # Explicitly specify the backend to avoid ValueError
                 backend = get_backends()[0]
                 login(request, user, backend=backend.__class__.__module__ + "." + backend.__class__.__name__)
 
                 if user.access_level == 'Admin':
+                    log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
                     return redirect(reverse('account_management'))
+                
                 elif user.access_level == 'Bus Manager':
-                    return redirect('cdps_admin_dashboard')
+                    log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
+                    return redirect('cdps_admin_dashboard')                             # update!!!
+                
                 else:
                     print("❓ Unknown access level")
                     return render(request, 'login.html', {'error': 'Access level not recognized'})
@@ -124,48 +98,10 @@ def login_view(request):
 
     return render(request, 'login.html')
 
-
-
 #--
 
 
 #--
-# from django.core.validators import validate_email
-# from django.core.exceptions import ValidationError
-# from django.contrib.auth import authenticate, login
-
-
-# def login_view(request):
-#     if request.method == 'POST':
-#         email = request.POST.get('email')
-#         password = request.POST.get('password')
-
-#         # Validate email format
-#         try:
-#             validate_email(email)  # Validates the email format
-#         except ValidationError:
-#             return render(request, 'login.html', {'error': 'Invalid email format'})
-
-#         # Authenticate user
-#         user = authenticate(request, username=email, password=password)
-
-#         if user is not None:
-#             login(request, user)
-#             print(f"👤 Match found in DB: {user} ({user.user_code})")
-#             print("✅ Password matches!")
-
-#             if user.access_level == 'Admin':
-#                 return redirect(reverse('account_management'))
-#             elif user.access_level == 'Bus Manager':
-#                 return redirect(reverse('bus_manager_dashboard'))
-#             else:
-#                 print("❓ Unknown access level")
-#                 return render(request, 'login.html', {'error': 'Access level not recognized'})
-#         else:
-#             print("❌ No match or incorrect password")
-#             return render(request, 'login.html', {'error': 'Invalid email or password'})
-
-#     return render(request, 'login.html')
 
 
 #-------------------------------------------------------------------------
@@ -180,32 +116,49 @@ def user_list(request):
     return render(request, 'admin/accountManagement.html', {'users': users})
 
 #-------------------------------------------------------------------------
-# from django.shortcuts import render
-# from django.http import JsonResponse
-# from .models import CustomUser
-# from django.contrib.auth.hashers import make_password  # To hash password before saving
-
-# import json
-# import uuid
+from django.contrib.auth import get_user_model
+import json
+import uuid
+import logging
+from django.http import JsonResponse
 
 logger = logging.getLogger(__name__)
+
+# Get the user model dynamically
+User = get_user_model()
 
 def add_user(request):
     if request.method == 'POST':
         try:
-            data = json.loads(request.body)
-            print("📩 Received data:", data)  # ADD THIS TO DEBUG
+            data = json.loads(request.body)  # Parse the JSON body
+            print("📩 Received data:", data)  # Log the received data
 
-            user = CustomUser.objects.create_user(
+            email = data.get('email', '').strip().lower()  # Normalize the email
+            print("Normalized email:", email)
+
+            # Check if email already exists using the dynamic user model
+            if User.objects.filter(email=email).exists():
+                print("Email already in use!")
+                return JsonResponse({'status': 'error', 'message': 'Email is already in use.'}, status=400)
+
+            # If no error, create the user
+            user = User.objects.create_user(
                 username=str(uuid.uuid4()),
                 first_name=data.get('first_name', ''),
                 last_name=data.get('last_name', ''),
-                email=data.get('email', ''),
+                email=email,  # Use the normalized email
                 phone_number=data.get('phone_number', ''),
                 access_level=data.get('access_level', 'Bus Manager'),
                 verified=data.get('verified', False),
                 password=data.get('password', 'temporary123'),
             )
+
+
+            # log_action(user, 'Add User', f"User {user.first_name} {user.last_name} was added.")
+            # Pass request.user to log_action
+            log_action(request, 'Add User', f"User {user.first_name} {user.last_name} account added.")
+
+            # log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
 
             return JsonResponse({'status': 'success'}, status=201)
 
@@ -213,10 +166,7 @@ def add_user(request):
             print("❌ Exception:", e)
             logger.error(f"Error adding user: {str(e)}")
             return JsonResponse({'status': 'error', 'message': 'Error occurred while adding user.'}, status=500)
-        
 
-        
-        
 
 #-------------------------------------------------------------------------
 # from django.http import JsonResponse
@@ -233,6 +183,7 @@ def edit_user(request):
             user_code = data.get("user_code")
             user = CustomUser.objects.get(user_code=user_code)
 
+            log_action(request, 'Edit User', f"User {user.first_name} {user.last_name} information adjusted.")
             # Update fields
             user.first_name = data["first_name"]
             user.last_name = data["last_name"]
@@ -244,6 +195,7 @@ def edit_user(request):
             if data["password"]:  # Only update if password is provided
                 user.password = make_password(data["password"])
 
+           
             user.save()
             return JsonResponse({"message": "User updated successfully."})
         except CustomUser.DoesNotExist:
@@ -262,12 +214,67 @@ def delete_user(request):
         data = json.loads(request.body)
         user_code = data.get("user_code")
         user = CustomUser.objects.get(user_code=user_code)
+        log_action(request, 'Delete User', f"User {user.first_name} {user.last_name} account deleted.")
         user.delete()
         return JsonResponse({"message": "User deleted successfully."})
     except CustomUser.DoesNotExist:
         return JsonResponse({"error": "User not found."}, status=404)
     except Exception as e:
         return JsonResponse({"error": str(e)}, status=400)
+
+#-------------------------------------------------------------------------
+
+from .models import ActionLog
+
+
+
+
+User = get_user_model()
+
+# def log_action(request, action_type, details=""):
+#     # Access the currently logged-in user
+#     user = request.user
+#     if user.is_authenticated:
+#         action_log = ActionLog(
+#             user_code=user,
+#             action=action_type,
+#             details=details
+#         )
+#         action_log.save()
+#     else:
+#         print("No user is logged in!")
+
+def log_action(request, action_type, details=""):
+    # Access the currently logged-in user
+    user = request.user  # This is the correct way to access the logged-in user
+    if user.is_authenticated:  # Now check on user, not request
+        action_log = ActionLog(
+            user_code=user,
+            action=action_type,
+            details=details
+        )
+        action_log.save()
+    else:
+        print("No user is logged in!")
+
+
+
+
+from django.shortcuts import render
+from .models import ActionLog
+
+def action_log_list(request):
+    print("✅ action_log_list being called")
+    
+    # Fetch all action logs from the database
+    actions = ActionLog.objects.all().order_by('-timestamp')  # Optionally order by timestamp (most recent first)
+    
+    print(f"🧾 Action Logs in DB: {actions}")
+    
+    # Render the action logs in the template
+    return render(request, 'admin/actionLog.html', {'actions': actions})
+
+
 
 #-------------------------------------------------------------------------
 
