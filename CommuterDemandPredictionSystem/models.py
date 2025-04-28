@@ -60,3 +60,27 @@ class ActionLog(models.Model):
     class Meta:
         ordering = ['-timestamp']
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from django.db import models
+import uuid
+
+class Dataset(models.Model):
+    dataset_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+
+    user_code = models.ForeignKey('CustomUser', on_delete=models.CASCADE, to_field='user_code')
+    filename = models.CharField(max_length=255)
+
+    date = models.DateField()
+    route = models.CharField(max_length=255)
+    time = models.TimeField()
+    num_commuters = models.IntegerField()
+
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Dataset {self.dataset_code} for route {self.route} on {self.date}"
+
+    class Meta:
+        ordering = ['-timestamp']

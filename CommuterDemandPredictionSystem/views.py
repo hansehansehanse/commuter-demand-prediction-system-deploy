@@ -226,23 +226,7 @@ def delete_user(request):
 
 from .models import ActionLog
 
-
-
-
 User = get_user_model()
-
-# def log_action(request, action_type, details=""):
-#     # Access the currently logged-in user
-#     user = request.user
-#     if user.is_authenticated:
-#         action_log = ActionLog(
-#             user_code=user,
-#             action=action_type,
-#             details=details
-#         )
-#         action_log.save()
-#     else:
-#         print("No user is logged in!")
 
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
@@ -256,7 +240,6 @@ def log_action(request, action_type, details=""):
         action_log.save()
     else:
         print("No user is logged in!")
-
 
 
 
@@ -277,6 +260,133 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
+# from django.contrib.auth import get_user_model
+# from .models import Dataset
+# import pandas as pd
+# from datetime import datetime
+
+# User = get_user_model()
+
+# def dataset_upload_list(request):
+#     if request.method == 'POST':
+#         dataset_file = request.FILES.get('dataset_file')
+#         if dataset_file:
+#             # Read the dataset using pandas
+#             file_extension = dataset_file.name.split('.')[-1]
+#             if file_extension == 'xlsx':
+#                 df = pd.read_excel(dataset_file)
+#             elif file_extension == 'csv':
+#                 df = pd.read_csv(dataset_file)
+
+#             # Print the first few rows to see the format
+#             print(df.head())
+
+#             # Get the user_code from the logged-in user
+#             user = request.user
+#             print(f"User Code: {user.user_code}")  # Print user code for debugging
+
+#             # Loop through the dataframe and save each row to the model
+#             for _, row in df.iterrows():
+#                 # Convert the date to the correct format
+#                 try:
+#                     date = pd.to_datetime(row['Date']).date()  # Extract just the date part
+#                 except Exception as e:
+#                     print(f"Error parsing date: {e}")
+#                     continue  # Skip this row if there's a problem with the date
+
+#                 route = row['Route']
+                
+#                 # Convert the time to 24-hour format
+#                 try:
+#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+#                 except ValueError as e:
+#                     print(f"Error parsing time: {e}")
+#                     continue  # Skip this row if there's a problem with the time
+
+#                 num_commuters = row['Commuters']
+
+#                 # Print data before saving it
+#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
+
+#                 # Create a new Dataset instance and save it
+#                 Dataset.objects.create(
+#                     date=date,
+#                     route=route,
+#                     time=time,
+#                     num_commuters=num_commuters,
+#                     user_code=user,  # Pass the user instance here
+#                 )
+
+#             return redirect('dataset_upload_list')  # Redirect back to the page after uploading
+
+#     return render(request, 'admin/datasetUpload.html')
+
+from django.contrib.auth import get_user_model
+from .models import Dataset
+import pandas as pd
+from datetime import datetime
+from django.shortcuts import render, redirect
+
+User = get_user_model()
+
+def dataset_upload_list(request):
+    if request.method == 'POST':
+        dataset_file = request.FILES.get('dataset_file')
+        if dataset_file:
+            # Read the dataset using pandas
+            file_extension = dataset_file.name.split('.')[-1]
+            if file_extension == 'xlsx':
+                df = pd.read_excel(dataset_file)
+            elif file_extension == 'csv':
+                df = pd.read_csv(dataset_file)
+
+            # Print the first few rows to see the format
+            print(df.head())
+
+            # Get the user_code from the logged-in user
+            user = request.user
+            print(f"User Code: {user.user_code}")  # Print user code for debugging
+
+            # Loop through the dataframe and save each row to the model
+            for _, row in df.iterrows():
+                # Convert the date to the correct format
+                try:
+                    date = pd.to_datetime(row['Date']).date()  # Extract just the date part
+                except Exception as e:
+                    print(f"Error parsing date: {e}")
+                    continue  # Skip this row if there's a problem with the date
+
+                route = row['Route']
+                
+                # Convert the time to 24-hour format
+                try:
+                    time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+                except ValueError as e:
+                    print(f"Error parsing time: {e}")
+                    continue  # Skip this row if there's a problem with the time
+
+                num_commuters = row['Commuters']
+
+                # Print data before saving it
+                print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
+
+                # Create a new Dataset instance and save it
+                Dataset.objects.create(
+                    date=date,
+                    route=route,
+                    time=time,
+                    num_commuters=num_commuters,
+                    user_code=user,  # Pass the user instance here
+                )
+
+            return redirect('dataset_upload_list')  # Redirect back to the page after uploading
+
+    # Fetch all dataset entries from the database
+    datasets = Dataset.objects.all()
+
+    # Pass the datasets to the template
+    return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+
 
 #-------------------------------------------------------------------------
 

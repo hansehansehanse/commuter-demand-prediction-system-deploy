@@ -22,9 +22,8 @@ urlpatterns = [
     # path('admin/actionLog/', views.cdps_admin_actionLog, name='action_log'),                    # change later
     path('admin/actionLog/', views.action_log_list, name='action_log_list'), 
     
-    # path('action-log/', views.action_log_list, name='action_log_list'),
-
-    # other paths...
+    # path('admin/datasetUpload/', views.dataset_upload_list, name='dataset_upload_list'), 
+    path('admin/datasetUpload/', views.dataset_upload_list, name='dataset_upload_list'),
 
 
    
