@@ -28,28 +28,37 @@
                 <div class="card" style="min-height: 600px;">
                     <div class="table-responsive card-datatable" style="overflow-x: auto;">
                         <table class="table border-top w-100">
-                            <thead>
+                          <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Route</th>
+                                <th>Time</th>
+                                <th>Number of Commuters</th>
+                                <th>Filename</th>
+                                <th>Date Uploaded</th>
+                                <th>Dataset Code</th>
+                                <th>Uploaded By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in datasets %}
                                 <tr>
-                                    <th>Date</th>
-                                    <th>Route</th>
-                                    <th>Time</th>
-                                    <th>Number of Commuters</th>
+                                    <td>{{ data.date }}</td>
+                                    <td>{{ data.route }}</td>
+                                    <td>{{ data.time }}</td>
+                                    <td>{{ data.num_commuters }}</td>
+                                    <td>{{ data.filename }}</td>
+                                    <td>{{ data.date_uploaded|date:"Y-m-d H:i" }}</td> <!-- Format the upload date -->
+                                    <td>{{ data.dataset_code }}</td>
+                                    <td>{{ data.user_code.first_name }} {{ data.user_code.last_name }}</td>
                                 </tr>
-                            </thead>
-                            <tbody>
-                                {% for data in datasets %}
-                                    <tr>
-                                        <td>{{ data.date }}</td> <!-- Assuming your model has 'date' field -->
-                                        <td>{{ data.route }}</td> <!-- Assuming your model has 'route' field -->
-                                        <td>{{ data.time }}</td> <!-- Assuming your model has 'time' field -->
-                                        <td>{{ data.num_commuters }}</td> <!-- Assuming your model has 'num_commuters' field -->
-                                    </tr>
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="4">No data to display.</td>
-                                    </tr>
-                                {% endfor %}
-                            </tbody>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No dataset entries available.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        
                         </table>
                     </div>
                 </div>

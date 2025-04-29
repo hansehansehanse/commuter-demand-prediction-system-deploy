@@ -260,66 +260,6 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
-# from django.contrib.auth import get_user_model
-# from .models import Dataset
-# import pandas as pd
-# from datetime import datetime
-
-# User = get_user_model()
-
-# def dataset_upload_list(request):
-#     if request.method == 'POST':
-#         dataset_file = request.FILES.get('dataset_file')
-#         if dataset_file:
-#             # Read the dataset using pandas
-#             file_extension = dataset_file.name.split('.')[-1]
-#             if file_extension == 'xlsx':
-#                 df = pd.read_excel(dataset_file)
-#             elif file_extension == 'csv':
-#                 df = pd.read_csv(dataset_file)
-
-#             # Print the first few rows to see the format
-#             print(df.head())
-
-#             # Get the user_code from the logged-in user
-#             user = request.user
-#             print(f"User Code: {user.user_code}")  # Print user code for debugging
-
-#             # Loop through the dataframe and save each row to the model
-#             for _, row in df.iterrows():
-#                 # Convert the date to the correct format
-#                 try:
-#                     date = pd.to_datetime(row['Date']).date()  # Extract just the date part
-#                 except Exception as e:
-#                     print(f"Error parsing date: {e}")
-#                     continue  # Skip this row if there's a problem with the date
-
-#                 route = row['Route']
-                
-#                 # Convert the time to 24-hour format
-#                 try:
-#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-#                 except ValueError as e:
-#                     print(f"Error parsing time: {e}")
-#                     continue  # Skip this row if there's a problem with the time
-
-#                 num_commuters = row['Commuters']
-
-#                 # Print data before saving it
-#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
-
-#                 # Create a new Dataset instance and save it
-#                 Dataset.objects.create(
-#                     date=date,
-#                     route=route,
-#                     time=time,
-#                     num_commuters=num_commuters,
-#                     user_code=user,  # Pass the user instance here
-#                 )
-
-#             return redirect('dataset_upload_list')  # Redirect back to the page after uploading
-
-#     return render(request, 'admin/datasetUpload.html')
 
 from django.contrib.auth import get_user_model
 from .models import Dataset
@@ -370,14 +310,15 @@ def dataset_upload_list(request):
                 # Print data before saving it
                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
 
-                # Create a new Dataset instance and save it
                 Dataset.objects.create(
                     date=date,
                     route=route,
                     time=time,
                     num_commuters=num_commuters,
-                    user_code=user,  # Pass the user instance here
+                    user_code=user,  # user who uploaded
+                    filename=dataset_file.name,  # 🆕 Save the filename here
                 )
+
 
             return redirect('dataset_upload_list')  # Redirect back to the page after uploading
 
@@ -389,7 +330,98 @@ def dataset_upload_list(request):
 
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from django.shortcuts import render
+from .models import ImportantEvent, Dataset  # Import your other model
+
+def dataset_temporal_list(request):
+    # Fetch both datasets
+    events = ImportantEvent.objects.all()  # Fetch events data
+    temporal_data = Dataset.objects.all()  # Replace with your actual model for the temporal list
+    
+    return render(request, 'admin/datasetTemporal.html', {
+        'events': events,  # Pass the events dataset
+        'temporal_data': temporal_data,  # Pass the other dataset (replace Dataset with your actual model)
+    })
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+# from django.shortcuts import render
+# from .models import Dataset
+
+# def dataset_temporal_list(request):
+#     # Fetch all dataset entries
+#     datasets = Dataset.objects.all().order_by('-date')  # Order by date, most recent first
+    
+#     # Pass datasets to template
+#     return render(request, 'admin/datasetTemporal.html', {'datasets': datasets})
+
+from .models import ImportantEvent
+
+def dataset_temporal_list(request):
+    # Fetch all events, order by date (most recent first)
+    events = ImportantEvent.objects.all().order_by('-date')
+
+    # Pass events to the template
+    return render(request, 'admin/datasetTemporal.html', {'datasets': events})  # Use 'datasets' in context
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from django.shortcuts import render
+
+from django.http import JsonResponse
+from .models import ImportantEvent
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+import json
+
+# @csrf_exempt  # If you don't want to manually handle CSRF for now (later you can improve this)
+def dataset_addEvent(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            event_name = data.get('event_name')
+            event_type = data.get('event_type')
+            date = data.get('date')
+            
+            # Save to database (assuming you have an ImportantEvent model)
+            ImportantEvent.objects.create(
+                event_name=event_name,
+                event_type=event_type,
+                date=date
+            )
+            
+            return JsonResponse({'status': 'success'})
+        except Exception as e:
+            print(e)
+            return JsonResponse({'status': 'error', 'message': str(e)})
+    else:
+        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+
+
+
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------

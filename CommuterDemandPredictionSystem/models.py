@@ -64,23 +64,55 @@ class ActionLog(models.Model):
 #-------------------------------------------------------------------------
 
 from django.db import models
+from django.contrib.auth import get_user_model
 import uuid
+
+User = get_user_model()
 
 class Dataset(models.Model):
     dataset_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-
-    user_code = models.ForeignKey('CustomUser', on_delete=models.CASCADE, to_field='user_code')
-    filename = models.CharField(max_length=255)
-
     date = models.DateField()
-    route = models.CharField(max_length=255)
+    route = models.CharField(max_length=100)
     time = models.TimeField()
     num_commuters = models.IntegerField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    user_code = models.ForeignKey(User, on_delete=models.CASCADE)
+    filename = models.CharField(max_length=255, blank=True, null=True)
+    date_uploaded = models.DateTimeField(auto_now_add=True)
 
-    timestamp = models.DateTimeField(auto_now_add=True)
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+# models.py
+
+import uuid
+from django.db import models
+
+class ImportantEvent(models.Model):
+    event_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    event_name = models.CharField(max_length=255)
+    event_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('Holiday', 'Holiday'),
+            ('University Event', 'University Event'),
+            ('Local Event', 'Local Event'),
+            ('Others', 'Others')
+        ],
+        default='Others'
+    )
+    date = models.DateField()
+
+    created_at = models.DateTimeField(auto_now_add=True)  # optional but good for tracking
 
     def __str__(self):
-        return f"Dataset {self.dataset_code} for route {self.route} on {self.date}"
+        return f"{self.event_name} ({self.date})"
 
-    class Meta:
-        ordering = ['-timestamp']
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
