@@ -22,10 +22,22 @@ urlpatterns = [
     # path('admin/actionLog/', views.cdps_admin_actionLog, name='action_log'),                    # change later
     path('admin/actionLog/', views.action_log_list, name='action_log_list'), 
     
-    # path('admin/datasetUpload/', views.dataset_upload_list, name='dataset_upload_list'), 
     path('admin/datasetUpload/', views.dataset_upload_list, name='dataset_upload_list'),
 
 
-   
+
+
+
+
+    # path('admin/datasetTemporal/', views.dataset_temporal_list, name='dataset_temporal_list'),
+    path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
+    path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event
+
+
+
+    
+
+
+
     
 ]

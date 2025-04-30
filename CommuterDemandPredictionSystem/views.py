@@ -260,66 +260,6 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
-# from django.contrib.auth import get_user_model
-# from .models import Dataset
-# import pandas as pd
-# from datetime import datetime
-
-# User = get_user_model()
-
-# def dataset_upload_list(request):
-#     if request.method == 'POST':
-#         dataset_file = request.FILES.get('dataset_file')
-#         if dataset_file:
-#             # Read the dataset using pandas
-#             file_extension = dataset_file.name.split('.')[-1]
-#             if file_extension == 'xlsx':
-#                 df = pd.read_excel(dataset_file)
-#             elif file_extension == 'csv':
-#                 df = pd.read_csv(dataset_file)
-
-#             # Print the first few rows to see the format
-#             print(df.head())
-
-#             # Get the user_code from the logged-in user
-#             user = request.user
-#             print(f"User Code: {user.user_code}")  # Print user code for debugging
-
-#             # Loop through the dataframe and save each row to the model
-#             for _, row in df.iterrows():
-#                 # Convert the date to the correct format
-#                 try:
-#                     date = pd.to_datetime(row['Date']).date()  # Extract just the date part
-#                 except Exception as e:
-#                     print(f"Error parsing date: {e}")
-#                     continue  # Skip this row if there's a problem with the date
-
-#                 route = row['Route']
-                
-#                 # Convert the time to 24-hour format
-#                 try:
-#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-#                 except ValueError as e:
-#                     print(f"Error parsing time: {e}")
-#                     continue  # Skip this row if there's a problem with the time
-
-#                 num_commuters = row['Commuters']
-
-#                 # Print data before saving it
-#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
-
-#                 # Create a new Dataset instance and save it
-#                 Dataset.objects.create(
-#                     date=date,
-#                     route=route,
-#                     time=time,
-#                     num_commuters=num_commuters,
-#                     user_code=user,  # Pass the user instance here
-#                 )
-
-#             return redirect('dataset_upload_list')  # Redirect back to the page after uploading
-
-#     return render(request, 'admin/datasetUpload.html')
 
 from django.contrib.auth import get_user_model
 from .models import Dataset
@@ -370,14 +310,15 @@ def dataset_upload_list(request):
                 # Print data before saving it
                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
 
-                # Create a new Dataset instance and save it
                 Dataset.objects.create(
                     date=date,
                     route=route,
                     time=time,
                     num_commuters=num_commuters,
-                    user_code=user,  # Pass the user instance here
+                    user_code=user,  # user who uploaded
+                    filename=dataset_file.name,  # 🆕 Save the filename here
                 )
+
 
             return redirect('dataset_upload_list')  # Redirect back to the page after uploading
 
@@ -389,7 +330,89 @@ def dataset_upload_list(request):
 
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+# views.py
+
+from django.shortcuts import render, redirect
+from .models import TemporalEvent
+
+# # List events
+# def event_list(request):
+#     events = TemporalEvent.objects.all().order_by('date')  # You can modify the order as needed
+#     return render(request, 'admin/datasetTemporal.html', {'events': events})
+
+# @login_required
+def event_list(request):
+    events = TemporalEvent.objects.all().order_by('date')
+    return render(request, 'admin/datasetTemporal.html', {'events': events})
+
+
+# from django.shortcuts import render, redirect
+# from .models import TemporalEvent 
+
+# def add_event(request):
+#     if request.method == 'POST':
+#         # Get data from the form
+
+#         event_name = request.POST.get('event_name')
+#         event_type = request.POST.get('event_type')
+#         date = request.POST.get('date')
+
+#         # Save the event to the database
+#         event = TemporalEvent(
+
+#             event_name=event_name,
+#             event_type=event_type,
+#             date=date
+#         )
+#         event.save()
+
+#         # Redirect after saving
+#         return redirect('event_list')  # Change this to whatever your redirect URL is
+#     return render(request, 'admin/datasetTemporal.html')
+
+from django.shortcuts import render, redirect
+from .models import TemporalEvent
+from django.contrib.auth.decorators import login_required
+
+# @login_required
+def add_event(request):
+    if request.method == 'POST':
+        event_name = request.POST.get('event_name')
+        event_type = request.POST.get('event_type')
+        date = request.POST.get('date')
+
+        event = TemporalEvent(
+            event_name=event_name,
+            event_type=event_type,
+            date=date,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        event.save()
+
+        return redirect('event_list')  # Replace with your actual URL name
+    return render(request, 'admin/datasetTemporal.html')
+
 
 #-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
 
 #-------------------------------------------------------------------------

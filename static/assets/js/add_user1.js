@@ -112,7 +112,7 @@ document.addEventListener("DOMContentLoaded", function () {
                 errorMessage.textContent = result.message || "An unknown error occurred. Please try again.";
             } else {
                 // If success, reload the page or reset the form
-                alert("User added successfully!");
+                // alert("User added successfully!");
                 window.location.reload();
             }
         })
