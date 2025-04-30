@@ -26,11 +26,13 @@ urlpatterns = [
 
 
 
+
+
+
     # path('admin/datasetTemporal/', views.dataset_temporal_list, name='dataset_temporal_list'),
+    path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
+    path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event
 
-
-    path('admin/datasetTemporal/', views.dataset_temporal_list, name='dataset_temporal_list'),
-    path('admin/datasetTemporal/addEvent/', views.dataset_addEvent, name='dataset_addEvent'),
 
 
     

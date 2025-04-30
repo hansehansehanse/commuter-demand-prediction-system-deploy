@@ -1,121 +1,112 @@
 {% extends 'admin_base.html' %}
 
 {% block content %}
-
-
 <div class="container-xxl flex-grow-1 container-p-y">
     <div class="row">
-      <!-- Controls: Add Event, Search -->
-      <div class="col-12 mb-3">
-        <div class="d-flex justify-content-between">
-          <!-- Add Event Button -->
-          <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
-            <i class="ti ti-plus me-2"></i> Add Event
-          </button>
-  
-          <!-- Search Bar -->
-          <div class="d-flex">
-            <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
-          </div>
+        <!-- Controls: Add Event, Search -->
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-between">
+                <!-- Add Event Button -->
+                <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addEventModal">
+                    <i class="ti ti-plus me-2"></i> Add Event
+                </button>
 
+                <!-- Search Bar -->
+                <div class="d-flex">
+                    <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
+                </div>
+            </div>
         </div>
-      </div>
-  
-      <!-- Event Table -->
-      <div class="col-12">
-        <div class="card" style="min-height: 600px;">
-          <div class="table-responsive card-datatable" style="overflow-x: auto;">
-            <table class="table border-top w-100">
-                <thead>
-                    <tr>
-                        <th>ID</th>
-                        <th>Event Code</th>
-                        <th>Event Name</th>
-                        <th>Event Type</th>
-                        <th>Date</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for event in datasets %}  <!-- Use 'datasets' here -->
-                        <tr>
-                            <td>{{ event.id }}</td>
-                            <td>{{ event.event_code }}</td>
-                            <td>{{ event.event_name }}</td>
-                            <td>{{ event.event_type }}</td>
-                            <td>{{ event.date|date:"Y-m-d" }}</td>
-                            <td class="text-nowrap">
-                                <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewEventModal{{ event.id }}">
-                                    <i class="ti ti-eye ti-xs"></i>
-                                </button>
-                                <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">
-                                    <i class="ti ti-pencil ti-xs"></i>
-                                </button>
-                                <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteEventModal{{ event.id }}">
-                                    <i class="ti ti-trash ti-xs"></i>
-                                </button>
-                            </td>
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6">No events found.</td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-                
-            </table>
-            
-          </div>
+
+        <!-- Event Table -->
+        <div class="col-12">
+            <div class="card" style="min-height: 600px;">
+                <div class="table-responsive card-datatable" style="overflow-x: auto;">
+                    <table class="table border-top w-100">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Event Code</th>
+                                <th>Event Name</th>
+                                <th>Event Type</th>
+                                <th>Date</th>
+                                <th>Created By</th>
+                                <th>Updated By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in events %}
+                                <tr>
+                                    <td>{{ event.id }}</td>
+                                    <td>{{ event.event_code }}</td>
+                                    <td>{{ event.event_name }}</td>
+                                    <td>{{ event.event_type }}</td>
+                                    <td>{{ event.date|date:"Y-m-d" }}</td>
+                                    <td>{{ event.user_code.first_name }} {{ event.user_code.last_name }}</td>
+                                    <td>{{ event.user_code.first_name }} {{ event.user_code.last_name }}</td>
+                                    <td class="text-nowrap">
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewEventModal{{ event.id }}">
+                                            <i class="ti ti-eye ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">
+                                            <i class="ti ti-pencil ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteEventModal{{ event.id }}">
+                                            <i class="ti ti-trash ti-xs"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8">No events found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                        
+                    </table>
+                </div>
+            </div>
         </div>
-      </div>
     </div>
+</div>
 
-<!-- Modal (Add Event) -->
+<!-- Add Event Modal -->
 <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title" id="addEventModalLabel">Add Event</h5>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addEventModalLabel">Add Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- The form should go here -->
+                <form method="POST" action="{% url 'add_event' %}">
+                    {% csrf_token %}
+
+                    <div class="mb-3">
+                        <label for="event_name" class="form-label">Event Name</label>
+                        <input type="text" class="form-control" id="event_name" name="event_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="event_type" class="form-label">Event Type</label>
+                        <select class="form-select" id="event_type" name="event_type" required>
+                            <option value="holiday">Holiday</option>
+                            <option value="university_event">University Event</option>
+                            <option value="local_event">Local Event</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="date" class="form-label">Event Date</label>
+                        <input type="date" class="form-control" id="date" name="date" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Save Event</button>
+                </form>
+            </div>
         </div>
-        <div class="modal-body">
-            <form id="addEventForm">
-                {% csrf_token %}
-                <!-- Event Name -->
-                <div class="mb-3">
-                    <label for="event_name" class="form-label">Event Name</label>
-                    <input type="text" class="form-control" id="event_name" required>
-                </div>
-            
-                <!-- Event Type -->
-                <div class="mb-3">
-                    <label for="event_type" class="form-label">Event Type</label>
-                    <select class="form-select" id="event_type" required>
-                        <option value="Holiday">Holiday</option>
-                        <option value="University Event">University Event</option>
-                        <option value="Local Event">Local Event</option>
-                        <option value="Others">Others</option>
-                    </select>
-                </div>
-            
-                <!-- Date -->
-                <div class="mb-3">
-                    <label for="date" class="form-label">Date</label>
-                    <input type="date" class="form-control" id="date" required>
-                </div>
-            
-                <button type="submit" class="btn btn-primary">Add Event</button>
-            </form>
-            
-        </div>
-      </div>
     </div>
-  </div>
-  
-  
+</div>
 
-  </div>
-
-<!-- {% load static %}
-<script src="{% static 'assets/js/sp_addEvent1.js' %}"></script> -->
 {% endblock %}

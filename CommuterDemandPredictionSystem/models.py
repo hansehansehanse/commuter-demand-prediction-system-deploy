@@ -82,36 +82,49 @@ class Dataset(models.Model):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 # models.py
 
-import uuid
-from django.db import models
+# User = get_user_model()
 
-class ImportantEvent(models.Model):
-    event_code = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+# class TemporalEvent(models.Model):
+#     EVENT_TYPE_CHOICES = [
+#         ('holiday', 'Holiday'),
+#         ('university_event', 'University Event'),
+#         ('local_event', 'Local Event'),
+#         ('others', 'Others'),
+#     ]
+    
+#     event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+#     event_name = models.CharField(max_length=255)
+#     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+#     date = models.DateField()
+
+from django.contrib.auth import get_user_model
+User = get_user_model()
+
+class TemporalEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('local_holiday', 'Local Holiday'),
+        ('university_event', 'University Event'),
+        ('local_event', 'Local Event'),
+        ('others', 'Others'),
+    ]
+
+    event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
     event_name = models.CharField(max_length=255)
-    event_type = models.CharField(
-        max_length=50,
-        choices=[
-            ('Holiday', 'Holiday'),
-            ('University Event', 'University Event'),
-            ('Local Event', 'Local Event'),
-            ('Others', 'Others')
-        ],
-        default='Others'
-    )
-    date = models.DateField()
-
-    created_at = models.DateTimeField(auto_now_add=True)  # optional but good for tracking
-
-    def __str__(self):
-        return f"{self.event_name} ({self.date})"
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    date = models.DateField(null=True, blank=True)
 
 
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events_created')
+    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events_updated')
 
-
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
 
 #-------------------------------------------------------------------------

@@ -333,77 +333,68 @@ def dataset_upload_list(request):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-from django.shortcuts import render
-from .models import ImportantEvent, Dataset  # Import your other model
+# views.py
 
-def dataset_temporal_list(request):
-    # Fetch both datasets
-    events = ImportantEvent.objects.all()  # Fetch events data
-    temporal_data = Dataset.objects.all()  # Replace with your actual model for the temporal list
-    
-    return render(request, 'admin/datasetTemporal.html', {
-        'events': events,  # Pass the events dataset
-        'temporal_data': temporal_data,  # Pass the other dataset (replace Dataset with your actual model)
-    })
+from django.shortcuts import render, redirect
+from .models import TemporalEvent
 
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
+# # List events
+# def event_list(request):
+#     events = TemporalEvent.objects.all().order_by('date')  # You can modify the order as needed
+#     return render(request, 'admin/datasetTemporal.html', {'events': events})
 
-# from django.shortcuts import render
-# from .models import Dataset
-
-# def dataset_temporal_list(request):
-#     # Fetch all dataset entries
-#     datasets = Dataset.objects.all().order_by('-date')  # Order by date, most recent first
-    
-#     # Pass datasets to template
-#     return render(request, 'admin/datasetTemporal.html', {'datasets': datasets})
-
-from .models import ImportantEvent
-
-def dataset_temporal_list(request):
-    # Fetch all events, order by date (most recent first)
-    events = ImportantEvent.objects.all().order_by('-date')
-
-    # Pass events to the template
-    return render(request, 'admin/datasetTemporal.html', {'datasets': events})  # Use 'datasets' in context
+# @login_required
+def event_list(request):
+    events = TemporalEvent.objects.all().order_by('date')
+    return render(request, 'admin/datasetTemporal.html', {'events': events})
 
 
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
+# from django.shortcuts import render, redirect
+# from .models import TemporalEvent 
 
-from django.shortcuts import render
+# def add_event(request):
+#     if request.method == 'POST':
+#         # Get data from the form
 
-from django.http import JsonResponse
-from .models import ImportantEvent
-from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
-import json
+#         event_name = request.POST.get('event_name')
+#         event_type = request.POST.get('event_type')
+#         date = request.POST.get('date')
 
-# @csrf_exempt  # If you don't want to manually handle CSRF for now (later you can improve this)
-def dataset_addEvent(request):
+#         # Save the event to the database
+#         event = TemporalEvent(
+
+#             event_name=event_name,
+#             event_type=event_type,
+#             date=date
+#         )
+#         event.save()
+
+#         # Redirect after saving
+#         return redirect('event_list')  # Change this to whatever your redirect URL is
+#     return render(request, 'admin/datasetTemporal.html')
+
+from django.shortcuts import render, redirect
+from .models import TemporalEvent
+from django.contrib.auth.decorators import login_required
+
+# @login_required
+def add_event(request):
     if request.method == 'POST':
-        try:
-            data = json.loads(request.body)
-            event_name = data.get('event_name')
-            event_type = data.get('event_type')
-            date = data.get('date')
-            
-            # Save to database (assuming you have an ImportantEvent model)
-            ImportantEvent.objects.create(
-                event_name=event_name,
-                event_type=event_type,
-                date=date
-            )
-            
-            return JsonResponse({'status': 'success'})
-        except Exception as e:
-            print(e)
-            return JsonResponse({'status': 'error', 'message': str(e)})
-    else:
-        return JsonResponse({'status': 'error', 'message': 'Invalid request method'})
+        event_name = request.POST.get('event_name')
+        event_type = request.POST.get('event_type')
+        date = request.POST.get('date')
 
+        event = TemporalEvent(
+            event_name=event_name,
+            event_type=event_type,
+            date=date,
+            created_by=request.user,
+            updated_by=request.user,
+        )
+        event.save()
+
+        return redirect('event_list')  # Replace with your actual URL name
+    return render(request, 'admin/datasetTemporal.html')
 
 
 #-------------------------------------------------------------------------
