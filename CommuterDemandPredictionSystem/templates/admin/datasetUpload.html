@@ -50,7 +50,14 @@
                                     <td>{{ data.filename }}</td>
                                     <td>{{ data.date_uploaded|date:"Y-m-d H:i" }}</td> <!-- Format the upload date -->
                                     <td>{{ data.dataset_code }}</td>
-                                    <td>{{ data.user_code.first_name }} {{ data.user_code.last_name }}</td>
+                                    <td>
+                                        {% if data.uploader %}
+                                          {{ data.uploader.first_name }} {{ data.uploader.last_name }}
+                                        {% else %}
+                                          Unknown
+                                        {% endif %}
+                                    </td>
+                                      
                                 </tr>
                             {% empty %}
                                 <tr>

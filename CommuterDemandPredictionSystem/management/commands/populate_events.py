@@ -15,10 +15,10 @@ class Command(BaseCommand):
             if not TemporalEvent.objects.filter(event_name=name).exists():
                 TemporalEvent.objects.create(
                     event_name=name,
-                    event_type='University Event',
+                    event_type='university_event',
                     date=None,
-                    created_by=None,                                                            # can't use other placeholder values like '-' 
-                    updated_by=None
+                    created_by_code=None,  # Use correct field name
+                    updated_by_code=None   # Use correct field name
                 )
                 self.stdout.write(self.style.SUCCESS(f"Added default event: {name}"))
             else:

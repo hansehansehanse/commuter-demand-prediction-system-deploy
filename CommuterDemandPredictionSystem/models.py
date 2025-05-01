@@ -76,34 +76,21 @@ class Dataset(models.Model):
     time = models.TimeField()
     num_commuters = models.IntegerField()
     uploaded_at = models.DateTimeField(auto_now_add=True)
-    user_code = models.ForeignKey(User, on_delete=models.CASCADE)
+    user_code = models.UUIDField()                                                                  #!!!
     filename = models.CharField(max_length=255, blank=True, null=True)
     date_uploaded = models.DateTimeField(auto_now_add=True)
 
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-
-
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-# models.py
-
-# User = get_user_model()
-
-# class TemporalEvent(models.Model):
-#     EVENT_TYPE_CHOICES = [
-#         ('holiday', 'Holiday'),
-#         ('university_event', 'University Event'),
-#         ('local_event', 'Local Event'),
-#         ('others', 'Others'),
-#     ]
     
-#     event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-#     event_name = models.CharField(max_length=255)
-#     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
-#     date = models.DateField()
 
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 from django.contrib.auth import get_user_model
+import uuid
+
 User = get_user_model()
 
 class TemporalEvent(models.Model):
@@ -119,12 +106,13 @@ class TemporalEvent(models.Model):
     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
     date = models.DateField(null=True, blank=True)
 
-
-    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events_created')
-    updated_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='events_updated')
-
+    created_by = models.UUIDField(null=True, blank=True)  # Allow null initially
+    updated_by = models.UUIDField(null=True, blank=True)
+    
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
 
 
 #-------------------------------------------------------------------------

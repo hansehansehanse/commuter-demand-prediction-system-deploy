@@ -15,4 +15,4 @@ class CommuterdemandpredictionsystemConfig(AppConfig):
         # Call the custom command to create default users after migration
         call_command('create_default_users')
 
-        call_command('populate_events')
+        # call_command('populate_events')

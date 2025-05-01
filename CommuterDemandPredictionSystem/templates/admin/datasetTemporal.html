@@ -41,10 +41,28 @@
                                     <td>{{ event.id }}</td>
                                     <td>{{ event.event_code }}</td>
                                     <td>{{ event.event_name }}</td>
-                                    <td>{{ event.event_type }}</td>
+                                    <td>{{ event.get_event_type_display }}</td>
                                     <td>{{ event.date|date:"Y-m-d" }}</td>
-                                    <td>{{ event.user_code.first_name }} {{ event.user_code.last_name }}</td>
-                                    <td>{{ event.user_code.first_name }} {{ event.user_code.last_name }}</td>
+                                    <td>
+                                        {% if event.created_by_user %}
+                                            {% with user=event.created_by_user %}
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            {% endwith %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if event.updated_by_user %}
+                                            {% with user=event.updated_by_user %}
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            {% endwith %}
+                                        {% else %}
+                                            Not updated
+                                        {% endif %}
+                                    </td>
+                                    
+                                    </td>
                                     <td class="text-nowrap">
                                         <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewEventModal{{ event.id }}">
                                             <i class="ti ti-eye ti-xs"></i>
@@ -63,7 +81,6 @@
                                 </tr>
                             {% endfor %}
                         </tbody>
-                        
                     </table>
                 </div>
             </div>
@@ -80,10 +97,9 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <!-- The form should go here -->
-                <form method="POST" action="{% url 'add_event' %}">
+                <!-- Form to add an event -->
+                <form id="addEventForm" method="POST" action="{% url 'add_event' %}">
                     {% csrf_token %}
-
                     <div class="mb-3">
                         <label for="event_name" class="form-label">Event Name</label>
                         <input type="text" class="form-control" id="event_name" name="event_name" required>
@@ -91,17 +107,20 @@
                     <div class="mb-3">
                         <label for="event_type" class="form-label">Event Type</label>
                         <select class="form-select" id="event_type" name="event_type" required>
-                            <option value="holiday">Holiday</option>
+                            <option value="local_holiday">Local Holiday</option>
                             <option value="university_event">University Event</option>
                             <option value="local_event">Local Event</option>
                             <option value="others">Others</option>
                         </select>
                     </div>
-                    
                     <div class="mb-3">
                         <label for="date" class="form-label">Event Date</label>
                         <input type="date" class="form-control" id="date" name="date" required>
                     </div>
+
+                    <!-- Message container (success or error) -->
+                    <div id="formResponse" class="alert" style="display: none;"></div>
+
                     <button type="submit" class="btn btn-primary">Save Event</button>
                 </form>
             </div>

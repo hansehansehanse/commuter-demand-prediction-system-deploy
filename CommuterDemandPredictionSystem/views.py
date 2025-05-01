@@ -1,6 +1,6 @@
 
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.hashers import make_password
@@ -261,6 +261,7 @@ def action_log_list(request):
 
 #-------------------------------------------------------------------------
 
+
 from django.contrib.auth import get_user_model
 from .models import Dataset
 import pandas as pd
@@ -280,34 +281,27 @@ def dataset_upload_list(request):
             elif file_extension == 'csv':
                 df = pd.read_csv(dataset_file)
 
-            # Print the first few rows to see the format
-            print(df.head())
+            print(df.head())  # Debug: show uploaded data
 
-            # Get the user_code from the logged-in user
             user = request.user
-            print(f"User Code: {user.user_code}")  # Print user code for debugging
+            print(f"User Code: {user.user_code}")  # Debug: user UUID
 
-            # Loop through the dataframe and save each row to the model
             for _, row in df.iterrows():
-                # Convert the date to the correct format
                 try:
-                    date = pd.to_datetime(row['Date']).date()  # Extract just the date part
+                    date = pd.to_datetime(row['Date']).date()
                 except Exception as e:
                     print(f"Error parsing date: {e}")
-                    continue  # Skip this row if there's a problem with the date
+                    continue
 
                 route = row['Route']
-                
-                # Convert the time to 24-hour format
                 try:
                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
                 except ValueError as e:
                     print(f"Error parsing time: {e}")
-                    continue  # Skip this row if there's a problem with the time
+                    continue
 
                 num_commuters = row['Commuters']
 
-                # Print data before saving it
                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
 
                 Dataset.objects.create(
@@ -315,18 +309,27 @@ def dataset_upload_list(request):
                     route=route,
                     time=time,
                     num_commuters=num_commuters,
-                    user_code=user,  # user who uploaded
-                    filename=dataset_file.name,  # 🆕 Save the filename here
+                    user_code=user.user_code,  # now storing UUID
+                    filename=dataset_file.name,
                 )
 
+            return redirect('dataset_upload_list')
 
-            return redirect('dataset_upload_list')  # Redirect back to the page after uploading
-
-    # Fetch all dataset entries from the database
+    # GET request: Fetch datasets
     datasets = Dataset.objects.all()
 
-    # Pass the datasets to the template
+    # Map user UUIDs to user objects
+    user_map = {
+        u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
+    }
+
+    # Attach uploader info to each dataset entry
+    for d in datasets:
+        d.uploader = user_map.get(d.user_code)
+
     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+
+
 
 
 #-------------------------------------------------------------------------
@@ -335,70 +338,120 @@ def dataset_upload_list(request):
 
 # views.py
 
-from django.shortcuts import render, redirect
-from .models import TemporalEvent
+# from django.contrib.auth import get_user_model
+# from .models import TemporalEvent
 
-# # List events
+# User = get_user_model()
+
 # def event_list(request):
-#     events = TemporalEvent.objects.all().order_by('date')  # You can modify the order as needed
+#     # Get all the events
+#     events = TemporalEvent.objects.all()
+
+#     # Pre-fetch users for created_by and updated_by (correct field names)
+#     created_by_users = {user.user_code: user for user in User.objects.filter(user_code__in=[event.created_by for event in events])}
+#     updated_by_users = {user.user_code: user for user in User.objects.filter(user_code__in=[event.updated_by for event in events if event.updated_by])}
+
+#     # Add the user objects to each event
+#     for event in events:
+#         event.created_by_user = created_by_users.get(event.created_by)
+#         event.updated_by_user = updated_by_users.get(event.updated_by)
+
 #     return render(request, 'admin/datasetTemporal.html', {'events': events})
 
-# @login_required
-def event_list(request):
-    events = TemporalEvent.objects.all().order_by('date')
-    return render(request, 'admin/datasetTemporal.html', {'events': events})
 
 
-# from django.shortcuts import render, redirect
-# from .models import TemporalEvent 
 
-# def add_event(request):
-#     if request.method == 'POST':
-#         # Get data from the form
+#-------------------------------------------------------------------------
+# !!!don't delete this works in general
+# from django.shortcuts import render
+# from .models import TemporalEvent
 
-#         event_name = request.POST.get('event_name')
-#         event_type = request.POST.get('event_type')
-#         date = request.POST.get('date')
+# def event_list(request):
+#     events = TemporalEvent.objects.all()
+#     return render(request, 'admin/datasetTemporal.html', {'events': events})
 
-#         # Save the event to the database
-#         event = TemporalEvent(
-
-#             event_name=event_name,
-#             event_type=event_type,
-#             date=date
-#         )
-#         event.save()
-
-#         # Redirect after saving
-#         return redirect('event_list')  # Change this to whatever your redirect URL is
-#     return render(request, 'admin/datasetTemporal.html')
-
-from django.shortcuts import render, redirect
+#-------------------------------------------------------------------------
+from django.shortcuts import render
 from .models import TemporalEvent
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth import get_user_model
 
-# @login_required
-def add_event(request):
-    if request.method == 'POST':
-        event_name = request.POST.get('event_name')
-        event_type = request.POST.get('event_type')
-        date = request.POST.get('date')
+User = get_user_model()
 
-        event = TemporalEvent(
-            event_name=event_name,
-            event_type=event_type,
-            date=date,
-            created_by=request.user,
-            updated_by=request.user,
-        )
-        event.save()
+def event_list(request):
+    events = TemporalEvent.objects.all()
 
-        return redirect('event_list')  # Replace with your actual URL name
-    return render(request, 'admin/datasetTemporal.html')
+    # Fetch users once to reduce database queries
+    user_map = {user.user_code: user for user in User.objects.all()}
+
+    for event in events:
+        # Attach the user object for created_by and updated_by
+        event.created_by_user = user_map.get(event.created_by)
+        event.updated_by_user = user_map.get(event.updated_by)
+
+    return render(request, 'admin/datasetTemporal.html', {'events': events})
 
 
 #-------------------------------------------------------------------------
 
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import TemporalEvent
+from django.contrib.auth import get_user_model
+import json
+import logging
+import uuid
+
+# Logger
+logger = logging.getLogger(__name__)
+
+User = get_user_model()
+
+def add_event(request):
+    if request.method == 'POST':
+        try:
+            # Get data from the request body (parsed from JSON)
+            data = json.loads(request.body)  # Parse the JSON body
+            print("📩 Received event data:", data)  # Log the received data
+
+            # Extract form data
+            event_name = data.get('event_name', '').strip()
+            event_type = data.get('event_type', '')
+            event_date = data.get('date', None)
+
+            # Normalize the event type
+            if event_type not in dict(TemporalEvent.EVENT_TYPE_CHOICES):
+                return JsonResponse({'status': 'error', 'message': 'Invalid event type.'}, status=400)
+
+            # Check if an event with the same name already exists (optional validation)
+            if TemporalEvent.objects.filter(event_name=event_name, date=event_date).exists():
+                return JsonResponse({'status': 'error', 'message': 'Event with the same name and date already exists.'}, status=400)
+
+            # Get the user who is creating the event and assign their UUID (not the numeric id)
+            created_by_user = request.user.user_code  # Ensure you're using the user_code UUID here
+
+            # Create the new event
+            event = TemporalEvent.objects.create(
+                event_name=event_name,
+                event_type=event_type,
+                date=event_date,
+                created_by=created_by_user,  # Assign the current user's UUID
+                updated_by=created_by_user,  # Initial update by the creator
+            )
+
+            # Log the action (for audit purposes)
+            log_action(request, 'Add Event', f"Event {event.event_name} created by {request.user.first_name} {request.user.last_name}.")
+
+            return JsonResponse({'status': 'success'}, status=201)
+
+        except Exception as e:
+            logger.error(f"Error adding event: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'Error occurred while adding event.'}, status=500)
+
+
+
+
+#-------------------------------------------------------------------------
+#fixedEvent
 
 #-------------------------------------------------------------------------
 

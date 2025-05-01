@@ -1,121 +1,51 @@
-// // Get CSRF token from hidden input
-// function getCSRFToken() {
-//     const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
-//     if (!tokenInput) {
-//         console.error("CSRF token input not found!");
-//         return '';
-//     }
-//     return tokenInput.value;
-// }
-
-// document.addEventListener("DOMContentLoaded", function () {
-//     const form = document.getElementById("addEventForm");
-
-//     if (!form) return;
-
-//     form.addEventListener("submit", function (e) {
-//         e.preventDefault();  // Prevent the form from being submitted immediately
-//         console.log("Data1");
-
-//         // Check if the elements are actually being selected
-//         const event_name = document.getElementById("event_name");
-//         const event_type = document.getElementById("event_type");
-//         const date = document.getElementById("date");
-
-//         console.log("event_name:", event_name);
-//         console.log("event_type:", event_type);
-//         console.log("date:", date);
-
-//         if (event_name && event_type && date) {
-//             const data = {
-//                 event_name: event_name.value,
-//                 event_type: event_type.value,
-//                 date: date.value,
-//             };
-//             console.log("Data2:", data);
-
-//             // Send data to the server using fetch
-//             fetch("/cdps/admin/datasetTemporal/addEvent/", {
-//                 method: "POST",
-//                 headers: {
-//                    "Content-Type": "application/json",
-//                    "X-CSRFToken": getCSRFToken(),
-//                 },
-//                 body: JSON.stringify(data),
-//              })
-//              .then(response => response.json())
-//              .then(result => {
-//                  console.log(result);
-//                  if (result.status === "success") {
-//                     //  alert("Event added successfully!");
-//                     window.location.reload();
-//                  }
-//              })
-//              .catch(error => {
-//                  console.error("Error adding event:", error);
-//              });
-             
-//         } else {
-//             console.error("One or more form elements are missing!");
-//         }
-//     });
-// });
-
-// Get CSRF token from hidden input
-function getCSRFToken() {
-    const tokenInput = document.querySelector('[name=csrfmiddlewaretoken]');
-    if (!tokenInput) {
-        console.error("CSRF token input not found!");
-        return '';
-    }
-    return tokenInput.value;
-}
-
 document.addEventListener("DOMContentLoaded", function () {
+    // Grab the form by its ID
     const form = document.getElementById("addEventForm");
 
     if (!form) return;
 
     form.addEventListener("submit", function (e) {
-        e.preventDefault();  // Prevent the form from being submitted immediately
+        e.preventDefault();  // stop the normal POST
 
-        const event_name = document.getElementById("event_name");
-        const event_type = document.getElementById("event_type");
-        const day = document.getElementById("event_day");
-        const month = document.getElementById("event_month");
-        const year = document.getElementById("event_year");  // Optional
+        // Collect all inputs by their IDs
+        const data = {
+            event_name: document.getElementById("event_name").value,
+            event_type: document.getElementById("event_type").value,
+            date: document.getElementById("date").value,
+        };
 
-        if (event_name && event_type && day && month) {
-            const data = {
-                event_name: event_name.value,
-                event_type: event_type.value,
-                day: parseInt(day.value),
-                month: parseInt(month.value),
-                year: year?.value ? parseInt(year.value) : null
-            };
+        console.log("🔘 Submit button clicked");
+        console.log("📦 Event data:", data);
 
-            // Send data to the server using fetch
-            fetch("/cdps/admin/datasetTemporal/addEvent/", {
-                method: "POST",
-                headers: {
-                   "Content-Type": "application/json",
-                   "X-CSRFToken": getCSRFToken(),
-                },
-                body: JSON.stringify(data),
-             })
-             .then(response => response.json())
-             .then(result => {
-                 if (result.status === "success") {
-                    window.location.reload();
-                 } else {
-                    console.error("Server error:", result.message);
-                 }
-             })
-             .catch(error => {
-                 console.error("Error adding event:", error);
-             });
-        } else {
-            console.error("One or more form elements are missing!");
-        }
+        // Send it to Django using fetch
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch("/cdps/admin/datasetTemporal/addEvent/", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrfToken,
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json()) // Parse the JSON response
+        .then(result => {
+            console.log("✅ Success:", result);
+            
+            if (result.status === 'error') {
+                // If there's an error, show the error message from the server in the modal
+                const errorMessage = document.getElementById("formResponse");
+                errorMessage.classList.add('alert-danger');  // Add error styling
+                errorMessage.style.display = 'block'; // Make the error message visible
+                errorMessage.textContent = result.message || "An unknown error occurred. Please try again.";
+            } else {
+                // If success, reload the page or reset the form
+                window.location.reload();  // Reload the page to reflect the new event
+            }
+        })
+        .catch(error => {
+            console.error("❌ Error:", error);
+            // Optionally, you can log the error here without showing an alert
+        });
     });
 });
