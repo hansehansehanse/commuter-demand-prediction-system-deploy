@@ -35,6 +35,40 @@ emp_sidebar_items = [
 #     return render(request, 'admin/dashboard2.html', context)
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from datetime import timedelta, date
+from CommuterDemandPredictionSystem.models import HolidayEvent, TemporalEvent
+
+def build_holiday_set():
+    holidays = set()
+    # Yearless holidays
+    for h in HolidayEvent.objects.all():
+        for year in range(2000, 2101):  # safe test range
+            holidays.add(date(year, h.date.month, h.date.day))
+    # Dated temporal events
+    for t in TemporalEvent.objects.exclude(date=None):
+        holidays.add(t.date)
+    return holidays
+
+def is_day_before_holiday(d, holidays):
+    return (d + timedelta(days=1)) in holidays
+
+def is_long_weekend(d, holidays):
+    return (
+        (d.weekday() == 4 and (d + timedelta(days=1)) in holidays and (d + timedelta(days=2)).weekday() == 6) or
+        (d.weekday() == 5 and (d + timedelta(days=2)) in holidays) or
+        (d.weekday() == 6 and (d - timedelta(days=2)) in holidays)
+    )
+
+def is_day_before_long_weekend(d, holidays):
+    return is_long_weekend(d + timedelta(days=1), holidays)
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
 #admin
 def cdps_admin_accountManagement(request):
     # context = {'sidebar_items':emp_sidebar_items}
@@ -330,6 +364,88 @@ def action_log_list(request):
 #     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
 ######################################################################### OG DONT DELETE!!!
 
+# from django.contrib.auth import get_user_model
+# from .models import Dataset, HolidayEvent, TemporalEvent
+# import pandas as pd
+# from datetime import datetime
+# from django.shortcuts import render, redirect
+
+# User = get_user_model()
+
+# def dataset_upload_list(request):
+#     if request.method == 'POST':
+#         dataset_file = request.FILES.get('dataset_file')
+#         if dataset_file:
+#             file_extension = dataset_file.name.split('.')[-1]
+#             if file_extension == 'xlsx':
+#                 df = pd.read_excel(dataset_file)
+#             elif file_extension == 'csv':
+#                 df = pd.read_csv(dataset_file)
+
+#             user = request.user
+#             print(f"User Code: {user.user_code}")  # Debug
+
+#             # Fetch holidays and temporal events
+#             holiday_dates = set(h.date for h in HolidayEvent.objects.all() if h.date)
+#             temporal_dates = set(t.date for t in TemporalEvent.objects.exclude(date=None))
+
+#             for _, row in df.iterrows():
+#                 try:
+#                     date = pd.to_datetime(row['Date']).date()
+#                 except Exception as e:
+#                     print(f"Error parsing date: {e}")
+#                     continue
+
+#                 route = row['Route']
+#                 try:
+#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+#                 except ValueError as e:
+#                     print(f"Error parsing time: {e}")
+#                     continue
+
+#                 num_commuters = row['Commuters']
+
+#                 # Compute additional fields
+#                 day_of_week = date.strftime('%A')  # Monday, Tuesday, etc.
+#                 month = date.month
+#                 is_holiday = (date.replace(year=1900) in holiday_dates) or (date in temporal_dates)
+#                 is_saturday = date.weekday() == 5
+#                 is_friday = date.weekday() == 4
+
+#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, "
+#                     f"Commuters: {num_commuters}, User Code: {user.user_code}, "
+#                     f"Day: {day_of_week}, Month: {month}, IsHoliday: {is_holiday}, "
+#                     f"IsSaturday: {is_saturday}, IsFriday: {is_friday}")
+
+
+#                 Dataset.objects.create(
+#                     date=date,
+#                     route=route,
+#                     time=time,
+#                     num_commuters=num_commuters,
+#                     user_code=user.user_code,
+#                     filename=dataset_file.name,
+#                     day_of_week=day_of_week,
+#                     month=month,
+#                     is_holiday=is_holiday,
+#                     is_saturday=is_saturday,
+#                     is_friday=is_friday,
+#                 )
+
+#             return redirect('dataset_upload_list')
+
+#     datasets = Dataset.objects.all()
+
+#     user_map = {
+#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
+#     }
+
+#     for d in datasets:
+#         d.uploader = user_map.get(d.user_code)
+
+#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+
+
 from django.contrib.auth import get_user_model
 from .models import Dataset, HolidayEvent, TemporalEvent
 import pandas as pd
@@ -351,52 +467,64 @@ def dataset_upload_list(request):
             user = request.user
             print(f"User Code: {user.user_code}")  # Debug
 
-            # Fetch holidays and temporal events
-            holiday_dates = set(h.date for h in HolidayEvent.objects.all() if h.date)
-            temporal_dates = set(t.date for t in TemporalEvent.objects.exclude(date=None))
+            holidays = build_holiday_set()  # Build once
 
             for _, row in df.iterrows():
                 try:
-                    date = pd.to_datetime(row['Date']).date()
+                    date_val = pd.to_datetime(row['Date']).date()
                 except Exception as e:
                     print(f"Error parsing date: {e}")
                     continue
 
                 route = row['Route']
                 try:
-                    time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+                    time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
                 except ValueError as e:
                     print(f"Error parsing time: {e}")
                     continue
 
                 num_commuters = row['Commuters']
 
-                # Compute additional fields
-                day_of_week = date.strftime('%A')  # Monday, Tuesday, etc.
-                month = date.month
-                is_holiday = (date.replace(year=1900) in holiday_dates) or (date in temporal_dates)
-                is_saturday = date.weekday() == 5
-                is_friday = date.weekday() == 4
+                day_of_week = date_val.strftime("%A")
+                month = date_val.strftime("%B")
+                weekday = date_val.weekday()
 
-                print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, "
-                    f"Commuters: {num_commuters}, User Code: {user.user_code}, "
-                    f"Day: {day_of_week}, Month: {month}, IsHoliday: {is_holiday}, "
-                    f"IsSaturday: {is_saturday}, IsFriday: {is_friday}")
+                is_friday = weekday == 4
+                is_saturday = weekday == 5
+                is_holiday = date_val in holidays
+                is_before_holiday = is_day_before_holiday(date_val, holidays)
+                is_lweekend = is_long_weekend(date_val, holidays)
+                is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
 
+                # print(f"Saving Dataset - Date: {date_val}, Route: {route}, Time: {time_val}, "
+                #     f"Commuters: {num_commuters}, Day: {day_of_week}, Month: {month}, "
+                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
+                #     f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
+
+                
+                print(f"Saving Dataset - Date: {date_val},"
+                    f"Commuters: {num_commuters},  "
+                    f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
+                    f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
 
                 Dataset.objects.create(
-                    date=date,
+                    date=date_val,
                     route=route,
-                    time=time,
+                    time=time_val,
                     num_commuters=num_commuters,
                     user_code=user.user_code,
                     filename=dataset_file.name,
-                    day_of_week=day_of_week,
+
+                    day=day_of_week,
                     month=month,
-                    is_holiday=is_holiday,
-                    is_saturday=is_saturday,
                     is_friday=is_friday,
+                    is_saturday=is_saturday,
+                    is_holiday=is_holiday,
+                    is_day_before_holiday=is_before_holiday,
+                    is_long_weekend=is_lweekend,
+                    is_day_before_long_weekend=is_before_lweekend
                 )
+
 
             return redirect('dataset_upload_list')
 
@@ -411,65 +539,9 @@ def dataset_upload_list(request):
 
     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
 
-
-
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-# views.py
-
-# from django.contrib.auth import get_user_model
-# from .models import TemporalEvent
-
-# User = get_user_model()
-
-# def event_list(request):
-#     # Get all the events
-#     events = TemporalEvent.objects.all()
-
-#     # Pre-fetch users for created_by and updated_by (correct field names)
-#     created_by_users = {user.user_code: user for user in User.objects.filter(user_code__in=[event.created_by for event in events])}
-#     updated_by_users = {user.user_code: user for user in User.objects.filter(user_code__in=[event.updated_by for event in events if event.updated_by])}
-
-#     # Add the user objects to each event
-#     for event in events:
-#         event.created_by_user = created_by_users.get(event.created_by)
-#         event.updated_by_user = updated_by_users.get(event.updated_by)
-
-#     return render(request, 'admin/datasetTemporal.html', {'events': events})
-
-
-
-
-#-------------------------------------------------------------------------
-# !!!don't delete this works in general
-# from django.shortcuts import render
-# from .models import TemporalEvent
-
-# def event_list(request):
-#     events = TemporalEvent.objects.all()
-#     return render(request, 'admin/datasetTemporal.html', {'events': events})
-
-#-------------------------------------------------------------------------
-# from django.shortcuts import render
-# from .models import TemporalEvent
-# from django.contrib.auth import get_user_model
-
-# User = get_user_model()
-
-# def event_list(request):
-#     events = TemporalEvent.objects.all()
-
-#     # Fetch users once to reduce database queries
-#     user_map = {user.user_code: user for user in User.objects.all()}
-
-#     for event in events:
-#         # Attach the user object for created_by and updated_by
-#         event.created_by_user = user_map.get(event.created_by)
-#         event.updated_by_user = user_map.get(event.updated_by)
-
-#     return render(request, 'admin/datasetTemporal.html', {'events': events})
 
 # views.py
 from django.shortcuts import render
@@ -557,30 +629,42 @@ def add_event(request):
 
 
 #-------------------------------------------------------------------------
-#HolidayEvent
+#-------------------------------------------------------------------------
+
 # from django.shortcuts import render
-# from .models import TemporalEvent
-# from django.contrib.auth import get_user_model
+# from .models import Dataset
 
-# User = get_user_model()
-
-# def event_list(request):
-#     events = TemporalEvent.objects.all()
-
-#     # Fetch users once to reduce database queries
-#     user_map = {user.user_code: user for user in User.objects.all()}
-
-#     for event in events:
-#         # Attach the user object for created_by and updated_by
-#         event.created_by_user = user_map.get(event.created_by)
-#         event.updated_by_user = user_map.get(event.updated_by)
-
-#     return render(request, 'admin/datasetTemporal.html', {'events': events})
-
-
-
+# def datasetprediction_list(request):
+#     datasets = Dataset.objects.all()  # Get all datasets from the database
+#     return render(request, 'admin/datasetPrediction.html', {'datasets': datasets})
 
 #-------------------------------------------------------------------------
+
+# views.py
+# from django.shortcuts import render
+# from .cdps import train_and_predict_random_forest
+
+# def predict_commuters(request):
+#     # Get the predictions from the model
+#     predictions = train_and_predict_random_forest()
+
+#     # Pass the predictions to the template
+#     return render(request, 'admin/datasetPrediction.html', {'predictions': predictions})
+
+# views.py
+
+from django.shortcuts import render
+from .cdps import train_and_predict_random_forest
+
+def predict_commuters(request):
+    # Get the predictions for the next 2 weeks
+    predictions = train_and_predict_random_forest()
+
+    # Render the predictions in the table format
+    return render(request, 'admin/datasetPrediction.html', {'predictions': predictions})
+
+
+
 
 #-------------------------------------------------------------------------
 

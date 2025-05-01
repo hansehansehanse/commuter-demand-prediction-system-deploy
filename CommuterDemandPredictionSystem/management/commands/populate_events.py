@@ -62,6 +62,8 @@ class Command(BaseCommand):
             # ("Founding Anniversary", datetime.date(1900, 7, 15)),
             ("test", datetime.date(2025, 1, 5)),
             ("test 2", datetime.date(2024, 1, 6)),
+            ("test 3", datetime.date(2024, 1, 5)),
+            ("test 4", datetime.date(2024, 1, 8)),
         ]
 
         for name, date in local_holidays:

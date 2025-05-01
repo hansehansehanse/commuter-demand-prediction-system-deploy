@@ -98,11 +98,15 @@ class Dataset(models.Model):
     date_uploaded = models.DateTimeField(auto_now_add=True)
 
     day_of_week = models.CharField(max_length=20, blank=True)
+    day = models.CharField(max_length=20, null=True, blank=True)
     month = models.CharField(max_length=20, blank=True)
     is_holiday = models.BooleanField(default=False)
     is_friday = models.BooleanField(default=False)
     is_saturday = models.BooleanField(default=False)
-    
+
+    is_day_before_holiday = models.BooleanField(default=False)
+    is_long_weekend = models.BooleanField(default=False)
+    is_day_before_long_weekend = models.BooleanField(default=False)
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------

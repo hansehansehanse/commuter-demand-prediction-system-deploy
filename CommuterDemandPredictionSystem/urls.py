@@ -31,6 +31,22 @@ urlpatterns = [
     path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
 
+
+    # path('admin/datasetPredictions/', views.datasetprediction_list, name='datasetprediction_list'),
+    # path('admin/datasetPredictions/predictCommuters', views.predict_commuters, name='predict_commuters'),
+
+    path('admin/datasetPrediction/', views.predict_commuters, name='datasetprediction_list'),
+    path('admin/datasetPrediction/predictCommuters', views.predict_commuters, name='predict_commuters'),
+
+
+
+
+    
+
+
+
+
+
     
     
 
