@@ -62,7 +62,24 @@ class ActionLog(models.Model):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+######################################################################### OG DONT DELETE!!!
+# from django.db import models
+# from django.contrib.auth import get_user_model
+# import uuid
 
+# User = get_user_model()
+
+# class Dataset(models.Model):
+#     dataset_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+#     date = models.DateField()
+#     route = models.CharField(max_length=100)
+#     time = models.TimeField()
+#     num_commuters = models.IntegerField()
+#     uploaded_at = models.DateTimeField(auto_now_add=True)
+#     user_code = models.UUIDField()                                                                  #!!!
+#     filename = models.CharField(max_length=255, blank=True, null=True)
+#     date_uploaded = models.DateTimeField(auto_now_add=True)
+######################################################################### OG DONT DELETE!!!
 from django.db import models
 from django.contrib.auth import get_user_model
 import uuid
@@ -80,6 +97,11 @@ class Dataset(models.Model):
     filename = models.CharField(max_length=255, blank=True, null=True)
     date_uploaded = models.DateTimeField(auto_now_add=True)
 
+    day_of_week = models.CharField(max_length=20, blank=True)
+    month = models.CharField(max_length=20, blank=True)
+    is_holiday = models.BooleanField(default=False)
+    is_friday = models.BooleanField(default=False)
+    is_saturday = models.BooleanField(default=False)
     
 
 #-------------------------------------------------------------------------

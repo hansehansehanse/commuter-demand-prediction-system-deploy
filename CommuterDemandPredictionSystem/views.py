@@ -261,9 +261,77 @@ def action_log_list(request):
 
 #-------------------------------------------------------------------------
 
+######################################################################### OG DONT DELETE!!!
+# from django.contrib.auth import get_user_model
+# from .models import Dataset
+# import pandas as pd
+# from datetime import datetime
+# from django.shortcuts import render, redirect
+
+# User = get_user_model()
+
+# def dataset_upload_list(request):
+#     if request.method == 'POST':
+#         dataset_file = request.FILES.get('dataset_file')
+#         if dataset_file:
+#             # Read the dataset using pandas
+#             file_extension = dataset_file.name.split('.')[-1]
+#             if file_extension == 'xlsx':
+#                 df = pd.read_excel(dataset_file)
+#             elif file_extension == 'csv':
+#                 df = pd.read_csv(dataset_file)
+
+#             print(df.head())  # Debug: show uploaded data
+
+#             user = request.user
+#             print(f"User Code: {user.user_code}")  # Debug: user UUID
+
+#             for _, row in df.iterrows():
+#                 try:
+#                     date = pd.to_datetime(row['Date']).date()
+#                 except Exception as e:
+#                     print(f"Error parsing date: {e}")
+#                     continue
+
+#                 route = row['Route']
+#                 try:
+#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+#                 except ValueError as e:
+#                     print(f"Error parsing time: {e}")
+#                     continue
+
+#                 num_commuters = row['Commuters']
+
+#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
+
+#                 Dataset.objects.create(
+#                     date=date,
+#                     route=route,
+#                     time=time,
+#                     num_commuters=num_commuters,
+#                     user_code=user.user_code,  # now storing UUID
+#                     filename=dataset_file.name,
+#                 )
+
+#             return redirect('dataset_upload_list')
+
+#     # GET request: Fetch datasets
+#     datasets = Dataset.objects.all()
+
+#     # Map user UUIDs to user objects
+#     user_map = {
+#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
+#     }
+
+#     # Attach uploader info to each dataset entry
+#     for d in datasets:
+#         d.uploader = user_map.get(d.user_code)
+
+#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+######################################################################### OG DONT DELETE!!!
 
 from django.contrib.auth import get_user_model
-from .models import Dataset
+from .models import Dataset, HolidayEvent, TemporalEvent
 import pandas as pd
 from datetime import datetime
 from django.shortcuts import render, redirect
@@ -274,17 +342,18 @@ def dataset_upload_list(request):
     if request.method == 'POST':
         dataset_file = request.FILES.get('dataset_file')
         if dataset_file:
-            # Read the dataset using pandas
             file_extension = dataset_file.name.split('.')[-1]
             if file_extension == 'xlsx':
                 df = pd.read_excel(dataset_file)
             elif file_extension == 'csv':
                 df = pd.read_csv(dataset_file)
 
-            print(df.head())  # Debug: show uploaded data
-
             user = request.user
-            print(f"User Code: {user.user_code}")  # Debug: user UUID
+            print(f"User Code: {user.user_code}")  # Debug
+
+            # Fetch holidays and temporal events
+            holiday_dates = set(h.date for h in HolidayEvent.objects.all() if h.date)
+            temporal_dates = set(t.date for t in TemporalEvent.objects.exclude(date=None))
 
             for _, row in df.iterrows():
                 try:
@@ -302,33 +371,45 @@ def dataset_upload_list(request):
 
                 num_commuters = row['Commuters']
 
-                print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
+                # Compute additional fields
+                day_of_week = date.strftime('%A')  # Monday, Tuesday, etc.
+                month = date.month
+                is_holiday = (date.replace(year=1900) in holiday_dates) or (date in temporal_dates)
+                is_saturday = date.weekday() == 5
+                is_friday = date.weekday() == 4
+
+                print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, "
+                    f"Commuters: {num_commuters}, User Code: {user.user_code}, "
+                    f"Day: {day_of_week}, Month: {month}, IsHoliday: {is_holiday}, "
+                    f"IsSaturday: {is_saturday}, IsFriday: {is_friday}")
+
 
                 Dataset.objects.create(
                     date=date,
                     route=route,
                     time=time,
                     num_commuters=num_commuters,
-                    user_code=user.user_code,  # now storing UUID
+                    user_code=user.user_code,
                     filename=dataset_file.name,
+                    day_of_week=day_of_week,
+                    month=month,
+                    is_holiday=is_holiday,
+                    is_saturday=is_saturday,
+                    is_friday=is_friday,
                 )
 
             return redirect('dataset_upload_list')
 
-    # GET request: Fetch datasets
     datasets = Dataset.objects.all()
 
-    # Map user UUIDs to user objects
     user_map = {
         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
     }
 
-    # Attach uploader info to each dataset entry
     for d in datasets:
         d.uploader = user_map.get(d.user_code)
 
     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
-
 
 
 
