@@ -371,25 +371,50 @@ def dataset_upload_list(request):
 #     return render(request, 'admin/datasetTemporal.html', {'events': events})
 
 #-------------------------------------------------------------------------
+# from django.shortcuts import render
+# from .models import TemporalEvent
+# from django.contrib.auth import get_user_model
+
+# User = get_user_model()
+
+# def event_list(request):
+#     events = TemporalEvent.objects.all()
+
+#     # Fetch users once to reduce database queries
+#     user_map = {user.user_code: user for user in User.objects.all()}
+
+#     for event in events:
+#         # Attach the user object for created_by and updated_by
+#         event.created_by_user = user_map.get(event.created_by)
+#         event.updated_by_user = user_map.get(event.updated_by)
+
+#     return render(request, 'admin/datasetTemporal.html', {'events': events})
+
+# views.py
 from django.shortcuts import render
-from .models import TemporalEvent
+from CommuterDemandPredictionSystem.models import HolidayEvent, TemporalEvent
 from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
 def event_list(request):
-    events = TemporalEvent.objects.all()
+    # Fetch all records
+    holidays = HolidayEvent.objects.all().order_by('date')
+    events = TemporalEvent.objects.all().order_by('date')
 
-    # Fetch users once to reduce database queries
+    events = TemporalEvent.objects.all().order_by('event_type', 'sort_order')
+
+
     user_map = {user.user_code: user for user in User.objects.all()}
-
     for event in events:
-        # Attach the user object for created_by and updated_by
         event.created_by_user = user_map.get(event.created_by)
         event.updated_by_user = user_map.get(event.updated_by)
 
-    return render(request, 'admin/datasetTemporal.html', {'events': events})
-
+    context = {
+        'holidays': holidays,
+        'events': events,
+    }
+    return render(request, 'admin/datasetTemporal.html', context)
 
 #-------------------------------------------------------------------------
 
@@ -451,7 +476,28 @@ def add_event(request):
 
 
 #-------------------------------------------------------------------------
-#fixedEvent
+#HolidayEvent
+# from django.shortcuts import render
+# from .models import TemporalEvent
+# from django.contrib.auth import get_user_model
+
+# User = get_user_model()
+
+# def event_list(request):
+#     events = TemporalEvent.objects.all()
+
+#     # Fetch users once to reduce database queries
+#     user_map = {user.user_code: user for user in User.objects.all()}
+
+#     for event in events:
+#         # Attach the user object for created_by and updated_by
+#         event.created_by_user = user_map.get(event.created_by)
+#         event.updated_by_user = user_map.get(event.updated_by)
+
+#     return render(request, 'admin/datasetTemporal.html', {'events': events})
+
+
+
 
 #-------------------------------------------------------------------------
 

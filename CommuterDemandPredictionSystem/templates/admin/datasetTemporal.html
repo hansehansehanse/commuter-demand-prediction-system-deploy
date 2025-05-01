@@ -25,7 +25,7 @@
                     <table class="table border-top w-100">
                         <thead>
                             <tr>
-                                <th>ID</th>
+                                <!-- <th>ID</th> -->
                                 <th>Event Code</th>
                                 <th>Event Name</th>
                                 <th>Event Type</th>
@@ -38,7 +38,7 @@
                         <tbody>
                             {% for event in events %}
                                 <tr>
-                                    <td>{{ event.id }}</td>
+                                    <!-- <td>{{ event.id }}</td> -->
                                     <td>{{ event.event_code }}</td>
                                     <td>{{ event.event_name }}</td>
                                     <td>{{ event.get_event_type_display }}</td>
@@ -85,8 +85,68 @@
                 </div>
             </div>
         </div>
+
+        <!-- Holiday Event Table -->
+        <div class="col-12">
+            <div class="card" style="min-height: 600px;">
+                <div class="table-responsive card-datatable" style="overflow-x: auto;">
+                    <table class="table border-top w-100">
+                        <thead>
+                            <tr>
+                                <!-- <th>ID</th> -->
+                                <th>Holiday Event Code</th>
+                                <th>Holiday Event Name</th>
+                                <th>Holiday Event Type</th>
+                                <th>Date</th>
+                                <th>Updated By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for holiday in holidays %}
+                            <tr>
+                                <!-- <td>{{ holiday.id }}</td> -->
+                                <td>{{ holiday.event_code }}</td>
+                                <td>{{ holiday.event_name }}</td>
+                                <td>{{ holiday.get_event_type_display }}</td>
+                                <td>{{ holiday.date|date:"F d" }}</td>
+                                <td>
+                                    {% if holiday.updated_by %}
+                                        {{ holiday.updated_by }}
+                                    {% else %}
+                                        Not updated
+                                    {% endif %}
+                                </td>
+                                <td class="text-nowrap">
+                                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewEventModal{{ event.id }}">
+                                        <i class="ti ti-eye ti-xs"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editEventModal{{ event.id }}">
+                                        <i class="ti ti-pencil ti-xs"></i>
+                                    </button>
+                                    <!-- <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteEventModal{{ event.id }}">
+                                        <i class="ti ti-trash ti-xs"></i>
+                                    </button> -->
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr><td colspan="6">No holidays found.</td></tr>
+                            {% endfor %}
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        
     </div>
 </div>
+
+
+
+
 
 <!-- Add Event Modal -->
 <div class="modal fade" id="addEventModal" tabindex="-1" aria-labelledby="addEventModalLabel" aria-hidden="true">

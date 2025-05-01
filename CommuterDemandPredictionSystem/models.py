@@ -106,6 +106,8 @@ class TemporalEvent(models.Model):
     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
     date = models.DateField(null=True, blank=True)
 
+    sort_order = models.PositiveIntegerField(default=0)
+
     created_by = models.UUIDField(null=True, blank=True)  # Allow null initially
     updated_by = models.UUIDField(null=True, blank=True)
     
@@ -113,7 +115,49 @@ class TemporalEvent(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
 
 
-
-
 #-------------------------------------------------------------------------
+
+# from django.db import models
+# import uuid
+
+# class HolidayEvent(models.Model):
+#     EVENT_TYPE_CHOICES = [
+#         ('holiday', 'Holiday'),
+#     ]
+
+#     # Primary fields
+#     event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+#     event_name = models.CharField(max_length=255)
+#     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+#     date = models.DateField(null=True, blank=True)  # This will hold the date without any year filtering
+
+#     # Tracking fields
+#     updated_by = models.UUIDField(null=True, blank=True)  # UUID of the user who last updated it (you may link this with a user model)
+#     updated_at = models.DateTimeField(auto_now=True)  # Automatically updated timestamp when the object is updated
+
+class HolidayEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('holiday', 'Holiday'),
+    ]
+
+    # Primary fields
+    event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    event_name = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    date = models.DateField(null=True, blank=True)  # Stores only the month and day
+
+    # Tracking fields
+    updated_by = models.UUIDField(null=True, blank=True)  # UUID of the user who last updated it
+    updated_at = models.DateTimeField(auto_now=True)  # Automatically updated timestamp when the object is updated
+
+    def save(self, *args, **kwargs):
+        # Store the date without the year (set it to January 1st if no year is given)
+        if self.date:
+            self.date = self.date.replace(year=1900)  # Year doesn't matter, just replace it with a dummy value
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return self.event_name
+
+
 #-------------------------------------------------------------------------
