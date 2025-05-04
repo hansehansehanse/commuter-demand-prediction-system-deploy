@@ -653,114 +653,11 @@ from django.db.models import Avg
 from .models import Dataset
 import json
 
-# def dataset_graph(request):
-#     # Grouping data by time and calculating the average number of commuters
-#     avg_by_time = (
-#         Dataset.objects
-#         .values('time')  # Group by 'time'
-#         .annotate(avg_commuters=Avg('num_commuters'))  # Get the average of 'num_commuters'
-#         .order_by('time')
-#     )
-
-#     # Prepare the labels (formatted time) and data ({% url 'average_commuters' %}muters)
-#     labels = [entry['time'].strftime('%I:%M %p') for entry in avg_by_time]
-#     data = [entry['avg_commuters'] for entry in avg_by_time]
-
-#     # Pass the labels and data to the template as JSON
-#     context = {
-#         'labels_json': json.dumps(labels),  # Convert labels to JSON
-#         'data_json': json.dumps(data),  # Convert data to JSON
-#     }
-
-#     return render(request, 'admin/datasetGraph.html', context)
-
-
-
-#-------------------------------------------------------------------------
-
-# from django.shortcuts import render
-# from django.utils.timezone import now, timedelta
-# from django.db.models import Sum
-# from .models import Dataset
-# import json
-# from django.shortcuts import render
-# from .models import Dataset
-# from django.utils.timezone import timedelta
-# from django.db.models import Sum
-# import json
-
-# def dataset_graph(request):
-#     # Get the latest available date from Dataset
-#     latest_entry = Dataset.objects.order_by('-date').first()
-    
-#     if not latest_entry:
-#         # Handle empty dataset
-#         return render(request, 'admin/datasetGraph.html', {
-#             'labels_json': json.dumps([]),
-#             'data_json': json.dumps([]),
-#         })
-
-#     latest_date = latest_entry.date
-#     seven_days_ago = latest_date - timedelta(days=6)
-
-#     print("Latest dataset date:", latest_date)
-#     print("Date range:", seven_days_ago, "to", latest_date)
-
-#     # Filter and group data
-#     data_by_day = (
-#         Dataset.objects
-#         .filter(date__range=(seven_days_ago, latest_date))
-#         .filter(time__gte='05:00:00')  # Only after 5:00 AM
-#         .values('date')
-#         .annotate(total_commuters=Sum('num_commuters'))
-#         .order_by('date')
-#     )
-
-#     labels = [entry['date'].strftime('%b %d') for entry in data_by_day]
-#     data = [entry['total_commuters'] for entry in data_by_day]
-
-#     print("Labels:", labels)
-#     print("Data:", data)
-
-#     context = {
-#         'labels_json': json.dumps(labels),
-#         'data_json': json.dumps(data),
-#     }
-
-#     return render(request, 'admin/datasetGraph.html', context)
-
-
-
-
-
-#-------------------------------------------------------------------------
-
-# from django.shortcuts import render
-
-# def dataset_graph(request):
-#     print("hi")  # Just to confirm the view is being called
-#     return render(request, 'admin/datasetGraph.html')
-
-
-
-
-
 from django.http import JsonResponse
 from django.db.models import Sum
 from .models import Dataset
 
-# def dataset_graph_data(request):
-#     # Step 1: Get the 7 most recent distinct dates from the dataset
-#     recent_dates = Dataset.objects.values_list('date', flat=True).distinct().order_by('-date')[:7]
-    
-#     # Step 2: Query all data from those dates only
-#     data = Dataset.objects.filter(
-#         date__in=recent_dates
-#     ).values('date', 'route', 'time').annotate(
-#         total_commuters=Sum('num_commuters')
-#     ).order_by('date', 'route', 'time')
 
-#     return JsonResponse(list(data), safe=False)
 
 def dataset_graph_data(request):
     print("✅ dataset_graph_data called")
@@ -848,20 +745,29 @@ def dataset_graph_data(request):
 
 
 def dataset_graph(request):
+
     if request.method == "POST":
-        graph_type = request.POST.get("graph_type")  # New parameter
+        graph_type = request.POST.get("graph_type")  # New parameter to decide which graph to show
         route = request.POST.get("route")
         time_str = request.POST.get("time")
+        selected_date = request.POST.get("date")  # Get the selected date for average calculation
+
+        # print(f"Graph Type: {graph_type}")
+        print(f"1 Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
 
         if not route or not time_str:
             return JsonResponse({'error': 'Missing route or time'})
 
-        if graph_type == "last7":
-            return get_last_7_records_chart_data(route, time_str)
         
-        # Future: more graph types like:
-        # elif graph_type == "average_from_date":
-        #     return get_avg_commuter_from_date(route, selected_date)
+        # Handle different graph types
+        if graph_type == "last7":
+            print("FROM: last7")
+            return get_last_7_records_chart_data(route, time_str)
+
+        elif graph_type == "average_from_date":
+            print("FROM: average_from_date")
+            print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
+            return get_average_commuters_from_date(route, time_str, selected_date)
 
         return JsonResponse({'error': 'Unknown graph_type'})
 
@@ -896,8 +802,83 @@ def get_last_7_records_chart_data(route, time_str):
         'dates': dates,
         'num_commuters': num_commuters,
     }
-
+    # print("get_last_7_records_chart_data")
     return JsonResponse({'chart_data': json.dumps(chart_data)})
+
+
+from .models import Dataset
+from django.db.models import Avg
+from datetime import datetime
+from django.http import JsonResponse
+
+def get_average_commuters_from_date(route, time_str, selected_date):
+    
+    try:
+        # Parse inputs
+        date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
+
+        # Try to find the latest available date on or before the selected date
+        latest_available = Dataset.objects.filter(
+            route=route,
+            time=time_obj,
+            date__lte=date_obj
+        ).order_by('-date').first()
+
+        if not latest_available:
+            print("❌ No matching records found at all.")
+            return JsonResponse({'average': 0})
+
+        fallback_date = latest_available.date
+        print(f"✅ Using fallback date range: earliest up to {fallback_date}")
+
+        # Get all matching records up to the fallback date
+        matching_records = Dataset.objects.filter(
+            route=route,
+            time=time_obj,
+            date__lte=fallback_date
+        )
+
+        # print(f"🔍 Matching records for route='{route}', time='{time_obj}', date ≤ {fallback_date}:")
+        # for record in matching_records:
+        #     print(f"  🚌 ID: {record.id}, Date: {record.date}, Count: {record.num_commuters}")
+
+
+        # Step 3: Compute manual average
+        total = 0
+        count = 0
+
+        # print("\n📋 Starting manual average computation:")
+        for record in matching_records:
+            prev_total = total
+            prev_count = count
+
+            total += record.num_commuters
+            count += 1
+
+            # print(
+            #     f"  ➕ Record ID {record.id} | Date: {record.date} | "
+            #     f"Commuters: {record.num_commuters} | "
+            #     f"Prev Total: {prev_total} ➝ New Total: {total} | "
+            #     f"Prev Count: {prev_count} ➝ New Count: {count}"
+            # )
+
+        if count > 0:
+            average = total / count
+            print(f"\n✅ Final Total: {total}")
+            print(f"📌 Final Count: {count}")
+            print(f"📊 Computed Average: {round(average, 2)}")
+        else:
+            average = 0
+            print("⚠️ No records to compute average from.")
+
+        return JsonResponse({'average': round(average, 2)})
+
+
+    except Exception as e:
+        print("❌ Error in get_average_commuters_from_date:", e)
+        return JsonResponse({'error': 'Failed to compute average'}, status=500)
+
 
 
 
