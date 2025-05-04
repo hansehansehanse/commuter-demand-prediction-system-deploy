@@ -49,12 +49,12 @@
       <!-- <li class="menu-header small text-uppercase">
         <span class="menu-header-text">Apps &amp; Pages</span>
       </li> -->
-      <li class="menu-item">
+      <!-- <li class="menu-item">
         <a href="dashboard" class="menu-link">
           <i class="menu-icon tf-icons ti ti-apps"></i>
           <div data-i18n="Dashboard">Dashboard</div>
         </a>
-      </li>
+      </li> -->
       <li class="menu-item">
         <a href="{% url 'account_management' %}" class="menu-link">                 <!-- Use this format instead -->                       
           <i class="menu-icon tf-icons ti ti-users"></i>
@@ -85,5 +85,13 @@
           <div>CDPS</div>
         </a>
       </li>
+      <li class="menu-item">
+        <a href="{% url 'dataset_graph' %}" class="menu-link">
+          <i class="menu-icon tf-icons ti ti-chart-line"></i>
+          <div data-i18n="Graphs">Graphs</div>
+        </a>
+      </li>
     </ul>
   </aside>
+
+  

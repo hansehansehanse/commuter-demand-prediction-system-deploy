@@ -1,0 +1,146 @@
+{% extends 'admin_base_graph.html' %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4">
+    <span class="text-muted fw-light">Dataset /</span> Commuter Chart
+  </h4>
+
+  <!-- Route and Time Selection -->
+  <div>
+    <label for="route">Select Route:</label>
+    <select id="route" onchange="updateTimeOptions()">
+      <option value="">Select Route</option>
+      <option value="A to B" {% if route == 'A to B' %}selected{% endif %}>A to B</option>
+      <option value="A to C" {% if route == 'A to C' %}selected{% endif %}>A to C</option>
+    </select>
+  </div>
+
+  <div>
+    <label for="time">Select Time:</label>
+    <select id="time" onchange="">
+      <option value="">Select Time</option>
+      <!-- Time options will be populated based on selected route -->
+    </select>
+  </div>
+
+  <div> 
+    <button id="submitBtn" class="btn btn-primary">Update Chart</button>
+
+  </div>
+
+  <!-- Chart Display -->
+  <div id="chart1"></div>
+
+  <!-- Script for AJAX and Line Chart -->
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+  <script>
+    const routeTimes = {
+      "A to B": ["5:00AM", "1:00PM", "6:00PM"],
+      "A to C": ["5:30AM"]
+    };
+  
+    let lastSelectedRoute = "";
+    let lastSelectedTime = "";
+  
+    // Function to update the time dropdown based on selected route
+    function updateTimeOptions() {
+      const routeSelect = document.getElementById('route');
+      const timeSelect = document.getElementById('time');
+      const selectedRoute = routeSelect.value;
+  
+      lastSelectedRoute = selectedRoute;
+      lastSelectedTime = "";  // Clear selected time when route changes
+  
+      // Reset time options
+      timeSelect.innerHTML = '<option value="">Select Time</option>';
+  
+      if (selectedRoute && routeTimes[selectedRoute]) {
+        routeTimes[selectedRoute].forEach(time => {
+          const option = document.createElement("option");
+          option.value = time;
+          option.textContent = time;
+          timeSelect.appendChild(option);
+        });
+      }
+    }
+  
+    // Function to render the chart based on selected route/time
+    function updateChart() {
+      if (!lastSelectedRoute || !lastSelectedTime) {
+        // alert("Please select both a route and a time.");
+        return;
+      }
+  
+      // Send AJAX request to Django view
+      $.ajax({
+        url: "{% url 'dataset_graph' %}",
+        type: "POST",
+        data: {
+          'route': lastSelectedRoute,
+          'time': lastSelectedTime,
+          'csrfmiddlewaretoken': '{{ csrf_token }}',
+        },
+        success: function (response) {
+          const chartData = JSON.parse(response.chart_data);
+          const dates = chartData.dates;
+          const numCommuters = chartData.num_commuters;
+  
+          const chartElement = document.querySelector("#chart1");
+          chartElement.innerHTML = "";  // Clear old chart
+  
+          const options = {
+            chart: {
+              type: 'line',
+              height: 350
+            },
+            series: [{
+              name: `${lastSelectedRoute} (${lastSelectedTime})`,
+              data: numCommuters
+            }],
+            xaxis: {
+              categories: dates,
+            },
+            title: {
+              text: `${lastSelectedRoute} - ${lastSelectedTime} Commuter Trend`,
+              align: 'center'
+            }
+          };
+  
+          const chart = new ApexCharts(chartElement, options);
+          chart.render();
+        },
+        error: function () {
+          alert('Error fetching data');
+        }
+      });
+    }
+  
+    // ========== Event Bindings ==========
+  
+    // Update route and reset time options
+    document.getElementById('route').addEventListener('change', updateTimeOptions);
+  
+    // Update time when selected
+    document.getElementById('time').addEventListener('change', function () {
+      lastSelectedTime = this.value;
+    });
+  
+    // Submit button click triggers the chart update
+    document.getElementById('submitBtn').addEventListener('click', function (e) {
+      e.preventDefault();
+      updateChart();
+    });
+  
+    // On page load
+    window.onload = function () {
+      updateTimeOptions(); // Initialize time dropdown if route is pre-selected
+    };
+  </script>
+  
+  
+  
+</div>
+{% endblock %}

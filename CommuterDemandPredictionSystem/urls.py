@@ -40,6 +40,20 @@ urlpatterns = [
 
 
 
+    # path('admin/datasetGraph/', views.dataset_graph, name='dataset_graph'),
+    # path('admin/datasetGraph/data/', views.dataset_graph_data, name='dataset_graph_data'),
+    path('admin/datasetGraph/', views.dataset_graph, name='dataset_graph'),
+    # path('admin/datasetGraph/data/', views.dataset_graph_data, name='dataset_graph_data'),
+    
+    
+
+
+
+
+    
+
+
+
 
     
 
