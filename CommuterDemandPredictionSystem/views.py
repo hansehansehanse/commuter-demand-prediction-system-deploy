@@ -662,7 +662,7 @@ import json
 #         .order_by('time')
 #     )
 
-#     # Prepare the labels (formatted time) and data (average commuters)
+#     # Prepare the labels (formatted time) and data ({% url 'average_commuters' %}muters)
 #     labels = [entry['time'].strftime('%I:%M %p') for entry in avg_by_time]
 #     data = [entry['avg_commuters'] for entry in avg_by_time]
 
@@ -780,62 +780,13 @@ def dataset_graph_data(request):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-# def dataset_graph(request):
-#     if request.method == "POST":
-#         route = request.POST.get("route")
-#         time_str = request.POST.get("time")
+# from django.shortcuts import render
 
-#         print("Selected route:", route)
-#         print("Selected time:", time_str)
+# from django.http import JsonResponse
+# from datetime import datetime, timedelta
+# from .models import Dataset
+# import json
 
-#         if not route or not time_str:
-#             return render(request, 'admin/datasetGraph.html', {'error': 'Missing route or time'})
-
-#         try:
-#             time_obj = datetime.strptime(time_str, "%I:%M%p").time()
-#         except ValueError:
-#             return render(request, 'admin/datasetGraph.html', {'error': 'Invalid time format'})
-
-#         latest_entry = Dataset.objects.filter(route=route, time=time_obj).order_by('-date').first()
-
-#         if not latest_entry:
-#             print("No data found for selected route and time.")
-#             return render(request, 'admin/datasetGraph.html', {'error': 'No data found for selected route and time'})
-
-#         latest_date = latest_entry.date
-#         start_date = latest_date - timedelta(days=6)
-
-#         results = Dataset.objects.filter(
-#             route=route,
-#             time=time_obj,
-#             date__range=(start_date, latest_date)
-#         ).order_by('-date')
-
-#         print("Filtered Results (Last 7 Days):")
-#         for r in results:
-#             print(f"Date: {r.date}, Time: {r.time}, Count: {r.num_commuters}")
-
-#         return render(request, 'admin/datasetGraph.html', {
-#             'results': results,
-#             'route': route,
-#             'time': time_str,
-#             'bus_schedule': {
-#                 "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-#                 "A to C": ["5:30AM"]
-#             }
-#         })
-
-#     return render(request, 'admin/datasetGraph.html', {
-#         'bus_schedule': {
-#             "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-#             "A to C": ["5:30AM"]
-#         }
-#     })
-
-from django.shortcuts import render
-from datetime import datetime, timedelta
-from .models import Dataset
-import json
 
 # def dataset_graph(request):
 #     if request.method == "POST":
@@ -847,19 +798,19 @@ import json
 #         print("Selected time:", time_str)
 
 #         if not route or not time_str:
-#             return render(request, 'admin/datasetGraph.html', {'error': 'Missing route or time'})
+#             return JsonResponse({'error': 'Missing route or time'})
 
 #         try:
 #             time_obj = datetime.strptime(time_str, "%I:%M%p").time()
 #         except ValueError:
-#             return render(request, 'admin/datasetGraph.html', {'error': 'Invalid time format'})
+#             return JsonResponse({'error': 'Invalid time format'})
 
 #         # Get the latest entry to calculate the date range
 #         latest_entry = Dataset.objects.filter(route=route, time=time_obj).order_by('-date').first()
 
 #         if not latest_entry:
 #             print("No data found for selected route and time.")
-#             return render(request, 'admin/datasetGraph.html', {'error': 'No data found for selected route and time'})
+#             return JsonResponse({'error': 'No data found for selected route and time'})
 
 #         latest_date = latest_entry.date
 #         start_date = latest_date - timedelta(days=6)
@@ -869,7 +820,7 @@ import json
 #             route=route,
 #             time=time_obj,
 #             date__range=(start_date, latest_date)
-#         ).order_by('-date')
+#         ).order_by('date')
 
 #         # Prepare data for the chart
 #         dates = [r.date.strftime('%Y-%m-%d') for r in results]
@@ -877,25 +828,16 @@ import json
 
 #         # Print the results for debugging purposes
 #         print("Filtered Results (Last 7 Days):")
+#         print(f"Route: {route}, Time: {time_str}")
 #         for r in results:
 #             print(f"Date: {r.date}, Time: {r.time}, Count: {r.num_commuters}")
 
-#         # Pass the data to the template for rendering
 #         chart_data = {
 #             'dates': dates,
 #             'num_commuters': num_commuters,
 #         }
 
-#         return render(request, 'admin/datasetGraph.html', {
-#             'results': results,
-#             'route': route,
-#             'time': time_str,
-#             'chart_data': json.dumps(chart_data),  # Pass the chart data as JSON
-#             'bus_schedule': {
-#                 "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-#                 "A to C": ["5:30AM"]
-#             }
-#         })
+#         return JsonResponse({'chart_data': json.dumps(chart_data)})
 
 #     return render(request, 'admin/datasetGraph.html', {
 #         'bus_schedule': {
@@ -905,61 +847,23 @@ import json
 #     })
 
 
-from django.http import JsonResponse
-from datetime import datetime, timedelta
-from .models import Dataset
-import json
-
 def dataset_graph(request):
     if request.method == "POST":
+        graph_type = request.POST.get("graph_type")  # New parameter
         route = request.POST.get("route")
         time_str = request.POST.get("time")
-
-        # Print for debugging purposes
-        print("Selected route:", route)
-        print("Selected time:", time_str)
 
         if not route or not time_str:
             return JsonResponse({'error': 'Missing route or time'})
 
-        try:
-            time_obj = datetime.strptime(time_str, "%I:%M%p").time()
-        except ValueError:
-            return JsonResponse({'error': 'Invalid time format'})
+        if graph_type == "last7":
+            return get_last_7_records_chart_data(route, time_str)
+        
+        # Future: more graph types like:
+        # elif graph_type == "average_from_date":
+        #     return get_avg_commuter_from_date(route, selected_date)
 
-        # Get the latest entry to calculate the date range
-        latest_entry = Dataset.objects.filter(route=route, time=time_obj).order_by('-date').first()
-
-        if not latest_entry:
-            print("No data found for selected route and time.")
-            return JsonResponse({'error': 'No data found for selected route and time'})
-
-        latest_date = latest_entry.date
-        start_date = latest_date - timedelta(days=6)
-
-        # Query the dataset for the last 7 days
-        results = Dataset.objects.filter(
-            route=route,
-            time=time_obj,
-            date__range=(start_date, latest_date)
-        ).order_by('date')
-
-        # Prepare data for the chart
-        dates = [r.date.strftime('%Y-%m-%d') for r in results]
-        num_commuters = [r.num_commuters for r in results]
-
-        # Print the results for debugging purposes
-        print("Filtered Results (Last 7 Days):")
-        print(f"Route: {route}, Time: {time_str}")
-        for r in results:
-            print(f"Date: {r.date}, Time: {r.time}, Count: {r.num_commuters}")
-
-        chart_data = {
-            'dates': dates,
-            'num_commuters': num_commuters,
-        }
-
-        return JsonResponse({'chart_data': json.dumps(chart_data)})
+        return JsonResponse({'error': 'Unknown graph_type'})
 
     return render(request, 'admin/datasetGraph.html', {
         'bus_schedule': {
@@ -967,6 +871,35 @@ def dataset_graph(request):
             "A to C": ["5:30AM"]
         }
     })
+
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from datetime import datetime, timedelta
+from .models import Dataset
+import json
+
+def get_last_7_records_chart_data(route, time_str):
+    try:
+        time_obj = datetime.strptime(time_str, "%I:%M%p").time()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid time format'})
+
+    # Get the latest 7 historical entries for that route & time
+    results = Dataset.objects.filter(route=route, time=time_obj).order_by('-date')[:7]
+    results = sorted(results, key=lambda x: x.date)  # Ascending order for the chart
+
+    dates = [r.date.strftime('%Y-%m-%d') for r in results]
+    num_commuters = [r.num_commuters for r in results]
+
+    chart_data = {
+        'dates': dates,
+        'num_commuters': num_commuters,
+    }
+
+    return JsonResponse({'chart_data': json.dumps(chart_data)})
+
+
 
 
 
