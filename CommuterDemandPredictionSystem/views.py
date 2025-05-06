@@ -4,38 +4,18 @@ from django.http import HttpResponse, JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from django.contrib.auth.hashers import make_password
-
 from .models import CustomUser
-
 import json
 import uuid
-
 import logging
+from .models import ActionLog  
 
-from .models import ActionLog  # Assuming log_action uses the ActionLog model.
 
 
-emp_sidebar_items = [
-    {'url':'hris_emp_dashboard', 'icon_class':'ti-smart-home', 'name':'Dashboard'},
-    {'url':'hris_emp_records', 'icon_class':'ti-file', 'name':'Records'},
-    {'url':'hris_emp_payroll', 'icon_class':'ti-file-dollar', 'name':'Payroll'},
-    {'url':'hris_emp_leaves', 'icon_class':'ti-checkbox', 'name':'Leaves'},
-]
 
 
 #-------------------------------------------------------------------------
-# def cdps_admin_dashboard(request):
-#     # context = {'sidebar_items':emp_sidebar_items}
-#     context = {}
-#     return render(request, 'admin/dashboard.html', context)
 
-# def cdps_admin_dashboard2(request):
-#     # context = {'sidebar_items':emp_sidebar_items}
-#     context = {}
-#     return render(request, 'admin/dashboard2.html', context)
-
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
 from datetime import timedelta, date
@@ -187,12 +167,9 @@ def add_user(request):
                 password=data.get('password', 'temporary123'),
             )
 
-
-            # log_action(user, 'Add User', f"User {user.first_name} {user.last_name} was added.")
-            # Pass request.user to log_action
             log_action(request, 'Add User', f"User {user.first_name} {user.last_name} account added.")
 
-            # log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
+
 
             return JsonResponse({'status': 'success'}, status=201)
 
@@ -203,13 +180,7 @@ def add_user(request):
 
 
 #-------------------------------------------------------------------------
-# from django.http import JsonResponse
-# from django.views.decorators.csrf import csrf_exempt
-# import json
-# from .models import CustomUser
-# from django.contrib.auth.hashers import make_password
 
-# @csrf_exempt  # only if you test without csrf token; otherwise keep csrf protection
 def edit_user(request):
     if request.method == "POST":
         try:
@@ -294,157 +265,6 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
-
-######################################################################### OG DONT DELETE!!!
-# from django.contrib.auth import get_user_model
-# from .models import Dataset
-# import pandas as pd
-# from datetime import datetime
-# from django.shortcuts import render, redirect
-
-# User = get_user_model()
-
-# def dataset_upload_list(request):
-#     if request.method == 'POST':
-#         dataset_file = request.FILES.get('dataset_file')
-#         if dataset_file:
-#             # Read the dataset using pandas
-#             file_extension = dataset_file.name.split('.')[-1]
-#             if file_extension == 'xlsx':
-#                 df = pd.read_excel(dataset_file)
-#             elif file_extension == 'csv':
-#                 df = pd.read_csv(dataset_file)
-
-#             print(df.head())  # Debug: show uploaded data
-
-#             user = request.user
-#             print(f"User Code: {user.user_code}")  # Debug: user UUID
-
-#             for _, row in df.iterrows():
-#                 try:
-#                     date = pd.to_datetime(row['Date']).date()
-#                 except Exception as e:
-#                     print(f"Error parsing date: {e}")
-#                     continue
-
-#                 route = row['Route']
-#                 try:
-#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-#                 except ValueError as e:
-#                     print(f"Error parsing time: {e}")
-#                     continue
-
-#                 num_commuters = row['Commuters']
-
-#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, Commuters: {num_commuters}, User Code: {user.user_code}")
-
-#                 Dataset.objects.create(
-#                     date=date,
-#                     route=route,
-#                     time=time,
-#                     num_commuters=num_commuters,
-#                     user_code=user.user_code,  # now storing UUID
-#                     filename=dataset_file.name,
-#                 )
-
-#             return redirect('dataset_upload_list')
-
-#     # GET request: Fetch datasets
-#     datasets = Dataset.objects.all()
-
-#     # Map user UUIDs to user objects
-#     user_map = {
-#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
-#     }
-
-#     # Attach uploader info to each dataset entry
-#     for d in datasets:
-#         d.uploader = user_map.get(d.user_code)
-
-#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
-######################################################################### OG DONT DELETE!!!
-
-# from django.contrib.auth import get_user_model
-# from .models import Dataset, HolidayEvent, TemporalEvent
-# import pandas as pd
-# from datetime import datetime
-# from django.shortcuts import render, redirect
-
-# User = get_user_model()
-
-# def dataset_upload_list(request):
-#     if request.method == 'POST':
-#         dataset_file = request.FILES.get('dataset_file')
-#         if dataset_file:
-#             file_extension = dataset_file.name.split('.')[-1]
-#             if file_extension == 'xlsx':
-#                 df = pd.read_excel(dataset_file)
-#             elif file_extension == 'csv':
-#                 df = pd.read_csv(dataset_file)
-
-#             user = request.user
-#             print(f"User Code: {user.user_code}")  # Debug
-
-#             # Fetch holidays and temporal events
-#             holiday_dates = set(h.date for h in HolidayEvent.objects.all() if h.date)
-#             temporal_dates = set(t.date for t in TemporalEvent.objects.exclude(date=None))
-
-#             for _, row in df.iterrows():
-#                 try:
-#                     date = pd.to_datetime(row['Date']).date()
-#                 except Exception as e:
-#                     print(f"Error parsing date: {e}")
-#                     continue
-
-#                 route = row['Route']
-#                 try:
-#                     time = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-#                 except ValueError as e:
-#                     print(f"Error parsing time: {e}")
-#                     continue
-
-#                 num_commuters = row['Commuters']
-
-#                 # Compute additional fields
-#                 day_of_week = date.strftime('%A')  # Monday, Tuesday, etc.
-#                 month = date.month
-#                 is_holiday = (date.replace(year=1900) in holiday_dates) or (date in temporal_dates)
-#                 is_saturday = date.weekday() == 5
-#                 is_friday = date.weekday() == 4
-
-#                 print(f"Saving Dataset - Date: {date}, Route: {route}, Time: {time}, "
-#                     f"Commuters: {num_commuters}, User Code: {user.user_code}, "
-#                     f"Day: {day_of_week}, Month: {month}, IsHoliday: {is_holiday}, "
-#                     f"IsSaturday: {is_saturday}, IsFriday: {is_friday}")
-
-
-#                 Dataset.objects.create(
-#                     date=date,
-#                     route=route,
-#                     time=time,
-#                     num_commuters=num_commuters,
-#                     user_code=user.user_code,
-#                     filename=dataset_file.name,
-#                     day_of_week=day_of_week,
-#                     month=month,
-#                     is_holiday=is_holiday,
-#                     is_saturday=is_saturday,
-#                     is_friday=is_friday,
-#                 )
-
-#             return redirect('dataset_upload_list')
-
-#     datasets = Dataset.objects.all()
-
-#     user_map = {
-#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
-#     }
-
-#     for d in datasets:
-#         d.uploader = user_map.get(d.user_code)
-
-#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
-
 
 from django.contrib.auth import get_user_model
 from .models import Dataset, HolidayEvent, TemporalEvent
@@ -671,89 +491,17 @@ def dataset_graph_data(request):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-
-# from django.shortcuts import render
-
-# from django.http import JsonResponse
-# from datetime import datetime, timedelta
-# from .models import Dataset
-# import json
-
-
-# def dataset_graph(request):
-#     if request.method == "POST":
-#         route = request.POST.get("route")
-#         time_str = request.POST.get("time")
-
-#         # Print for debugging purposes
-#         print("Selected route:", route)
-#         print("Selected time:", time_str)
-
-#         if not route or not time_str:
-#             return JsonResponse({'error': 'Missing route or time'})
-
-#         try:
-#             time_obj = datetime.strptime(time_str, "%I:%M%p").time()
-#         except ValueError:
-#             return JsonResponse({'error': 'Invalid time format'})
-
-#         # Get the latest entry to calculate the date range
-#         latest_entry = Dataset.objects.filter(route=route, time=time_obj).order_by('-date').first()
-
-#         if not latest_entry:
-#             print("No data found for selected route and time.")
-#             return JsonResponse({'error': 'No data found for selected route and time'})
-
-#         latest_date = latest_entry.date
-#         start_date = latest_date - timedelta(days=6)
-
-#         # Query the dataset for the last 7 days
-#         results = Dataset.objects.filter(
-#             route=route,
-#             time=time_obj,
-#             date__range=(start_date, latest_date)
-#         ).order_by('date')
-
-#         # Prepare data for the chart
-#         dates = [r.date.strftime('%Y-%m-%d') for r in results]
-#         num_commuters = [r.num_commuters for r in results]
-
-#         # Print the results for debugging purposes
-#         print("Filtered Results (Last 7 Days):")
-#         print(f"Route: {route}, Time: {time_str}")
-#         for r in results:
-#             print(f"Date: {r.date}, Time: {r.time}, Count: {r.num_commuters}")
-
-#         chart_data = {
-#             'dates': dates,
-#             'num_commuters': num_commuters,
-#         }
-
-#         return JsonResponse({'chart_data': json.dumps(chart_data)})
-
-#     return render(request, 'admin/datasetGraph.html', {
-#         'bus_schedule': {
-#             "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-#             "A to C": ["5:30AM"]
-#         }
-#     })
-
 
 def dataset_graph(request):
 
     if request.method == "POST":
-        graph_type = request.POST.get("graph_type")  # New parameter to decide which graph to show
+        graph_type = request.POST.get("graph_type")  
         route = request.POST.get("route")
         time_str = request.POST.get("time")
-        selected_date = request.POST.get("date")  # Get the selected date for average calculation
+        selected_date = request.POST.get("date")  
 
         # print(f"Graph Type: {graph_type}")
-        print(f"1 Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
+        # print(f"1 Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
 
         if not route or not time_str:
             return JsonResponse({'error': 'Missing route or time'})
@@ -766,8 +514,13 @@ def dataset_graph(request):
 
         elif graph_type == "average_from_date":
             print("FROM: average_from_date")
-            print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
+            # print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
             return get_average_commuters_from_date(route, time_str, selected_date)
+        
+        elif graph_type == "rf_prediction":
+            print("FROM: rf_prediction")
+            return ajax_random_forest_prediction(route, time_str, selected_date)
+
 
         return JsonResponse({'error': 'Unknown graph_type'})
 
@@ -844,7 +597,6 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         #     print(f"  🚌 ID: {record.id}, Date: {record.date}, Count: {record.num_commuters}")
 
 
-        # Step 3: Compute manual average
         total = 0
         count = 0
 
@@ -878,6 +630,36 @@ def get_average_commuters_from_date(route, time_str, selected_date):
     except Exception as e:
         print("❌ Error in get_average_commuters_from_date:", e)
         return JsonResponse({'error': 'Failed to compute average'}, status=500)
+
+
+from django.http import JsonResponse
+from .pm_rf_single import train_and_predict_random_forest_single  # Make sure to import your function
+
+def ajax_random_forest_prediction(route, time_str, selected_date):
+    print("ajax_random_forest_prediction")
+    try:
+        date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
+
+        prediction = train_and_predict_random_forest_single(route, time_obj, date_obj)
+        print(f"Prediction for {route} at {time_str} on {selected_date}: {prediction}")
+
+        return JsonResponse({'prediction': round(prediction, 2)})
+
+    except Exception as e:
+        print(f"Prediction Error: {e}")
+        return JsonResponse({'error': str(e)}, status=500)
+
+       
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
 
 
 

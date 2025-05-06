@@ -61,7 +61,7 @@
           <div>
             <h5 class="mb-0 me-2" id="avgCommutersValue">--</h5>
 
-            <small class="text-muted" id="avgCommutersLabel">Avg Commuters</small>
+            <small class="text-muted" id="avgCommutersLabel">Average Commuters</small>
           </div>
           <span class="badge bg-label-success rounded-pill p-2">
             <i class="ti ti-users ti-sm"></i>
@@ -74,9 +74,9 @@
       <div class="card h-100">
         <div class="card-body d-flex justify-content-between align-items-center">
           <div>
-            <h5 class="mb-0 me-2" id="avgCommutersValue">--</h5>
+            <h5 class="mb-0 me-2" id="rfPredictionValue">--</h5>
 
-            <small class="text-muted" id="avgCommutersLabel">Avg Commuters</small>
+            <small class="text-muted" id="rfPredictionLabel">Random Forest</small>
           </div>
           <span class="badge bg-label-success rounded-pill p-2">
             <i class="ti ti-users ti-sm"></i>
@@ -155,20 +155,45 @@
                 csrfmiddlewaretoken: '{{ csrf_token }}',
             },
             success: function (response) {
-                console.log("yess");
-                // document.getElementById("avgCommutersValue").textContent = response.avg_commuters ?? "--";
+                console.log("Successful Average Commuter Count");
+                
                 document.getElementById("avgCommutersValue").textContent = response.average ?? "--";
-
+                
             },
 
             error: () => {
-                console.log("no");
-                // alert("Error getting average commuter count");
+                // console.log("no");
+                alert("Error!");
+            }
+        });
+
+         //Random Forest Prediction
+        $.ajax({
+            url: "{% url 'dataset_graph' %}",
+            type: "POST",
+            data: {
+                graph_type: "rf_prediction",
+                route: selectedRoute,
+                time: selectedTime,
+                date: selectedDate,
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            success: function (response) {
+                console.log("rfPredictionValue: " + response.prediction);
+              
+                document.getElementById("rfPredictionValue").textContent = response.prediction ?? "--";
+
+                
+            },
+
+            error: () => {
+                // console.log("no");
+                alert("Error!");
             }
         });
         // console.log("AJAX request sent for average commuter count.");
+        }
     }
-}
 
     //!Average Commuter Count
    
@@ -287,6 +312,12 @@
       initializeEmptyChart();  // <- Add this line
       updateTimeOptions();
     };
+
+
+
+
+
+    //Random Forest Prediction
 
 
 
