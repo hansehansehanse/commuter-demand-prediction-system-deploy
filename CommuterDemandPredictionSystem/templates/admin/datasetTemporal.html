@@ -140,11 +140,129 @@
         </div>
 
 
-        
+    <!-- / / -->    
+    <!-- View Event Modal -->
+    {% for event in events %}
+    <div class="modal fade" id="viewEventModal{{ event.id }}" tabindex="-1" aria-labelledby="viewEventModalLabel{{ event.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="viewEventModalLabel{{ event.id }}">Event Info: {{ event.event_name }}</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Event Information Display -->
+                    <div class="mb-3">
+                        <label class="form-label">Event Code</label>
+                        <input type="text" class="form-control" value="{{ event.event_code }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Event Name</label>
+                        <input type="text" class="form-control" value="{{ event.event_name }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Event Type</label>
+                        <input type="text" class="form-control" value="{{ event.event_type }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Date</label>
+                        <input type="text" class="form-control" value="{{ event.date }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Created By</label>
+                        <input type="text" class="form-control" value="{{ event.created_by }}" disabled>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Updated By</label>
+                        <input type="text" class="form-control" value="{{ event.updated_by }}" disabled>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+    
+    {% for event in events %}
+    <!-- Edit Event Modal -->
+    <div class="modal fade" id="editEventModal{{ event.id }}" tabindex="-1" aria-labelledby="editEventModalLabel{{ event.id }}" aria-hidden="true">
+        <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+            <h5 class="modal-title" id="editEventModalLabel{{ event.id }}">Edit Event: {{ event.event_code }}</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+            <form id="editEventForm{{ event.id }}">
+                {% csrf_token %}
+                <div class="alert alert-danger" id="event-error-message{{ event.id }}" style="display:none;"></div>
+    
+                <!-- Event Code (readonly) -->
+                <div class="mb-3">
+                <label for="edit_event_code{{ event.id }}" class="form-label">Event Code</label>
+                <input type="text" class="form-control" id="edit_event_code{{ event.id }}" value="{{ event.event_code }}" disabled>
+                </div>
+    
+                <!-- Event Name -->
+                <div class="mb-3">
+                <label for="edit_event_name{{ event.id }}" class="form-label">Event Name</label>
+                <input type="text" class="form-control" id="edit_event_name{{ event.id }}" value="{{ event.event_name }}" required>
+                </div>
+    
+                <!-- Event Type -->
+                <div class="mb-3">
+                    <label for="edit_event_type{{ event.id }}" class="form-label">Event Type</label>
+                    <select class="form-select" id="edit_event_type{{ event.id }}" required>
+                        <option value="local_holiday" {% if event.event_type == 'local_holiday' %} selected {% endif %}>Local Holiday</option>
+                        <option value="university_event" {% if event.event_type == 'university_event' %} selected {% endif %}>University Event</option>
+                        <option value="local_event" {% if event.event_type == 'local_event' %} selected {% endif %}>Local Event</option>
+                        <option value="others" {% if event.event_type == 'others' %} selected {% endif %}>Others</option>
+                    </select>
+                </div>
+                
+    
+                <!-- Date -->
+                <div class="mb-3">
+                <label for="edit_event_date{{ event.id }}" class="form-label">Date</label>
+                <input type="date" class="form-control" id="edit_event_date{{ event.id }}" value="{{ event.date|date:'Y-m-d' }}" required>
+                </div>
+    
+                <!-- Hidden event ID (or event_code if that's your identifier) -->
+                <input type="hidden" id="edit_event_id{{ event.id }}" value="{{ event.id }}">
+    
+                <button type="submit" class="btn btn-primary">Save Changes</button>
+            </form>
+            </div>
+        </div>
+        </div>
+    </div>
+    {% endfor %}
+
+    {% for event in events %}
+    <div class="modal fade" id="deleteEventModal{{ event.id }}" tabindex="-1" aria-labelledby="deleteEventModalLabel{{ event.id }}" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+        <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="deleteEventModalLabel{{ event.id }}">Delete Event</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            Are you sure you want to delete event <strong>{{ event.event_name }}</strong> on <strong>{{ event.date }}</strong>?
+        </div>
+        <div class="modal-footer">
+            <input type="hidden" id="delete_event_code{{ event.id }}" value="{{ event.event_code }}">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-danger delete-event-btn" data-event-id="{{ event.id }}">Delete</button>
+        </div>
+        </div>
+    </div>
+    </div>
+    {% endfor %}
+
+
+
+
     </div>
 </div>
-
-
 
 
 

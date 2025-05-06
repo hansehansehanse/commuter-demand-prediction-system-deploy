@@ -23,6 +23,9 @@ urlpatterns = [
     path('admin/actionLog/', views.action_log_list, name='action_log_list'), 
     
     path('admin/datasetUpload/', views.dataset_upload_list, name='dataset_upload_list'),
+    #
+   
+   
 
 
 
@@ -30,6 +33,11 @@ urlpatterns = [
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
     path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
+
+    path('admin/datasetTemporal/edit-event/', views.edit_event, name='edit_event'),
+    path('admin/datasetTemporal/delete-event/', views.delete_event, name='delete_event'),
+    
+ 
 
 
     # path('admin/datasetPredictions/', views.datasetprediction_list, name='datasetprediction_list'),

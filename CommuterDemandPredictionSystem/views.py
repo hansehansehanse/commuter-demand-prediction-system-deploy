@@ -112,16 +112,16 @@ def get_university_semester_flags(target_date):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-#admin
-def cdps_admin_accountManagement(request):
-    # context = {'sidebar_items':emp_sidebar_items}
-    context = {}
-    return render(request, 'admin/accountManagement.html', context)
+# #admin
+# def cdps_admin_accountManagement(request):
+#     # context = {'sidebar_items':emp_sidebar_items}
+#     context = {}
+#     return render(request, 'admin/accountManagement.html', context)
 
-def cdps_admin_actionLog(request):
-    # context = {'sidebar_items':emp_sidebar_items}
-    context = {}
-    return render(request, 'admin/actionLog.html', context)
+# def cdps_admin_actionLog(request):
+#     # context = {'sidebar_items':emp_sidebar_items}
+#     context = {}
+#     return render(request, 'admin/actionLog.html', context)
 
 
 #-------------------------------------------------------------------------
@@ -338,9 +338,6 @@ from django.shortcuts import render, redirect
 User = get_user_model()
 
 def dataset_upload_list(request):
-
-
-
     if request.method == 'POST':
         dataset_file = request.FILES.get('dataset_file')
         if dataset_file:
@@ -399,21 +396,6 @@ def dataset_upload_list(request):
                 is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
                 is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
 
-
-                # print(f"Saving Dataset - Date: {date_val}, Route: {route}, Time: {time_val}, "
-                #     f"Commuters: {num_commuters}, Day: {day_of_week}, Month: {month}, "
-                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
-                #     f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
-
-                
-                # print(f"Saving Dataset - Date: {date_val}, "
-                #   f"Commuters: {num_commuters},  "
-                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
-                #     f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
-                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
-                # print(f"Saving Dataset - Date: {date_val} University Event: {is_university_event}")
-
-                # print(f"Saving Dataset - Date: {date_val} | Local Holiday : {is_local_holiday}| University Event: {is_university_event} | Local Event: {is_local_event} | Others: {is_others}")
 
                 # print(
                 #     f"Date: {date_val} | "
@@ -521,6 +503,7 @@ def event_list(request):
     return render(request, 'admin/datasetTemporal.html', context)
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
 
 from django.shortcuts import render
 from django.http import JsonResponse
@@ -576,7 +559,87 @@ def add_event(request):
             logger.error(f"Error adding event: {str(e)}")
             return JsonResponse({'status': 'error', 'message': 'Error occurred while adding event.'}, status=500)
 
+#-------------------------------------------------------------------------
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+from .models import TemporalEvent  # Import the model
 
+User = get_user_model()
+
+def edit_event(request):
+    print("Edit event view triggered!") 
+    if request.method == "POST":
+        try:
+            # Parse incoming data
+            data = json.loads(request.body)
+            event_code = data.get("event_code")  # Get the event code to identify the event
+            event = get_object_or_404(TemporalEvent, event_code=event_code)  # Find event by event_code
+
+            # Capture the logged-in user's UUID
+            updated_by = request.user.user_code  # Assuming your user model has `user_code` field
+
+            # Log the action (You can also use some action logging if required)
+            log_action(request, 'Edit Event', f"Event {event.event_name} updated.")
+
+            # Before updating, print the data that was received
+            print(f"Received data to update event: {data}")
+
+            # Update the event fields with data from the request
+            event.event_name = data["event_name"]
+            event.event_type = data["event_type"]
+            event.date = data["date"]  # Assume the 'date' comes as a valid date string
+            event.updated_by = updated_by  # Update the `updated_by` field with the logged-in user's UUID
+            
+            # Save the updated event object
+            event.save()
+            log_action(request, 'Edit Event', f"Event {event.event_name} edited by {request.user.first_name} {request.user.last_name}.")
+            # Print the updated event to check if the changes were applied
+            print(f"Updated event: {event.event_name}, {event.event_type}, {event.date}, updated by: {event.updated_by}")
+
+            # Return a success response
+            return JsonResponse({'status': 'success', 'message': 'Event updated successfully'})
+
+        except Exception as e:
+            # Print error to the console for debugging
+            print(f"Error: {e}")
+            # Return error message if something goes wrong
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+from .models import TemporalEvent
+
+def delete_event(request):
+    print("Delete event view triggered!")
+
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            event_code = data.get("event_code")
+
+            if not event_code:
+                return JsonResponse({'status': 'error', 'message': 'Event code is required.'}, status=400)
+
+            event = get_object_or_404(TemporalEvent, event_code=event_code)
+
+            log_action(request, 'Delete Event', f"Event {event.event_name} deleted by {request.user.first_name} {request.user.last_name}.")
+
+            event.delete()
+
+            print(f"✅ Deleted event with code: {event_code}")
+            return JsonResponse({'status': 'success', 'message': 'Event deleted successfully'})
+
+        except Exception as e:
+            print(f"❌ Error deleting event: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
 #-------------------------------------------------------------------------
