@@ -104,9 +104,31 @@ class Dataset(models.Model):
     is_friday = models.BooleanField(default=False)
     is_saturday = models.BooleanField(default=False)
 
-    is_day_before_holiday = models.BooleanField(default=False)
-    is_long_weekend = models.BooleanField(default=False)
-    is_day_before_long_weekend = models.BooleanField(default=False)
+    is_day_before_holiday = models.BooleanField(default=False)                                      #!!!
+    is_long_weekend = models.BooleanField(default=False)                                            #!!!
+    is_day_before_long_weekend = models.BooleanField(default=False)                                 #!!!      
+
+    is_local_holiday = models.BooleanField(default=False)
+    is_university_event = models.BooleanField(default=False)
+    is_local_event = models.BooleanField(default=False)
+    is_others = models.BooleanField(default=False)
+    is_flagged = models.BooleanField(default=False)
+
+
+    is_within_ay = models.BooleanField(default=False)
+
+    is_start_of_sem=models.BooleanField(default=False)
+
+    is_day_before_end_of_sem=models.BooleanField(default=False)
+    is_week_before_end_of_sem=models.BooleanField(default=False)
+    is_end_of_sem=models.BooleanField(default=False)    
+    is_day_after_end_of_sem=models.BooleanField(default=False)
+    is_2days_after_end_of_sem=models.BooleanField(default=False)
+    is_week_after_end_of_sem=models.BooleanField(default=False)
+
+
+    
+
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -142,24 +164,6 @@ class TemporalEvent(models.Model):
 
 
 #-------------------------------------------------------------------------
-
-# from django.db import models
-# import uuid
-
-# class HolidayEvent(models.Model):
-#     EVENT_TYPE_CHOICES = [
-#         ('holiday', 'Holiday'),
-#     ]
-
-#     # Primary fields
-#     event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-#     event_name = models.CharField(max_length=255)
-#     event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
-#     date = models.DateField(null=True, blank=True)  # This will hold the date without any year filtering
-
-#     # Tracking fields
-#     updated_by = models.UUIDField(null=True, blank=True)  # UUID of the user who last updated it (you may link this with a user model)
-#     updated_at = models.DateTimeField(auto_now=True)  # Automatically updated timestamp when the object is updated
 
 class HolidayEvent(models.Model):
     EVENT_TYPE_CHOICES = [

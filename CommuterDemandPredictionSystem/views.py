@@ -46,6 +46,69 @@ def is_day_before_long_weekend(d, holidays):
     return is_long_weekend(d + timedelta(days=1), holidays)
 
 #-------------------------------------------------------------------------
+
+
+def check_local_holiday_flag(target_date):
+    return TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
+
+def check_university_event_flag(target_date):
+    return TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
+
+def check_local_event_flag(target_date):
+    return TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
+
+def check_others_event_flag(target_date):
+    return TemporalEvent.objects.filter(date=target_date, event_type='others').exists()
+
+
+def get_university_semester_flags(target_date):
+    flags = {
+        'is_within_ay': False,
+        'is_start_of_sem': False,
+        'is_day_before_end_of_sem': False,
+        'is_week_before_end_of_sem': False,
+        'is_end_of_sem': False,
+        'is_day_after_end_of_sem': False,
+        'is_2days_after_end_of_sem': False,
+        'is_week_after_end_of_sem': False
+    }
+
+    # Collect start and end dates of sems
+    events = TemporalEvent.objects.filter(event_type='university_event')
+    sem_starts = events.filter(event_name__icontains='Start of').order_by('date')
+    sem_ends = events.filter(event_name__icontains='End of').order_by('date')
+
+    for start_event, end_event in zip(sem_starts, sem_ends):
+        start_date = start_event.date
+        end_date = end_event.date
+
+        if start_date <= target_date <= end_date:
+            flags['is_within_ay'] = True
+        if target_date == start_date:
+            flags['is_start_of_sem'] = True
+        if target_date == end_date - timedelta(days=1):
+            flags['is_day_before_end_of_sem'] = True
+
+        # if target_date == end_date - timedelta(days=7):
+        #     flags['is_week_before_end_of_sem'] = True
+        if end_date - timedelta(days=7) <= target_date < end_date:                      # 7 days before eos
+            flags['is_week_before_end_of_sem'] = True
+
+
+        if target_date == end_date:
+            flags['is_end_of_sem'] = True
+        if target_date == end_date + timedelta(days=1):
+            flags['is_day_after_end_of_sem'] = True
+        if target_date == end_date + timedelta(days=2):
+            flags['is_2days_after_end_of_sem'] = True
+        # if target_date == end_date + timedelta(days=7):
+        #     flags['is_week_after_end_of_sem'] = True
+        if end_date < target_date <= end_date + timedelta(days=7):                      # 7 days after eos
+            flags['is_week_after_end_of_sem'] = True
+
+    return flags
+
+
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
@@ -275,6 +338,9 @@ from django.shortcuts import render, redirect
 User = get_user_model()
 
 def dataset_upload_list(request):
+
+
+
     if request.method == 'POST':
         dataset_file = request.FILES.get('dataset_file')
         if dataset_file:
@@ -285,7 +351,7 @@ def dataset_upload_list(request):
                 df = pd.read_csv(dataset_file)
 
             user = request.user
-            print(f"User Code: {user.user_code}")  # Debug
+            # print(f"User Code: {user.user_code}")  # Debug
 
             holidays = build_holiday_set()  # Build once
 
@@ -303,6 +369,7 @@ def dataset_upload_list(request):
                     print(f"Error parsing time: {e}")
                     continue
 
+
                 num_commuters = row['Commuters']
 
                 day_of_week = date_val.strftime("%A")
@@ -316,16 +383,62 @@ def dataset_upload_list(request):
                 is_lweekend = is_long_weekend(date_val, holidays)
                 is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
 
+                is_local_holiday = check_local_holiday_flag(date_val)
+                is_university_event = check_university_event_flag(date_val)
+                is_local_event = check_local_event_flag(date_val)
+                is_others = check_others_event_flag(date_val)
+
+                semester_flags = get_university_semester_flags(date_val)
+
+                is_within_ay = semester_flags['is_within_ay']
+                is_start_of_sem = semester_flags['is_start_of_sem']
+                is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
+                is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
+                is_end_of_sem = semester_flags['is_end_of_sem']
+                is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
+                is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
+                is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
+
+
                 # print(f"Saving Dataset - Date: {date_val}, Route: {route}, Time: {time_val}, "
                 #     f"Commuters: {num_commuters}, Day: {day_of_week}, Month: {month}, "
                 #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
                 #     f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
 
                 
-                print(f"Saving Dataset - Date: {date_val},"
-                    f"Commuters: {num_commuters},  "
-                    f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
-                    f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
+                # print(f"Saving Dataset - Date: {date_val}, "
+                #   f"Commuters: {num_commuters},  "
+                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
+                #     f"isLongWeekend: {is_lweekend}, isDayBeforeLongWeekend: {is_before_lweekend}")
+                #     f"isHoliday: {is_holiday}, isDayBeforeHoliday: {is_before_holiday}, "
+                # print(f"Saving Dataset - Date: {date_val} University Event: {is_university_event}")
+
+                # print(f"Saving Dataset - Date: {date_val} | Local Holiday : {is_local_holiday}| University Event: {is_university_event} | Local Event: {is_local_event} | Others: {is_others}")
+
+                # print(
+                #     f"Date: {date_val} | "
+                #     f"is_within_ay: {is_within_ay}, "
+                #     f"is_start_of_sem: {is_start_of_sem}, "
+                #     f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
+                #     f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
+                #     # f"is_end_of_sem: {is_end_of_sem}, "
+                #     # f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
+                #     # f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
+                #     # f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
+                # )
+
+                # print(
+                #     f"Date: {date_val} | "
+                #     # f"is_within_ay: {is_within_ay}, "
+                #     # f"is_start_of_sem: {is_start_of_sem}, "
+                #     # f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
+                #     # f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
+                #     f"is_end_of_sem: {is_end_of_sem}, "
+                #     f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
+                #     f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
+                #     f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
+                # )
+
 
                 Dataset.objects.create(
                     date=date_val,
@@ -342,7 +455,23 @@ def dataset_upload_list(request):
                     is_holiday=is_holiday,
                     is_day_before_holiday=is_before_holiday,
                     is_long_weekend=is_lweekend,
-                    is_day_before_long_weekend=is_before_lweekend
+                    is_day_before_long_weekend=is_before_lweekend,
+
+                    # Temporal event flags
+                    is_local_holiday=is_local_holiday,
+                    is_university_event=is_university_event,
+                    is_local_event=is_local_event,
+                    is_others=is_others,
+
+                    # Semester-related flags
+                    is_within_ay=is_within_ay,
+                    is_start_of_sem=is_start_of_sem,
+                    is_day_before_end_of_sem=is_day_before_end_of_sem,
+                    is_week_before_end_of_sem=is_week_before_end_of_sem,
+                    is_end_of_sem=is_end_of_sem,
+                    is_day_after_end_of_sem=is_day_after_end_of_sem,
+                    is_2days_after_end_of_sem=is_2days_after_end_of_sem,
+                    is_week_after_end_of_sem=is_week_after_end_of_sem
                 )
 
                 log_action(request, 'Dataset Upload', f"User {user.first_name} {user.last_name} upload dataset.")
