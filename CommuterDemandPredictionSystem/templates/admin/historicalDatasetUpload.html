@@ -6,15 +6,18 @@
         <div class="col-12 mb-3">
             <div class="d-flex justify-content-between">
                 <!-- Upload Dataset Button -->
-                <form id="uploadDatasetForm" method="POST" enctype="multipart/form-data" action="{% url 'historical_dataset_event_list' %}">
+                <form method="POST" enctype="multipart/form-data" action="{% url 'historical_dataset_upload_list' %}">
+
+
                     {% csrf_token %}
                     <div class="input-group">
-                        <input type="file" class="form-control" name="dataset_file" accept=".xlsx,.csv" required>
+                        <input type="file" class="form-control" name="historical_dataset_file" accept=".xlsx,.csv" required>
                         <button type="submit" class="btn btn-primary">
                             <i class="ti ti-upload me-2"></i> Upload Historical Dataset
                         </button>
                     </div>
                 </form>
+                
             </div>
         </div>
         

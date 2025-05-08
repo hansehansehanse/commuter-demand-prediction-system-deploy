@@ -65,7 +65,7 @@ document.querySelectorAll("form[id^='editEventForm']").forEach((form) => {
             console.log("🗑️ Event deleted:", result);
             window.location.reload();
         })
-        // .catch(error => {
+        // .catch(error => {                                                                      # removed catch since it contradicts with sp_event1.js
         //     console.error("❌ Delete error:", error);
         //     alert("Something went wrong. See console for details.");
         // });

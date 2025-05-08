@@ -899,20 +899,185 @@ def ajax_random_forest_prediction(route, time_str, selected_date):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-# # views.py
+
 # from django.shortcuts import render
+# from CommuterDemandPredictionSystem.models import HistoricalTemporalEvent
+# from django.contrib.auth import get_user_model
 
-# def historicalDataset_upload_list(request):
-#     print("Rendering historicalDatasetUpload template")
-#     return render(request, 'admin/historicalDatasetUpload.html')
+# User = get_user_model()
 
-from django.shortcuts import render
-from CommuterDemandPredictionSystem.models import HistoricalTemporalEvent
+# def historical_dataset_event_list(request):
+#     events = HistoricalTemporalEvent.objects.all().order_by('-date')
+
+#     user_map = {user.user_code: user for user in User.objects.all()}
+#     for event in events:
+#         event.created_by_user = user_map.get(event.created_by)
+#         event.updated_by_user = user_map.get(event.updated_by)
+
+#     context = {
+#         'historical_events': events
+#     }
+
+#     return render(request, 'admin/historicalDatasetUpload.html', context)
+
+# from django.shortcuts import render
+# from CommuterDemandPredictionSystem.models import HistoricalDataset, HistoricalTemporalEvent
+# from django.contrib.auth import get_user_model
+
+# User = get_user_model()
+
+# def historical_dataset_event_list(request):
+#     # Fetch all HistoricalDataset and HistoricalTemporalEvent records
+#     historical_datasets = HistoricalDataset.objects.all().order_by('-date')  # Adjust ordering if needed
+#     events = HistoricalTemporalEvent.objects.all().order_by('-date')  # Adjust ordering if needed
+
+#     # Map user_code to users
+#     user_map = {user.user_code: user for user in User.objects.all()}
+
+#     # Assign user data to events
+#     for event in events:
+#         event.created_by_user = user_map.get(event.created_by)
+#         event.updated_by_user = user_map.get(event.updated_by)
+
+#     # Pass both datasets and events to the template
+#     context = {
+#         'historical_datasets': historical_datasets,
+#         'historical_events': events
+#     }
+
+#     return render(request, 'admin/historicalDatasetUpload.html', context)
+
+
 from django.contrib.auth import get_user_model
+from .models import HistoricalDataset
+import pandas as pd
+from datetime import datetime
+from django.shortcuts import render, redirect
 
 User = get_user_model()
 
+def historical_dataset_upload_list(request):
+
+    # group_semester_dates_historical()
+    
+    if request.method == 'POST':
+        dataset_file = request.FILES.get('historical_dataset_file')
+        if dataset_file:
+            file_extension = dataset_file.name.split('.')[-1]
+            if file_extension == 'xlsx':
+                df = pd.read_excel(dataset_file)
+            elif file_extension == 'csv':
+                df = pd.read_csv(dataset_file)
+
+            
+            user = request.user
+            holidays = build_holiday_set()  # Build once
+
+            for _, row in df.iterrows():
+                try:
+                    date_val = pd.to_datetime(row['Date']).date()
+                except Exception as e:
+                    print(f"Error parsing date: {e}")
+                    continue
+
+                route = row['Route']
+                try:
+                    time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+                except ValueError as e:
+                    print(f"Error parsing time: {e}")
+                    continue
+
+                num_commuters = row['Commuters']
+
+                day_of_week = date_val.strftime("%A")
+                month = date_val.strftime("%B")
+                weekday = date_val.weekday()
+
+                is_friday = weekday == 4
+                is_saturday = weekday == 5
+                is_holiday = date_val in holidays
+                is_before_holiday = is_day_before_holiday(date_val, holidays)
+                is_lweekend = is_long_weekend(date_val, holidays)
+                is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
+
+                is_local_holiday = check_local_holiday_flag(date_val)
+                is_university_event = check_university_event_flag(date_val)
+                is_local_event = check_local_event_flag(date_val)
+                is_others = check_others_event_flag(date_val)
+
+                semester_flags = get_historical_university_semester_flags(date_val)
+
+                is_within_ay = semester_flags['is_within_ay']
+                is_start_of_sem = semester_flags['is_start_of_sem']
+                is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
+                is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
+                is_end_of_sem = semester_flags['is_end_of_sem']
+                is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
+                is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
+                is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
+
+
+                # print(f"Date: {date_val}, Commuters: {num_commuters}, Holiday: {is_holiday}, Before-Holiday: {is_before_holiday}, LongWeekend: {is_lweekend}, Before-LongWeekend: {is_before_lweekend}")
+                # print(f"Date: {date_val}, Commuters: {num_commuters}, Local-Holiday: {is_local_holiday}, Univ-Event: {is_university_event}, Local-Event: {is_local_event}, Others: {is_others}, Semester Flags: {semester_flags}")
+
+
+                HistoricalDataset.objects.create(
+                    date=date_val,
+                    route=route,
+                    time=time_val,
+                    num_commuters=num_commuters,
+                    user_code=user.user_code,
+                    filename=dataset_file.name,
+
+                    day_of_week=day_of_week,
+                    month=month,
+                    is_friday=is_friday,
+                    is_saturday=is_saturday,
+                    is_holiday=is_holiday,
+                    is_day_before_holiday=is_before_holiday,
+                    is_long_weekend=is_lweekend,
+                    is_day_before_long_weekend=is_before_lweekend,
+
+                    # Temporal event flags
+                    is_local_holiday=is_local_holiday,
+                    is_university_event=is_university_event,
+                    is_local_event=is_local_event,
+                    is_others=is_others,
+
+                    # Semester-related flags
+                    is_within_ay=is_within_ay,
+                    is_start_of_sem=is_start_of_sem,
+                    is_day_before_end_of_sem=is_day_before_end_of_sem,
+                    is_week_before_end_of_sem=is_week_before_end_of_sem,
+                    is_end_of_sem=is_end_of_sem,
+                    is_day_after_end_of_sem=is_day_after_end_of_sem,
+                    is_2days_after_end_of_sem=is_2days_after_end_of_sem,
+                    is_week_after_end_of_sem=is_week_after_end_of_sem
+                )
+
+                log_action(request, 'Historical Dataset Upload', f"User {user.first_name} {user.last_name} uploaded historical dataset.")
+
+            return redirect('historical_dataset_upload_list')
+
+    historical_datasets = HistoricalDataset.objects.all()
+
+    user_map = {
+        u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in historical_datasets])
+    }
+
+    for d in historical_datasets:
+        d.uploader = user_map.get(d.user_code)
+
+    return render(request, 'admin/historicalDatasetUpload.html', {'historical_datasets': historical_datasets})
+ 
+
+
 def historical_dataset_event_list(request):
+
+    historical_dataset_upload_list(request)
+
+    # Load data
+    datasets = HistoricalDataset.objects.all().order_by('-id')
     events = HistoricalTemporalEvent.objects.all().order_by('-date')
 
     user_map = {user.user_code: user for user in User.objects.all()}
@@ -921,10 +1086,12 @@ def historical_dataset_event_list(request):
         event.updated_by_user = user_map.get(event.updated_by)
 
     context = {
-        'historical_events': events
+        'historical_datasets': datasets,
+        'historical_events': events,
     }
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
+
 
 #-------------------------------------------------------------------------
 
@@ -1043,11 +1210,112 @@ def delete_historical_event(request):
 
 
 #-------------------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+def group_semester_dates_historical():
+    grouped_dates = {
+        'Start of 1st Sem': [],
+        'End of 1st Sem': [],
+        'Start of 2nd Sem': [],
+        'End of 2nd Sem': [],
+        'Start of Midyear': [],
+        'End of Midyear': [],
+        'Start of 1st Sem Final Examinations': [],
+        'End of 1st Sem Final Examinations': [],
+        'Start of 2nd Sem Final Examinations': [],
+        'End of 2nd Sem Final Examinations': [],
+        'Start of Mid Year Final Examinations': [],
+        'End of Mid Year Final Examinations': []
+    }
+
+    # Fetch all university_event type events
+    events = HistoricalTemporalEvent.objects.filter(event_type='university_event')
+
+    for event in events:
+        normalized_name = event.event_name.strip().upper()  # Normalize case
+        for key in grouped_dates:
+            if key.upper() in normalized_name:
+                grouped_dates[key].append(event.date)
+
+    return grouped_dates
+
+
+# # Calling the function to group dates
+# grouped_dates_historical = group_semester_dates_historical()
+
+# # Output the grouped dates
+# for event_type, date_list in grouped_dates_historical.items():
+#     print(f"{event_type}: {date_list}")
+
+#-------------------------------------------------------------------------
+from datetime import timedelta
+
+def get_historical_university_semester_flags(target_date):
+    flags = {
+        'is_within_ay': False,
+        'is_start_of_sem': False,
+        'is_day_before_end_of_sem': False,
+        'is_week_before_end_of_sem': False,
+        'is_end_of_sem': False,
+        'is_day_after_end_of_sem': False,
+        'is_2days_after_end_of_sem': False,
+        'is_week_after_end_of_sem': False
+    }
+
+    grouped = group_semester_dates_historical()  # dynamically fetches data
+
+    semester_ranges = [
+        ('Start of 1st Sem', 'End of 1st Sem'),
+        ('Start of 2nd Sem', 'End of 2nd Sem'),
+        ('Start of Midyear', 'End of Midyear'),
+    ]
+
+    for start_key, end_key in semester_ranges:
+        start_dates = grouped.get(start_key, [])
+        end_dates = grouped.get(end_key, [])
+
+        for start_date, end_date in zip(start_dates, end_dates):
+            if start_date <= target_date <= end_date:
+                flags['is_within_ay'] = True
+            if target_date == start_date:
+                flags['is_start_of_sem'] = True
+            if target_date == end_date - timedelta(days=1):
+                flags['is_day_before_end_of_sem'] = True
+            if end_date - timedelta(days=7) <= target_date < end_date:
+                flags['is_week_before_end_of_sem'] = True
+            if target_date == end_date:
+                flags['is_end_of_sem'] = True
+            if target_date == end_date + timedelta(days=1):
+                flags['is_day_after_end_of_sem'] = True
+            if target_date == end_date + timedelta(days=2):
+                flags['is_2days_after_end_of_sem'] = True
+            if end_date < target_date <= end_date + timedelta(days=7):
+                flags['is_week_after_end_of_sem'] = True
+
+    return flags
+
 #-------------------------------------------------------------------------
 
 
 
 
+#-------------------------------------------------------------------------
 
 
 

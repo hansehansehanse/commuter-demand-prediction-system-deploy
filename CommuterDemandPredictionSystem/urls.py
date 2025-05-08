@@ -55,18 +55,21 @@ urlpatterns = [
 
 
 
- 
-    path('admin/historicalDatasetUpload/', views.historical_dataset_event_list, name='historical_dataset_event_list'),
+    
+    path('admin/historicalDatasetUpload/upload', views.historical_dataset_upload_list, name='historical_dataset_upload_list'),
+    path('admin/historicalDatasetUpload/dataset', views.historical_dataset_event_list, name='historical_dataset_event_list'),
+    
+
+
  
     path('admin/historicalDatasetUpload/addHistoricalEvent/', views.add_historical_event, name='add_historical_event'),
-
     path('admin/historicalDatasetUpload/editHistoricalEvent/', views.edit_historical_event, name='edit_historical_event'),
-
     path('admin/historicalDatasetUpload/deleteHistoricalEvent/', views.delete_historical_event, name='delete_historical_event'),
 
 
     
    
+
 
 
     
