@@ -14,7 +14,8 @@ class CommuterdemandpredictionsystemConfig(AppConfig):
     def create_default_users(self, **kwargs):
         # Call the custom command to create default users after migration
         call_command('create_default_users')
-
         call_command('populate_events')
         call_command('populate_holidayEvents')
+        call_command('populate_historicalEvents')
+
         

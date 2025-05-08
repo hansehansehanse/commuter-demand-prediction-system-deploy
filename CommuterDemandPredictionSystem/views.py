@@ -642,6 +642,58 @@ def delete_event(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
+
+#-------------------------------------------------------------------------
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+from .models import HolidayEvent  # Import your HolidayEvent model
+
+User = get_user_model()
+
+def edit_holiday_event(request):
+    print("Edit holiday event view triggered!") 
+    if request.method == "POST":
+        try:
+            # Parse incoming data
+            data = json.loads(request.body)
+            event_code = data.get("event_code")  # Get the event code to identify the event
+            event = get_object_or_404(HolidayEvent, event_code=event_code)  # Find event by event_code
+
+            # Capture the logged-in user's UUID
+            updated_by = request.user.user_code  # Assuming your user model has `user_code` field
+
+            # Log the action (You can also use some action logging if required)
+            log_action(request, 'Edit Holiday Event', f"Holiday Event {event.event_name} updated.")
+
+            # Before updating, print the data that was received
+            print(f"Received data to update holiday event: {data}")
+
+
+            # Update the holiday event fields with data from the request
+            event.event_name = data["event_name"]
+            # event.event_type = data["event_type"]
+            event.date = data["date"]  # Assume the 'date' comes as a valid date string
+            event.updated_by = updated_by  # Update the `updated_by` field with the logged-in user's UUID
+            
+            
+            # Save the updated event object
+            event.save()
+            log_action(request, 'Edit Holiday Event', f"Holiday Event {event.event_name} edited by {request.user.first_name} {request.user.last_name}.")
+            # Print the updated event to check if the changes were applied
+            print(f"Updated holiday event: {event.event_name}, {event.date}, updated by: {event.updated_by}")
+
+            # Return a success response
+            return JsonResponse({'status': 'success', 'message': 'Holiday Event updated successfully'})
+
+        except Exception as e:
+            # Print error to the console for debugging
+            print(f"Error: {e}")
+            # Return error message if something goes wrong
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
@@ -845,9 +897,150 @@ def ajax_random_forest_prediction(route, time_str, selected_date):
        
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+# # views.py
+# from django.shortcuts import render
+
+# def historicalDataset_upload_list(request):
+#     print("Rendering historicalDatasetUpload template")
+#     return render(request, 'admin/historicalDatasetUpload.html')
+
+from django.shortcuts import render
+from CommuterDemandPredictionSystem.models import HistoricalTemporalEvent
+from django.contrib.auth import get_user_model
+
+User = get_user_model()
+
+def historical_dataset_event_list(request):
+    events = HistoricalTemporalEvent.objects.all().order_by('-date')
+
+    user_map = {user.user_code: user for user in User.objects.all()}
+    for event in events:
+        event.created_by_user = user_map.get(event.created_by)
+        event.updated_by_user = user_map.get(event.updated_by)
+
+    context = {
+        'historical_events': events
+    }
+
+    return render(request, 'admin/historicalDatasetUpload.html', context)
 
 #-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
+
+def add_historical_event(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            print("📩 Received historical event data:", data)
+
+            event_name = data.get('event_name', '').strip()
+            event_type = data.get('event_type', '')
+            event_date = data.get('date', None)
+
+            if event_type not in dict(TemporalEvent.EVENT_TYPE_CHOICES):
+                return JsonResponse({'status': 'error', 'message': 'Invalid event type.'}, status=400)
+
+            if HistoricalTemporalEvent.objects.filter(event_name=event_name, date=event_date).exists():                         # can be improved filter for similar looking event inputs
+                return JsonResponse({'status': 'error', 'message': 'Event already exists.'}, status=400)
+
+            created_by_user = request.user.user_code
+
+            HistoricalTemporalEvent.objects.create(
+                event_name=event_name,
+                event_type=event_type,
+                date=event_date,
+                created_by=created_by_user,
+                updated_by=created_by_user,
+            )
+
+            log_action(request, 'Add Historical Event', f"{event_name} added by {request.user.first_name} {request.user.last_name}.")
+            return JsonResponse({'status': 'success'}, status=201)
+
+        except Exception as e:
+            logger.error(f"❌ Error adding historical event: {str(e)}")
+            return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
+
+
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+
+User = get_user_model()
+
+def edit_historical_event(request):
+    print("Edit historical event view triggered!") 
+    if request.method == "POST":
+        try:
+            # Parse incoming data
+            data = json.loads(request.body)
+            event_code = data.get("event_code")  # Get the event code to identify the event
+            event = get_object_or_404(HistoricalTemporalEvent, event_code=event_code)  # Find event by event_code
+
+            # Capture the logged-in user's UUID
+            updated_by = request.user.user_code  # Assuming your user model has `user_code` field
+
+            # Log the action
+            log_action(request, 'Edit Historical Event', f"Historical event {event.event_name} update requested.")
+
+            # Debug print
+            print(f"Received data to update historical event: {data}")
+
+            # Update fields
+            event.event_name = data["event_name"]
+            event.event_type = data["event_type"]
+            event.date = data["date"]
+            event.updated_by = updated_by
+            
+            # Save changes
+            event.save()
+
+            log_action(request, 'Edit Historical Event', f"Historical event {event.event_name} edited by {request.user.first_name} {request.user.last_name}.")
+            print(f"Updated historical event: {event.event_name}, {event.event_type}, {event.date}, updated by: {event.updated_by}")
+
+            return JsonResponse({'status': 'success', 'message': 'Historical event updated successfully'})
+
+        except Exception as e:
+            print(f"Error editing historical event: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
+
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib.auth import get_user_model
+from django.http import JsonResponse
+from django.shortcuts import get_object_or_404
+import json
+from .models import HistoricalTemporalEvent  # ✅ Correct model
+
+User = get_user_model()
+
+# @csrf_exempt
+def delete_historical_event(request):
+    
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            event_code = data.get("event_code")
+
+            if not event_code:
+                return JsonResponse({'status': 'error', 'message': 'Event code is required.'}, status=400)
+
+            event = get_object_or_404(HistoricalTemporalEvent, event_code=event_code)  # ✅ Correct model usage
+
+            log_action(request, 'Delete Historical Event', f"Event {event.event_name} deleted by {request.user.first_name} {request.user.last_name}.")  # Optional: customize log
+
+            event.delete()
+
+            print(f"✅ Deleted historical event with code: {event_code}")
+            return JsonResponse({'status': 'success', 'message': 'Historical event deleted successfully'})
+
+        except Exception as e:
+            print(f"❌ Error deleting historical event: {e}")
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
+
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------

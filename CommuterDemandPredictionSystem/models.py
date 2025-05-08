@@ -191,3 +191,72 @@ class HolidayEvent(models.Model):
 
 
 #-------------------------------------------------------------------------
+
+class HistoricalDataset(models.Model):
+    dataset_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    date = models.DateField()
+    route = models.CharField(max_length=100)
+    time = models.TimeField()
+    num_commuters = models.IntegerField()
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    user_code = models.UUIDField()                                                                  #!!!
+    filename = models.CharField(max_length=255, blank=True, null=True)
+    date_uploaded = models.DateTimeField(auto_now_add=True)
+
+    day_of_week = models.CharField(max_length=20, blank=True)
+    day = models.CharField(max_length=20, null=True, blank=True)
+    month = models.CharField(max_length=20, blank=True)
+    is_holiday = models.BooleanField(default=False)
+    is_friday = models.BooleanField(default=False)
+    is_saturday = models.BooleanField(default=False)
+
+    is_day_before_holiday = models.BooleanField(default=False)                                      #!!!
+    is_long_weekend = models.BooleanField(default=False)                                            #!!!
+    is_day_before_long_weekend = models.BooleanField(default=False)                                 #!!!      
+
+    is_local_holiday = models.BooleanField(default=False)
+    is_university_event = models.BooleanField(default=False)
+    is_local_event = models.BooleanField(default=False)
+    is_others = models.BooleanField(default=False)
+    is_flagged = models.BooleanField(default=False)
+
+
+    is_within_ay = models.BooleanField(default=False)
+
+    is_start_of_sem=models.BooleanField(default=False)
+
+    is_day_before_end_of_sem=models.BooleanField(default=False)
+    is_week_before_end_of_sem=models.BooleanField(default=False)
+    is_end_of_sem=models.BooleanField(default=False)    
+    is_day_after_end_of_sem=models.BooleanField(default=False)
+    is_2days_after_end_of_sem=models.BooleanField(default=False)
+    is_week_after_end_of_sem=models.BooleanField(default=False)
+
+
+
+
+from django.contrib.auth import get_user_model
+import uuid
+
+User = get_user_model()
+
+class HistoricalTemporalEvent(models.Model):
+    EVENT_TYPE_CHOICES = [
+        ('local_holiday', 'Local Holiday'),
+        ('university_event', 'University Event'),
+        ('local_event', 'Local Event'),
+        ('others', 'Others'),
+    ]
+
+    event_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    event_name = models.CharField(max_length=255)
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPE_CHOICES)
+    date = models.DateField(null=True, blank=True)
+
+    sort_order = models.PositiveIntegerField(default=0)
+
+    created_by = models.UUIDField(null=True, blank=True)  # Allow null initially
+    updated_by = models.UUIDField(null=True, blank=True)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)

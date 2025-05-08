@@ -1,0 +1,348 @@
+{% extends 'admin_base.html' %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+    <div class="row">
+        <div class="col-12 mb-3">
+            <div class="d-flex justify-content-between">
+                <!-- Upload Dataset Button -->
+                <form id="uploadDatasetForm" method="POST" enctype="multipart/form-data" action="{% url 'historical_dataset_event_list' %}">
+                    {% csrf_token %}
+                    <div class="input-group">
+                        <input type="file" class="form-control" name="dataset_file" accept=".xlsx,.csv" required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="ti ti-upload me-2"></i> Upload Historical Dataset
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- Historical Dataset Table (Training Set)-->
+        <div class="col-12">
+            <div class="card" style="min-height: 600px;">
+                <div class="table-responsive card-datatable" style="overflow-x: auto;">
+                    <table id="historicalDatasetTable" class="table border-top w-100">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Route</th>
+                                <th>Time</th>
+                                <th>Number of Commuters</th>
+                                <th>Filename</th>
+                                <th>Date Uploaded</th>
+                                <th>Dataset Code</th>
+                                <th>Uploaded By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for data in historical_datasets %}
+                                <tr>
+                                    <td>{{ data.date }}</td>
+                                    <td>{{ data.route }}</td>
+                                    <td>{{ data.time }}</td>
+                                    <td>{{ data.num_commuters }}</td>
+                                    <td>{{ data.filename }}</td>
+                                    <td>{{ data.date_uploaded|date:"Y-m-d H:i" }}</td>
+                                    <td>{{ data.dataset_code }}</td>
+                                    <td>
+                                        {% if data.uploader %}
+                                            {{ data.uploader.first_name }} {{ data.uploader.last_name }}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="8" class="text-center">No historical dataset entries available.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+        <div style="height: 25px;"></div>
+
+
+
+        <!-- Historical Event Table -->
+        <div class="col-12">
+            <div class="card" style="min-height: 600px;">
+
+                <div class="card-body pb-0">
+                    <!-- Heading and Button on the same row -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">
+                            <span class="text-muted fw-light">Historical Events /</span> Events
+                        </h4>
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addHistoricalEventModal">
+                            <i class="ti ti-plus me-2"></i> Add Event
+                        </button>
+                    </div>
+                
+                    <div class="table-responsive card-datatable" style="overflow-x: auto;">
+                        <!-- your table here -->
+                    </div>
+                </div>
+
+                <div class="table-responsive card-datatable" style="overflow-x: auto;">
+
+                    <table id="historicalEventTable" class="table border-top w-100">
+                        <thead>
+                            <tr>
+                                <!-- <th>Event Code</th> -->
+                                <th>Event Name</th>
+                                <th>Event Type</th>
+                                <th>Date</th>
+                                <th>Created By</th>
+                                <th>Updated By</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for event in historical_events %}
+                                <tr>
+                                    <!-- <td>{{ event.event_code }}</td> -->
+                                    <td>{{ event.event_name }}</td>
+                                    <td>{{ event.get_event_type_display }}</td>
+                                    <td>{{ event.date|date:"Y-m-d" }}</td>
+                                    <td>
+                                        {% if event.created_by_user %}
+                                            {% with user=event.created_by_user %}
+                                                {{ user.first_name }} {{ user.last_name }}
+                                            {% endwith %}
+                                        {% else %}
+                                            Unknown
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if event.updated_by_user %}
+                                            {{ event.updated_by_user.first_name }} {{ event.updated_by_user.last_name }}
+                                        {% else %}
+                                            Not updated
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-nowrap">
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewHistoricalEventModal{{ event.id }}">
+                                            <i class="ti ti-eye ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editHistoricalEventModal{{ event.id }}">
+                                            <i class="ti ti-pencil ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteHistoricalEventModal{{ event.id }}">
+                                            <i class="ti ti-trash ti-xs"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="7" class="text-center">No events found.</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+
+    </div>
+</div>
+
+<!-- Add Historical Event Modal -->
+<div class="modal fade" id="addHistoricalEventModal" tabindex="-1" aria-labelledby="addHistoricalEventModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="addHistoricalEventModalLabel">Add Historical Event</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addHistoricalEventForm" method="POST" action="{% url 'add_historical_event' %}">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="historical_event_name" class="form-label">Event Name</label>
+                        <input type="text" class="form-control" id="historical_event_name" name="event_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="historical_event_type" class="form-label">Event Type</label>
+                        <select class="form-select" id="historical_event_type" name="event_type" required>
+                            <option value="local_holiday">Local Holiday</option>
+                            <option value="university_event">University Event</option>
+                            <option value="local_event">Local Event</option>
+                            <option value="others">Others</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="historical_event_date" class="form-label">Event Date</label>
+                        <input type="date" class="form-control" id="historical_event_date" name="date" required>
+                    </div>
+
+                    <div id="historicalFormResponse" class="alert" style="display: none;"></div>
+
+                    <button type="submit" class="btn btn-primary">Save Event</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- View Historical Event Modal -->
+{% for event in historical_events %}
+<div class="modal fade" id="viewHistoricalEventModal{{ event.id }}" tabindex="-1" aria-labelledby="viewHistoricalEventModalLabel{{ event.id }}" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="viewHistoricalEventModalLabel{{ event.id }}">Historical Event: {{ event.event_name }}</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <!-- <div class="mb-3">
+                    <label class="form-label">Event Code</label>
+                    <input type="text" class="form-control" value="{{ event.event_code }}" disabled>
+                </div> -->
+                <div class="mb-3">
+                    <label class="form-label">Event Name</label>
+                    <input type="text" class="form-control" value="{{ event.event_name }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Event Type</label>
+                    <input type="text" class="form-control" value="{{ event.event_type }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-control" value="{{ event.date }}" disabled>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Updated By</label>
+                    <input type="text" class="form-control" value="{{ event.updated_by }}" disabled>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endfor %}
+
+{% for event in historical_events %}
+<!-- Edit Historical Event Modal -->
+<div class="modal fade" id="editHistoricalEventModal{{ event.id }}" tabindex="-1" aria-labelledby="editHistoricalEventModalLabel{{ event.id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="editHistoricalEventModalLabel{{ event.id }}">Edit Historical Event: {{ event.event_code }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="editHistoricalEventForm{{ event.id }}">
+          {% csrf_token %}
+          <div class="alert alert-danger" id="historical-event-error-message{{ event.id }}" style="display:none;"></div>
+
+          <div class="mb-3">
+            <label class="form-label">Event Code</label>
+            <input type="text" class="form-control" value="{{ event.event_code }}" id="edit_historical_event_code{{ event.id }}" disabled>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Event Name</label>
+            <input type="text" class="form-control" id="edit_historical_event_name{{ event.id }}" value="{{ event.event_name }}" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Event Type</label>
+            <select class="form-select" id="edit_historical_event_type{{ event.id }}" required>
+              <option value="local_holiday" {% if event.event_type == 'local_holiday' %} selected {% endif %}>Local Holiday</option>
+              <option value="university_event" {% if event.event_type == 'university_event' %} selected {% endif %}>University Event</option>
+              <option value="local_event" {% if event.event_type == 'local_event' %} selected {% endif %}>Local Event</option>
+              <option value="others" {% if event.event_type == 'others' %} selected {% endif %}>Others</option>
+            </select>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Date</label>
+            <input type="date" class="form-control" id="edit_historical_event_date{{ event.id }}" value="{{ event.date|date:'Y-m-d' }}" required>
+          </div>
+
+          <input type="hidden" id="edit_historical_event_id{{ event.id }}" value="{{ event.id }}">
+
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+<!-- Delete Historical Event Modal -->
+{% for event in historical_events %}
+<div class="modal fade" id="deleteHistoricalEventModal{{ event.id }}" tabindex="-1" aria-labelledby="deleteHistoricalEventModalLabel{{ event.id }}" aria-hidden="true">
+<div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+    <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="deleteHistoricalEventModalLabel{{ event.id }}">Delete Event</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+        Are you sure you want to delete event <strong>{{ event.event_name }}</strong> on <strong>{{ event.date }}</strong>?
+    </div>
+    <div class="modal-footer">
+        <input type="hidden" id="delete_event_code{{ event.id }}" value="{{ event.event_code }}">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+        <button type="button" class="btn btn-danger delete-event-btn" data-event-id="{{ event.id }}">Delete</button>
+    </div>
+    </div>
+</div>
+</div>
+{% endfor %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<!-- DataTables Bootstrap 5 CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+
+
+<!-- Initialize DataTables AFTER DOM is fully loaded -->
+<script>
+    $(document).ready(function() {
+        $('#historicalDatasetTable').DataTable({
+            "order": [[0, "desc"]],
+            "language": {
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search historical dataset..."
+            }
+        });
+    });
+
+    $(document).ready(function() {
+        $('#historicalEventTable').DataTable({
+            "order": [[0, "desc"]],
+            "language": {
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search historical events..."
+            }
+        });
+    });
+</script>
+{% endblock %}

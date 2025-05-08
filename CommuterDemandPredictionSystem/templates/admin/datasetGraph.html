@@ -19,7 +19,7 @@
               <label for="datePicker" class="form-label">Select Date:</label>
               <div class="input-group">
                 <input type="date" id="datePicker" class="form-control form-control-lg">
-                <button type="button" class="btn btn-outline-primary" onclick="setToday()">Today</button>
+                <!-- <button type="button" class="btn btn-outline-primary" onclick="setToday()">Today</button> -->
               </div>
             </div>
 
@@ -283,7 +283,7 @@
       updateChart();
     }
   
-    document.getElementById('route').addEventListener('change', updateTimeOptions);
+    document.getElementById('route').addEventListener('change', updateTimeOptions);         //try to add when date changes
     document.getElementById('time').addEventListener('change', function () {
       lastSelectedTime = this.value;
       updateChart();

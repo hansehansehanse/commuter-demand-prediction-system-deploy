@@ -23,8 +23,10 @@ class Command(BaseCommand):
         ("End of 1st Semester", 2, datetime.date(2024, 1, 10)),
         ("Start of 2nd Semester", 3, datetime.date(2024, 1, 15)),
         ("End of 2nd Semester", 4, datetime.date(2024, 1, 25)),
-        ("test1", 5, datetime.date(2024, 1, 20)),
-        # ("Final Exams Week", 6, datetime.date(2025, 12, 1)),
+        
+        ("Loyalty Day", 5, datetime.date(2025, 10, 10)),
+        ("UPLB Foundation Day", 1, datetime.date(2024, 3, 6)),
+        ("test1", 6, datetime.date(2024, 1, 20)),
     ]
 
         for name, order, event_date in university_events:
@@ -44,7 +46,6 @@ class Command(BaseCommand):
     def add_local_holidays(self):
         local_holidays = [
 
-            # ("Los Baños Founding Anniversary", datetime.date(1900, 7, 15)),
             ("test2", datetime.date(2024, 1, 19)),
 
         ]

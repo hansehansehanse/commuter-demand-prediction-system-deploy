@@ -16,10 +16,6 @@
                         </div>
                     </form>
 
-                    <!-- Search Bar -->
-                    <div class="d-flex">
-                        <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
-                    </div>
                 </div>
             </div>
 
@@ -27,7 +23,8 @@
             <div class="col-12">
                 <div class="card" style="min-height: 600px;">
                     <div class="table-responsive card-datatable" style="overflow-x: auto;">
-                        <table class="table border-top w-100">
+                        <table id="datasetTable" class="table border-top w-100">
+
                           <thead>
                             <tr>
                                 <th>Date</th>
@@ -72,4 +69,29 @@
             </div>
         </div>
     </div>
+
+
+<!-- DataTables Bootstrap 5 CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+
+
+<script>
+    $(document).ready(function() {
+        $('#datasetTable').DataTable({
+            "order": [[0, "desc"]],  // Default sort by first column (Date) descending
+            "language": {
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search dataset..."
+            }
+        });
+    });
+
+    
+</script>
+
 {% endblock %}

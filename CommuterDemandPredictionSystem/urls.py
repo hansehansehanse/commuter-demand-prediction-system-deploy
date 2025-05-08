@@ -36,6 +36,8 @@ urlpatterns = [
 
     path('admin/datasetTemporal/edit-event/', views.edit_event, name='edit_event'),
     path('admin/datasetTemporal/delete-event/', views.delete_event, name='delete_event'),
+
+    # path('admin/datasetTemporal/edit-holidayevent/', views.edit_holidayevent, name='edit_eholidayevent'),
     
  
 
@@ -50,6 +52,25 @@ urlpatterns = [
 
 
     path('admin/datasetGraph/', views.dataset_graph, name='dataset_graph'),
+
+
+
+ 
+    path('admin/historicalDatasetUpload/', views.historical_dataset_event_list, name='historical_dataset_event_list'),
+ 
+    path('admin/historicalDatasetUpload/addHistoricalEvent/', views.add_historical_event, name='add_historical_event'),
+
+    path('admin/historicalDatasetUpload/editHistoricalEvent/', views.edit_historical_event, name='edit_historical_event'),
+
+    path('admin/historicalDatasetUpload/deleteHistoricalEvent/', views.delete_historical_event, name='delete_historical_event'),
+
+
+    
+   
+
+
+    
+
 
 
     
