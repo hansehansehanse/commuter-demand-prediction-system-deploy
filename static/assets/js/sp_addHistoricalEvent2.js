@@ -127,7 +127,7 @@ document.querySelectorAll("form[id^='editHistoricalEventForm']").forEach((form) 
 });
 
 
-  
+//!!!! bat 2 delete ko
 document.querySelectorAll(".delete-event-btn").forEach((button) => {
     button.addEventListener("click", function () {
         const eventId = this.getAttribute("data-event-id");
@@ -156,5 +156,6 @@ document.querySelectorAll(".delete-event-btn").forEach((button) => {
         });
     });
   });
+
 
 

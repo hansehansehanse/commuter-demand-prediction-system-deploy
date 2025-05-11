@@ -32,12 +32,11 @@ urlpatterns = [
     # path('admin/datasetTemporal/', views.dataset_temporal_list, name='dataset_temporal_list'),
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
     path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event
-    path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
+    # path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
 
     path('admin/datasetTemporal/edit-event/', views.edit_event, name='edit_event'),
     path('admin/datasetTemporal/delete-event/', views.delete_event, name='delete_event'),
 
-    # path('admin/datasetTemporal/edit-holidayevent/', views.edit_holidayevent, name='edit_eholidayevent'),
     
  
 
@@ -55,9 +54,12 @@ urlpatterns = [
 
 
 
-    
+    # path('admin/historicalDatasetUpload/', views.historical_dataset_upload_page, name='historical_dataset_upload_page'),
+
     path('admin/historicalDatasetUpload/upload', views.historical_dataset_upload_list, name='historical_dataset_upload_list'),
     path('admin/historicalDatasetUpload/dataset', views.historical_dataset_event_list, name='historical_dataset_event_list'),
+
+    # path('admin/historicalDatasetUpload/checkOverlap/', views.check_dataset_overlap, name='check_dataset_overlap'),
     
 
 

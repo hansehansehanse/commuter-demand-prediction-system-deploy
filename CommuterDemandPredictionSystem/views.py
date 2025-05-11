@@ -344,8 +344,10 @@ def dataset_upload_list(request):
             file_extension = dataset_file.name.split('.')[-1]
             if file_extension == 'xlsx':
                 df = pd.read_excel(dataset_file)
+                
             elif file_extension == 'csv':
                 df = pd.read_csv(dataset_file)
+                
 
             user = request.user
             # print(f"User Code: {user.user_code}")  # Debug
@@ -900,182 +902,193 @@ def ajax_random_forest_prediction(route, time_str, selected_date):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-# from django.shortcuts import render
-# from CommuterDemandPredictionSystem.models import HistoricalTemporalEvent
-# from django.contrib.auth import get_user_model
-
-# User = get_user_model()
-
-# def historical_dataset_event_list(request):
-#     events = HistoricalTemporalEvent.objects.all().order_by('-date')
-
-#     user_map = {user.user_code: user for user in User.objects.all()}
-#     for event in events:
-#         event.created_by_user = user_map.get(event.created_by)
-#         event.updated_by_user = user_map.get(event.updated_by)
-
-#     context = {
-#         'historical_events': events
-#     }
-
-#     return render(request, 'admin/historicalDatasetUpload.html', context)
-
-# from django.shortcuts import render
-# from CommuterDemandPredictionSystem.models import HistoricalDataset, HistoricalTemporalEvent
-# from django.contrib.auth import get_user_model
-
-# User = get_user_model()
-
-# def historical_dataset_event_list(request):
-#     # Fetch all HistoricalDataset and HistoricalTemporalEvent records
-#     historical_datasets = HistoricalDataset.objects.all().order_by('-date')  # Adjust ordering if needed
-#     events = HistoricalTemporalEvent.objects.all().order_by('-date')  # Adjust ordering if needed
-
-#     # Map user_code to users
-#     user_map = {user.user_code: user for user in User.objects.all()}
-
-#     # Assign user data to events
-#     for event in events:
-#         event.created_by_user = user_map.get(event.created_by)
-#         event.updated_by_user = user_map.get(event.updated_by)
-
-#     # Pass both datasets and events to the template
-#     context = {
-#         'historical_datasets': historical_datasets,
-#         'historical_events': events
-#     }
-
-#     return render(request, 'admin/historicalDatasetUpload.html', context)
-
-
-from django.contrib.auth import get_user_model
-from .models import HistoricalDataset
-import pandas as pd
 from datetime import datetime
-from django.shortcuts import render, redirect
+#used in HistoricalDatasetUpload.html
+def parse_date_strict(date_str):
+    original = str(date_str).strip()
+    print("Original:", original)
 
-User = get_user_model()
+    # Remove time if it exists
+    if " " in original:
+        original = original.split(" ")[0]
+        print(f"Stripped time: {original}")
+
+    # Try special YYYY-DD-MM logic
+    try:
+        parts = original.split("-")
+        if len(parts) == 3 and len(parts[0]) == 4:
+            # Treat it as YYYY-DD-MM (flipped)
+            flipped_str = f"{parts[2]}/{parts[1]}/{parts[0]}"  # MM/DD/YYYY
+            parsed_date = datetime.strptime(flipped_str, "%m/%d/%Y")
+            print("Assumed format: YYYY-DD-MM (flipped to MM/DD/YYYY)")
+            print("Date in words:", parsed_date.strftime("%B %d, %Y"))
+            print("Formatted as MM/DD/YYYY:", parsed_date.strftime("%m/%d/%Y"))
+            return parsed_date.date()
+    except Exception as e:
+        print("Failed special YYYY-DD-MM interpretation:", e)
+
+    # Try normal formats
+    formats_to_try = [
+        "%m/%d/%Y", "%Y-%m-%d", "%d-%m-%Y",
+        "%d/%m/%Y", "%B %d, %Y", "%b %d, %Y", "%m-%d-%Y"
+    ]
+
+    for fmt in formats_to_try:
+        try:
+            parsed_date = datetime.strptime(original, fmt)
+            print(f"Successfully parsed using format '{fmt}'")
+            print("Date in words:", parsed_date.strftime("%B %d, %Y"))
+            print("Formatted as MM/DD/YYYY:", parsed_date.strftime("%m/%d/%Y"))
+            return parsed_date.date()
+        except ValueError:
+            continue
+
+    print(f"Could not parse: {original}")
+    return None  # Explicit return if parsing fails
+
+
+from django.shortcuts import render, redirect
+from django.http import JsonResponse
+import pandas as pd
+from .models import HistoricalDataset
+from datetime import datetime
 
 def historical_dataset_upload_list(request):
+    dataset_file = request.FILES.get('historical_dataset_file')
+    force_upload = request.POST.get('force_upload') == 'true'
 
-    # group_semester_dates_historical()
-    
-    if request.method == 'POST':
-        dataset_file = request.FILES.get('historical_dataset_file')
-        if dataset_file:
-            file_extension = dataset_file.name.split('.')[-1]
-            if file_extension == 'xlsx':
-                df = pd.read_excel(dataset_file)
-            elif file_extension == 'csv':
-                df = pd.read_csv(dataset_file)
+    if not dataset_file:
+        return JsonResponse({'error': 'No file uploaded'}, status=400)
 
+    file_extension = dataset_file.name.split('.')[-1]
+    if file_extension == 'xlsx':
+        df = pd.read_excel(dataset_file)
+        
+    elif file_extension == 'csv':
+        df = pd.read_csv(dataset_file)
+        
+    else:
+        return JsonResponse({'error': 'Unsupported file format'}, status=400)
+
+    overlap_count = 0
+    for _, row in df.iterrows():
+        try:
+            date_val = parse_date_strict(row['Date'])
+            # date_val = pd.to_datetime(row['Date']).date()
+           
+            route = row['Route']
+            time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+        except Exception as e:
+            print(f"Parsing error: {e}")
+            continue
+
+        # if HistoricalDataset.objects.filter(route=route, date=date_val, time=time_val).exists():
+        #     overlap_count += 1
+
+        #!
+        existing_entries = HistoricalDataset.objects.filter(route=route, date=date_val, time=time_val)
+        if existing_entries.exists():
+            if force_upload:
+                existing_entries.delete()  # Delete old entry before inserting new one
+            else:
+                overlap_count += 1
+
+
+
+    # First check for overlaps — allow modal to trigger without saving anything
+    if overlap_count > 0 and not force_upload:
+        
+        return JsonResponse({'overlap': True, 'count': overlap_count})
+
+
+    # PROCEED WITH DATA UPLOAD
+    user = request.user
+    holidays = build_holiday_set()
+
+    for _, row in df.iterrows():
+        try:
             
-            user = request.user
-            holidays = build_holiday_set()  # Build once
+            # date_val = pd.to_datetime(row['Date']).date()
+            date_val = parse_date_strict(row['Date'])
+            
+        except Exception as e:
+            print(f"Error parsing date: {e}")
+            continue
 
-            for _, row in df.iterrows():
-                try:
-                    date_val = pd.to_datetime(row['Date']).date()
-                except Exception as e:
-                    print(f"Error parsing date: {e}")
-                    continue
+        route = row['Route']
+        try:
+            time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+        except ValueError as e:
+            print(f"Error parsing time: {e}")
+            continue
 
-                route = row['Route']
-                try:
-                    time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-                except ValueError as e:
-                    print(f"Error parsing time: {e}")
-                    continue
+        num_commuters = row['Commuters']
+        day_of_week = date_val.strftime("%A")
+        month = date_val.strftime("%B")
+        weekday = date_val.weekday()
 
-                num_commuters = row['Commuters']
+        is_friday = weekday == 4
+        is_saturday = weekday == 5
+        is_holiday = date_val in holidays
+        is_before_holiday = is_day_before_holiday(date_val, holidays)
+        is_lweekend = is_long_weekend(date_val, holidays)
+        is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
 
-                day_of_week = date_val.strftime("%A")
-                month = date_val.strftime("%B")
-                weekday = date_val.weekday()
+        is_local_holiday = check_local_holiday_flag(date_val)
+        is_university_event = check_university_event_flag(date_val)
+        is_local_event = check_local_event_flag(date_val)
+        is_others = check_others_event_flag(date_val)
 
-                is_friday = weekday == 4
-                is_saturday = weekday == 5
-                is_holiday = date_val in holidays
-                is_before_holiday = is_day_before_holiday(date_val, holidays)
-                is_lweekend = is_long_weekend(date_val, holidays)
-                is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
+        semester_flags = get_historical_university_semester_flags(date_val)
 
-                is_local_holiday = check_local_holiday_flag(date_val)
-                is_university_event = check_university_event_flag(date_val)
-                is_local_event = check_local_event_flag(date_val)
-                is_others = check_others_event_flag(date_val)
+        # Save to database
+        HistoricalDataset.objects.create(
+            date=date_val,
+            route=route,
+            time=time_val,
+            num_commuters=num_commuters,
+            user_code=user.user_code,
+            filename=dataset_file.name,
 
-                semester_flags = get_historical_university_semester_flags(date_val)
+            day_of_week=day_of_week,
+            month=month,
+            is_friday=is_friday,
+            is_saturday=is_saturday,
+            is_holiday=is_holiday,
+            is_day_before_holiday=is_before_holiday,
+            is_long_weekend=is_lweekend,
+            is_day_before_long_weekend=is_before_lweekend,
 
-                is_within_ay = semester_flags['is_within_ay']
-                is_start_of_sem = semester_flags['is_start_of_sem']
-                is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
-                is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
-                is_end_of_sem = semester_flags['is_end_of_sem']
-                is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
-                is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
-                is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
+            is_local_holiday=is_local_holiday,
+            is_university_event=is_university_event,
+            is_local_event=is_local_event,
+            is_others=is_others,
+
+            is_within_ay=semester_flags['is_within_ay'],
+            is_start_of_sem=semester_flags['is_start_of_sem'],
+            is_day_before_end_of_sem=semester_flags['is_day_before_end_of_sem'],
+            is_week_before_end_of_sem=semester_flags['is_week_before_end_of_sem'],
+            is_end_of_sem=semester_flags['is_end_of_sem'],
+            is_day_after_end_of_sem=semester_flags['is_day_after_end_of_sem'],
+            is_2days_after_end_of_sem=semester_flags['is_2days_after_end_of_sem'],
+            is_week_after_end_of_sem=semester_flags['is_week_after_end_of_sem']
+        )
+
+    log_action(request, 'Historical Dataset Upload', f"User {user.first_name} {user.last_name} uploaded historical dataset.")
+
+    return JsonResponse({'success': True})
 
 
-                # print(f"Date: {date_val}, Commuters: {num_commuters}, Holiday: {is_holiday}, Before-Holiday: {is_before_holiday}, LongWeekend: {is_lweekend}, Before-LongWeekend: {is_before_lweekend}")
-                # print(f"Date: {date_val}, Commuters: {num_commuters}, Local-Holiday: {is_local_holiday}, Univ-Event: {is_university_event}, Local-Event: {is_local_event}, Others: {is_others}, Semester Flags: {semester_flags}")
 
 
-                HistoricalDataset.objects.create(
-                    date=date_val,
-                    route=route,
-                    time=time_val,
-                    num_commuters=num_commuters,
-                    user_code=user.user_code,
-                    filename=dataset_file.name,
 
-                    day_of_week=day_of_week,
-                    month=month,
-                    is_friday=is_friday,
-                    is_saturday=is_saturday,
-                    is_holiday=is_holiday,
-                    is_day_before_holiday=is_before_holiday,
-                    is_long_weekend=is_lweekend,
-                    is_day_before_long_weekend=is_before_lweekend,
 
-                    # Temporal event flags
-                    is_local_holiday=is_local_holiday,
-                    is_university_event=is_university_event,
-                    is_local_event=is_local_event,
-                    is_others=is_others,
 
-                    # Semester-related flags
-                    is_within_ay=is_within_ay,
-                    is_start_of_sem=is_start_of_sem,
-                    is_day_before_end_of_sem=is_day_before_end_of_sem,
-                    is_week_before_end_of_sem=is_week_before_end_of_sem,
-                    is_end_of_sem=is_end_of_sem,
-                    is_day_after_end_of_sem=is_day_after_end_of_sem,
-                    is_2days_after_end_of_sem=is_2days_after_end_of_sem,
-                    is_week_after_end_of_sem=is_week_after_end_of_sem
-                )
 
-                log_action(request, 'Historical Dataset Upload', f"User {user.first_name} {user.last_name} uploaded historical dataset.")
 
-            return redirect('historical_dataset_upload_list')
-
-    historical_datasets = HistoricalDataset.objects.all()
-
-    user_map = {
-        u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in historical_datasets])
-    }
-
-    for d in historical_datasets:
-        d.uploader = user_map.get(d.user_code)
-
-    return render(request, 'admin/historicalDatasetUpload.html', {'historical_datasets': historical_datasets})
- 
-
+#-------------------------------------------------------------------------
 
 def historical_dataset_event_list(request):
-
-    historical_dataset_upload_list(request)
-
     # Load data
     datasets = HistoricalDataset.objects.all().order_by('-id')
     events = HistoricalTemporalEvent.objects.all().order_by('-date')
@@ -1091,6 +1104,9 @@ def historical_dataset_event_list(request):
     }
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
+
+
+
 
 
 #-------------------------------------------------------------------------
@@ -1166,11 +1182,12 @@ def edit_historical_event(request):
             log_action(request, 'Edit Historical Event', f"Historical event {event.event_name} edited by {request.user.first_name} {request.user.last_name}.")
             print(f"Updated historical event: {event.event_name}, {event.event_type}, {event.date}, updated by: {event.updated_by}")
 
-            return JsonResponse({'status': 'success', 'message': 'Historical event updated successfully'})
+            return JsonResponse({'status': 'success'})              #!! removed alert
 
         except Exception as e:
             print(f"Error editing historical event: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
+
 
 
 from django.views.decorators.csrf import csrf_exempt

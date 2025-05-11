@@ -5,20 +5,47 @@
     <div class="row">
         <div class="col-12 mb-3">
             <div class="d-flex justify-content-between">
-                <!-- Upload Dataset Button -->
-                <form method="POST" enctype="multipart/form-data" action="{% url 'historical_dataset_upload_list' %}">
-
-
+                <!-- Upload Form -->
+                <form id="uploadForm" method="POST" enctype="multipart/form-data" action="{% url 'historical_dataset_upload_list' %}">
                     {% csrf_token %}
                     <div class="input-group">
-                        <input type="file" class="form-control" name="historical_dataset_file" accept=".xlsx,.csv" required>
+                        <input type="file" id="datasetFile" class="form-control" name="historical_dataset_file" accept=".xlsx,.csv" required>
                         <button type="submit" class="btn btn-primary">
                             <i class="ti ti-upload me-2"></i> Upload Historical Dataset
                         </button>
                     </div>
                 </form>
-                
+
+                <!-- Overwrite Confirmation Modal -->
+                <div class="modal fade" id="overlapModal" tabindex="-1" aria-labelledby="overlapModalLabel" aria-hidden="true">
+                    <div class="modal-dialog">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="overlapModalLabel">Dataset Overlap Detected</h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+                            <div class="modal-body">
+                                <p id="overlap-count"></p>
+                                <p>Would you like to continue with the upload?</p>
+                            </div>
+                            <div class="modal-footer">
+                                <button type="button" class="btn btn-secondary" id="cancel-upload" data-bs-dismiss="modal">Cancel</button>
+                                
+                                <button type="button" class="btn btn-primary" id="confirmUploadBtn">Confirm</button>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+  
+  
+
+
             </div>
+            
+            
         </div>
         
         <!-- Historical Dataset Table (Training Set)-->
@@ -301,6 +328,10 @@
 </div>
 </div>
 {% endfor %}
+
+
+
+
 
 
 
