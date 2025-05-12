@@ -954,6 +954,9 @@ from .models import HistoricalDataset
 from datetime import datetime
 
 def historical_dataset_upload_list(request):
+    if request.method == 'GET':
+        return redirect('historical_dataset_upload_list')
+    
     dataset_file = request.FILES.get('historical_dataset_file')
     force_upload = request.POST.get('force_upload') == 'true'
 
@@ -1080,10 +1083,141 @@ def historical_dataset_upload_list(request):
 
 
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.http import HttpResponse
+import pandas as pd
+from .models import HistoricalDataset
+from .randomForest import train_random_forest_model
+from datetime import datetime
+
+
+def historical_dataset_export(request):
+    """Exports the HistoricalDataset data to a CSV file."""
+    print("Export function triggered!")  # Debug output
+
+    # Get all dataset entries from HistoricalDataset model
+    data = HistoricalDataset.objects.all().values()
+    
+    # Create DataFrame from queryset
+    df = pd.DataFrame(list(data))
+
+    if df.empty:
+        print("No data available for export.")
+        return HttpResponse("No data to export.", status=204)
+
+    # Remove 'id' column (if it exists)
+    df.drop(columns=['id'], inplace=True, errors='ignore')
+
+    # Get current datetime for filename
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"historical_dataset_{now}.csv"
+
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    df.to_csv(path_or_buf=response, index=False)
+
+    print(f"Export successful! File sent: {filename}")
+    return response
 
 
 
+# import os
+# import glob
+# import joblib
+# from django.conf import settings
+# from django.http import JsonResponse
+# from django.utils.timezone import now
 
+# from .randomForest import train_random_forest_model  # adjust if needed
+
+# def train_random_forest_model_view(request):
+#     if request.method == 'POST':
+#         try:
+#             # Train model and get performance report
+#             model, performance_report = train_random_forest_model()
+
+#             # Create unique timestamp-based filename
+#             timestamp = now().strftime('%Y%m%d_%H%M%S')
+#             base_filename = f"random_forest_model_{timestamp}"
+
+#             # Directory to save model and report
+#             output_dir = os.path.join(settings.MEDIA_ROOT, 'ml_models')
+#             os.makedirs(output_dir, exist_ok=True)
+
+#             # Remove previous .pkl and .txt files
+#             for ext in ('*.pkl', '*.txt'):
+#                 for old_file in glob.glob(os.path.join(output_dir, ext)):
+#                     os.remove(old_file)
+
+#             # Save model
+#             model_path = os.path.join(output_dir, f"{base_filename}.pkl")
+#             joblib.dump(model, model_path)
+
+#             # Save report as a string (avoids TypeError)
+#             report_path = os.path.join(output_dir, f"{base_filename}.txt")
+#             with open(report_path, 'w') as f:
+#                 f.write(str(performance_report))  # Ensures it’s a string
+
+#             # return JsonResponse({'success': True, 'model_file': model_path})
+#             return redirect('historical_dataset_upload_list')
+
+#         except Exception as e:
+#             return JsonResponse({'error': str(e)}, status=500)
+
+#     return JsonResponse({'error': 'Invalid request method'}, status=405)
+
+import os
+import glob
+import joblib
+from django.conf import settings
+from django.utils.timezone import now
+from .randomForest import train_random_forest_model
+
+from django.shortcuts import redirect
+from django.contrib import messages
+
+def train_random_forest_model_view(request):
+    if request.method == 'POST':
+        try:
+            # Train model and get performance report
+            model, performance_report = train_random_forest_model()
+
+            # Create unique timestamp-based filename
+            timestamp = now().strftime('%Y%m%d_%H%M%S')
+            base_filename = f"random_forest_model_{timestamp}"
+
+            # Directory to save model and report
+            output_dir = os.path.join(settings.MEDIA_ROOT, 'ml_models')
+            os.makedirs(output_dir, exist_ok=True)
+
+            # Remove previous .pkl and .txt files
+            for ext in ('*.pkl', '*.txt'):
+                for old_file in glob.glob(os.path.join(output_dir, ext)):
+                    os.remove(old_file)
+
+            # Save model
+            model_path = os.path.join(output_dir, f"{base_filename}.pkl")
+            joblib.dump(model, model_path)
+
+            # Save report as a string (avoids TypeError)
+            report_path = os.path.join(output_dir, f"{base_filename}.txt")
+            with open(report_path, 'w') as f:
+                f.write(str(performance_report))  # Ensures it’s a string
+
+            # Success message
+            messages.success(request, "Model trained successfully and saved!")
+
+            # Redirect back to the original page after success
+            # return redirect('historical_dataset_upload_list')  # Redirect to the upload list page (adjust the name as necessary)
+            return redirect('historical_dataset_event_list')
+    
+        except Exception as e:
+            messages.error(request, f"Error during model training: {str(e)}")
+            return redirect('historical_dataset_upload_list')
+
+    return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
 #-------------------------------------------------------------------------

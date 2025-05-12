@@ -59,8 +59,9 @@ urlpatterns = [
     path('admin/historicalDatasetUpload/upload', views.historical_dataset_upload_list, name='historical_dataset_upload_list'),
     path('admin/historicalDatasetUpload/dataset', views.historical_dataset_event_list, name='historical_dataset_event_list'),
 
-    # path('admin/historicalDatasetUpload/checkOverlap/', views.check_dataset_overlap, name='check_dataset_overlap'),
-    
+    path('admin/historicalDatasetUpload/admin/historicalDatasetUpload/export', views.historical_dataset_export, name='historical_dataset_export'),
+
+    path('admin/historicalDatasetUpload/train-model/', views.train_random_forest_model_view, name='train_random_forest_model'),
 
 
  
