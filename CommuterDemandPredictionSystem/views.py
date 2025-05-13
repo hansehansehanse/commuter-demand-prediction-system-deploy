@@ -12,53 +12,124 @@ from .models import ActionLog
 
 
 
-
-
 #-------------------------------------------------------------------------
+from datetime import date
+from .models import HolidayEvent, TemporalEvent, HistoricalTemporalEvent
 
-#-------------------------------------------------------------------------
-
-from datetime import timedelta, date
-from CommuterDemandPredictionSystem.models import HolidayEvent, TemporalEvent
 
 def build_holiday_set():
     holidays = set()
-    # Yearless holidays
-    for h in HolidayEvent.objects.all():
-        for year in range(2000, 2101):  # safe test range
-            holidays.add(date(year, h.date.month, h.date.day))
-    # Dated temporal events
-    for t in TemporalEvent.objects.exclude(date=None):
-        holidays.add(t.date)
+    holiday_events = HolidayEvent.objects.all()
+    # print(f"[build_holiday_set] Found {holiday_events.count()} HolidayEvent(s).")
+
+    for h in holiday_events:
+        # print(f"  → Processing holiday: {h.event_name} on {h.date}")
+        for year in range(2000, 2101):  # Reasonable test range
+            full_date = date(year, h.date.month, h.date.day)
+            holidays.add(full_date)
+    
+    # print(f"[build_holiday_set] Total generated holiday dates: {len(holidays)}")
     return holidays
 
-def is_day_before_holiday(d, holidays):
-    return (d + timedelta(days=1)) in holidays
+def build_local_holiday_set():
+    local_holidays = set()
 
-def is_long_weekend(d, holidays):
+    temporal_qs = TemporalEvent.objects.filter(event_type='local_holiday').exclude(date=None)
+    # print(f"[build_local_holiday_set] Found {temporal_qs.count()} TemporalEvent(s) with 'local_holiday'.")
+
+    for t in temporal_qs:
+        # print(f"  → TemporalEvent: {t.event_name} on {t.date}")
+        local_holidays.add(t.date)
+
+    historical_qs = HistoricalTemporalEvent.objects.filter(event_type='local_holiday').exclude(date=None)
+    # print(f"[build_local_holiday_set] Found {historical_qs.count()} HistoricalTemporalEvent(s) with 'local_holiday'.")
+
+    for h in historical_qs:
+        # print(f"  → HistoricalTemporalEvent: {h.event_name} on {h.date}")
+        local_holidays.add(h.date)
+
+    # print(f"[build_local_holiday_set] Total unique local holiday dates: {len(local_holidays)}")
+    return local_holidays
+
+def is_any_holiday(d, holiday_set, local_holiday_set):
+    return any(d == holiday for holiday in holiday_set) or \
+           any(d == local_holiday for local_holiday in local_holiday_set)
+
+from datetime import timedelta
+
+def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
     return (
-        (d.weekday() == 4 and (d + timedelta(days=1)) in holidays and (d + timedelta(days=2)).weekday() == 6) or
-        (d.weekday() == 5 and (d + timedelta(days=2)) in holidays) or
-        (d.weekday() == 6 and (d - timedelta(days=2)) in holidays)
+        (d + timedelta(days=1)) in holiday_set or
+        (d + timedelta(days=1)) in local_holiday_set
+    )
+from datetime import timedelta
+
+# !!! still needs some tweaking
+def is_any_long_weekend(d, holiday_set, local_holiday_set):
+    def is_long_weekend_for_set(date, holidays):
+        weekday = date.weekday()
+        
+        # Define nearby days
+        prev_day = date - timedelta(days=1)
+        next_day = date + timedelta(days=1)
+        two_days_after = date + timedelta(days=2)
+        two_days_before = date - timedelta(days=2)
+        
+        # If the date itself is a holiday (not required but can be useful context)
+        is_holiday = date in holidays
+
+        # Classic Friday-Monday long weekends
+        friday_case = weekday == 4 and (next_day in holidays or two_days_after in holidays)  # Friday + Sat/Sun
+        monday_case = weekday == 0 and (two_days_before in holidays or prev_day in holidays)  # Mon + Sat/Sun
+        
+        # Thursday holiday leading into Friday off (bridge)
+        thursday_case = weekday == 3 and next_day in holidays
+
+        # Tuesday holiday after a Monday off
+        tuesday_case = weekday == 1 and prev_day in holidays
+
+        return friday_case or monday_case or thursday_case or tuesday_case
+
+    return (
+        is_long_weekend_for_set(d, holiday_set) or
+        is_long_weekend_for_set(d, local_holiday_set)
     )
 
-def is_day_before_long_weekend(d, holidays):
-    return is_long_weekend(d + timedelta(days=1), holidays)
+
+def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
+    next_day = d + timedelta(days=1)
+    return is_any_long_weekend(next_day, holiday_set, local_holiday_set)
+
+
+
+#-------------------------------------------------------------------------
 
 #-------------------------------------------------------------------------
 
 
 def check_local_holiday_flag(target_date):
-    return TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
+    return (
+        TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists() or
+        HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
+    )
 
 def check_university_event_flag(target_date):
-    return TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
+    return (
+        TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists() or
+        HistoricalTemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
+    )
 
 def check_local_event_flag(target_date):
-    return TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
+    return (
+        TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists() or
+        HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
+    )
 
 def check_others_event_flag(target_date):
-    return TemporalEvent.objects.filter(date=target_date, event_type='others').exists()
+    return (
+        TemporalEvent.objects.filter(date=target_date, event_type='others').exists() or
+        HistoricalTemporalEvent.objects.filter(date=target_date, event_type='others').exists()
+    )
 
 
 def get_university_semester_flags(target_date):
@@ -73,14 +144,27 @@ def get_university_semester_flags(target_date):
         'is_week_after_end_of_sem': False
     }
 
-    # Collect start and end dates of sems
-    events = TemporalEvent.objects.filter(event_type='university_event')
-    sem_starts = events.filter(event_name__icontains='Start of').order_by('date')
-    sem_ends = events.filter(event_name__icontains='End of').order_by('date')
+    # Fetch events from both models
+    temporal_events = TemporalEvent.objects.filter(event_type='university_event')
+    historical_events = HistoricalTemporalEvent.objects.filter(event_type='university_event')
+
+    # Combine and filter start/end events
+    combined_events = list(temporal_events) + list(historical_events)
+    sem_starts = sorted(
+        [e for e in combined_events if 'Start of' in e.event_name],
+        key=lambda e: e.date
+    )
+    sem_ends = sorted(
+        [e for e in combined_events if 'End of' in e.event_name],
+        key=lambda e: e.date
+    )
 
     for start_event, end_event in zip(sem_starts, sem_ends):
         start_date = start_event.date
         end_date = end_event.date
+
+        # Logging semester range
+        print(f"[Semester] Start of: {start_date} | End of: {end_date}")
 
         if start_date <= target_date <= end_date:
             flags['is_within_ay'] = True
@@ -88,40 +172,23 @@ def get_university_semester_flags(target_date):
             flags['is_start_of_sem'] = True
         if target_date == end_date - timedelta(days=1):
             flags['is_day_before_end_of_sem'] = True
-
-        # if target_date == end_date - timedelta(days=7):
-        #     flags['is_week_before_end_of_sem'] = True
-        if end_date - timedelta(days=7) <= target_date < end_date:                      # 7 days before eos
+        if end_date - timedelta(days=7) <= target_date < end_date:
             flags['is_week_before_end_of_sem'] = True
-
-
         if target_date == end_date:
             flags['is_end_of_sem'] = True
         if target_date == end_date + timedelta(days=1):
             flags['is_day_after_end_of_sem'] = True
         if target_date == end_date + timedelta(days=2):
             flags['is_2days_after_end_of_sem'] = True
-        # if target_date == end_date + timedelta(days=7):
-        #     flags['is_week_after_end_of_sem'] = True
-        if end_date < target_date <= end_date + timedelta(days=7):                      # 7 days after eos
+        if end_date < target_date <= end_date + timedelta(days=7):
             flags['is_week_after_end_of_sem'] = True
 
     return flags
 
 
+
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-# #admin
-# def cdps_admin_accountManagement(request):
-#     # context = {'sidebar_items':emp_sidebar_items}
-#     context = {}
-#     return render(request, 'admin/accountManagement.html', context)
-
-# def cdps_admin_actionLog(request):
-#     # context = {'sidebar_items':emp_sidebar_items}
-#     context = {}
-#     return render(request, 'admin/actionLog.html', context)
 
 
 #-------------------------------------------------------------------------
@@ -374,9 +441,9 @@ def dataset_upload_list(request):
                 day_of_week = date_val.strftime("%A")
                 month = date_val.strftime("%B")
                 weekday = date_val.weekday()
-
                 is_friday = weekday == 4
                 is_saturday = weekday == 5
+
                 is_holiday = date_val in holidays
                 is_before_holiday = is_day_before_holiday(date_val, holidays)
                 is_lweekend = is_long_weekend(date_val, holidays)
@@ -936,9 +1003,9 @@ def parse_date_strict(date_str):
     for fmt in formats_to_try:
         try:
             parsed_date = datetime.strptime(original, fmt)
-            print(f"Successfully parsed using format '{fmt}'")
-            print("Date in words:", parsed_date.strftime("%B %d, %Y"))
-            print("Formatted as MM/DD/YYYY:", parsed_date.strftime("%m/%d/%Y"))
+            # print(f"Successfully parsed using format '{fmt}'")
+            # print("Date in words:", parsed_date.strftime("%B %d, %Y"))
+            # print("Formatted as MM/DD/YYYY:", parsed_date.strftime("%m/%d/%Y"))
             return parsed_date.date()
         except ValueError:
             continue
@@ -954,6 +1021,7 @@ from .models import HistoricalDataset
 from datetime import datetime
 
 def historical_dataset_upload_list(request):
+    
     if request.method == 'GET':
         return redirect('historical_dataset_upload_list')
     
@@ -1006,7 +1074,9 @@ def historical_dataset_upload_list(request):
 
     # PROCEED WITH DATA UPLOAD
     user = request.user
-    holidays = build_holiday_set()
+    
+    holiday_set = build_holiday_set()
+    local_holiday_set = build_local_holiday_set()
 
     for _, row in df.iterrows():
         try:
@@ -1032,10 +1102,13 @@ def historical_dataset_upload_list(request):
 
         is_friday = weekday == 4
         is_saturday = weekday == 5
-        is_holiday = date_val in holidays
-        is_before_holiday = is_day_before_holiday(date_val, holidays)
-        is_lweekend = is_long_weekend(date_val, holidays)
-        is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
+
+        is_holiday = is_any_holiday(date_val, holiday_set, local_holiday_set)
+
+        is_day_before_holiday = is_day_before_any_holiday(date_val, holiday_set, local_holiday_set)
+        is_long_weekend = is_any_long_weekend(date_val, holiday_set, local_holiday_set)
+        is_day_before_long_weekend = is_day_before_any_long_weekend(date_val, holiday_set, local_holiday_set)
+
 
         is_local_holiday = check_local_holiday_flag(date_val)
         is_university_event = check_university_event_flag(date_val)
@@ -1055,12 +1128,15 @@ def historical_dataset_upload_list(request):
 
             day_of_week=day_of_week,
             month=month,
+
             is_friday=is_friday,
             is_saturday=is_saturday,
+
             is_holiday=is_holiday,
-            is_day_before_holiday=is_before_holiday,
-            is_long_weekend=is_lweekend,
-            is_day_before_long_weekend=is_before_lweekend,
+
+            is_day_before_holiday=is_day_before_holiday,
+            is_long_weekend=is_long_weekend,
+            is_day_before_long_weekend=is_day_before_long_weekend,
 
             is_local_holiday=is_local_holiday,
             is_university_event=is_university_event,
@@ -1121,53 +1197,6 @@ def historical_dataset_export(request):
     print(f"Export successful! File sent: {filename}")
     return response
 
-
-
-# import os
-# import glob
-# import joblib
-# from django.conf import settings
-# from django.http import JsonResponse
-# from django.utils.timezone import now
-
-# from .randomForest import train_random_forest_model  # adjust if needed
-
-# def train_random_forest_model_view(request):
-#     if request.method == 'POST':
-#         try:
-#             # Train model and get performance report
-#             model, performance_report = train_random_forest_model()
-
-#             # Create unique timestamp-based filename
-#             timestamp = now().strftime('%Y%m%d_%H%M%S')
-#             base_filename = f"random_forest_model_{timestamp}"
-
-#             # Directory to save model and report
-#             output_dir = os.path.join(settings.MEDIA_ROOT, 'ml_models')
-#             os.makedirs(output_dir, exist_ok=True)
-
-#             # Remove previous .pkl and .txt files
-#             for ext in ('*.pkl', '*.txt'):
-#                 for old_file in glob.glob(os.path.join(output_dir, ext)):
-#                     os.remove(old_file)
-
-#             # Save model
-#             model_path = os.path.join(output_dir, f"{base_filename}.pkl")
-#             joblib.dump(model, model_path)
-
-#             # Save report as a string (avoids TypeError)
-#             report_path = os.path.join(output_dir, f"{base_filename}.txt")
-#             with open(report_path, 'w') as f:
-#                 f.write(str(performance_report))  # Ensures it’s a string
-
-#             # return JsonResponse({'success': True, 'model_file': model_path})
-#             return redirect('historical_dataset_upload_list')
-
-#         except Exception as e:
-#             return JsonResponse({'error': str(e)}, status=500)
-
-#     return JsonResponse({'error': 'Invalid request method'}, status=405)
-
 import os
 import glob
 import joblib
@@ -1225,20 +1254,28 @@ def train_random_forest_model_view(request):
 def historical_dataset_event_list(request):
     # Load data
     datasets = HistoricalDataset.objects.all().order_by('-id')
+    recent_events = TemporalEvent.objects.all().order_by('event_type', 'sort_order')
+    holidays = HolidayEvent.objects.all().order_by('date')
     events = HistoricalTemporalEvent.objects.all().order_by('-date')
 
     user_map = {user.user_code: user for user in User.objects.all()}
+
     for event in events:
+        event.created_by_user = user_map.get(event.created_by)
+        event.updated_by_user = user_map.get(event.updated_by)
+
+    for event in recent_events:
         event.created_by_user = user_map.get(event.created_by)
         event.updated_by_user = user_map.get(event.updated_by)
 
     context = {
         'historical_datasets': datasets,
+        'recent_events': recent_events,
+        'holidays': holidays,
         'historical_events': events,
     }
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
-
 
 
 
