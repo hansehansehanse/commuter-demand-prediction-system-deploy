@@ -9,6 +9,7 @@ import json
 import uuid
 import logging
 from .models import ActionLog  
+from django.contrib import messages
 
 
 
@@ -806,6 +807,7 @@ def dataset_graph_data(request):
 #-------------------------------------------------------------------------
 
 def dataset_graph(request):
+    # test_load_model(request)
 
     if request.method == "POST":
         graph_type = request.POST.get("graph_type")  
@@ -823,7 +825,7 @@ def dataset_graph(request):
         # Handle different graph types
         if graph_type == "last7":
             print("FROM: last7")
-            return get_last_7_records_chart_data(route, time_str)
+            # return get_last_7_records_chart_data(route, time_str)
 
         elif graph_type == "average_from_date":
             print("FROM: average_from_date")
@@ -832,7 +834,10 @@ def dataset_graph(request):
         
         elif graph_type == "rf_prediction":
             print("FROM: rf_prediction")
-            return ajax_random_forest_prediction(route, time_str, selected_date)
+            
+            return rf_predict_commuters(route, time_str, selected_date)
+
+            
 
 
         return JsonResponse({'error': 'Unknown graph_type'})
@@ -885,7 +890,7 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
 
         # Try to find the latest available date on or before the selected date
-        latest_available = Dataset.objects.filter(
+        latest_available = HistoricalDataset.objects.filter(
             route=route,
             time=time_obj,
             date__lte=date_obj
@@ -899,7 +904,7 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         print(f"✅ Using fallback date range: earliest up to {fallback_date}")
 
         # Get all matching records up to the fallback date
-        matching_records = Dataset.objects.filter(
+        matching_records = HistoricalDataset.objects.filter(
             route=route,
             time=time_obj,
             date__lte=fallback_date
@@ -945,25 +950,144 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         return JsonResponse({'error': 'Failed to compute average'}, status=500)
 
 
-from django.http import JsonResponse
-from .pm_rf_single import train_and_predict_random_forest_single  # Make sure to import your function
+# from django.http import JsonResponse
+# from .pm_rf_single import train_and_predict_random_forest_single  # Make sure to import your function
 
-def ajax_random_forest_prediction(route, time_str, selected_date):
-    print("ajax_random_forest_prediction")
+# def ajax_random_forest_prediction(route, time_str, selected_date):
+#     print("ajax_random_forest_prediction")
+#     try:
+#         date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+#         time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
+
+#         prediction = train_and_predict_random_forest_single(route, time_obj, date_obj)
+#         print(f"Prediction for {route} at {time_str} on {selected_date}: {prediction}")
+
+#         return JsonResponse({'prediction': round(prediction, 2)})
+
+#     except Exception as e:
+#         print(f"Prediction Error: {e}")
+#         return JsonResponse({'error': str(e)}, status=500)
+
+
+####
+
+
+import os
+import joblib
+from django.http import JsonResponse
+from datetime import datetime
+
+# Load the pre-trained model using the method you suggested
+def load_pretrained_model():
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        model_path = os.path.join(current_dir, 'model', 'random_forest_model.pkl')
+
+        print(f"📍 Corrected Model Path: {model_path}")
+        print(f"📁 File Exists: {os.path.exists(model_path)}")
+
+        if not os.path.exists(model_path):
+            return None  # Model not found
+
+        model = joblib.load(model_path)
+        print("✅ Model loaded!")
+        print(f"📦 Model Type: {type(model)}")
+        return model
+
+    except Exception as e:
+        print("❌ Error loading model")
+        print(f"❌ Exception: {str(e)}")
+        return None
+
+def load_feature_list():
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        features_path = os.path.join(current_dir, 'model', 'features_used.pkl')
+
+        print(f"📍 Feature List Path: {features_path}")
+        print(f"📁 File Exists: {os.path.exists(features_path)}")
+
+        if not os.path.exists(features_path):
+            return None  # Feature list not found
+
+        features = joblib.load(features_path)
+        print("✅ Features loaded!")
+        return features
+
+    except Exception as e:
+        print("❌ Error loading features list")
+        print(f"❌ Exception: {str(e)}")
+        return None
+
+
+import pandas as pd
+import joblib
+from datetime import datetime
+from django.http import JsonResponse
+
+def rf_predict_commuters(route, time_str, selected_date):
+    model = load_pretrained_model()
+    features_to_use = load_feature_list()
+    
+    if model is None or features_to_use is None:
+        return JsonResponse({'error': 'Model or feature list loading failed'}, status=500)
+
+    # Parse inputs
     try:
         date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
         time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date or time format'}, status=400)
 
-        prediction = train_and_predict_random_forest_single(route, time_obj, date_obj)
-        print(f"Prediction for {route} at {time_str} on {selected_date}: {prediction}")
+    hour = time_obj.hour
+    weekday = date_obj.weekday()
 
-        return JsonResponse({'prediction': round(prediction, 2)})
+    # Build sets
+    holiday_set = build_holiday_set()
+    local_holiday_set = build_local_holiday_set()
+
+    # Encode route (simple example)
+    route_code = hash(route) % 1000
+
+    # Semester flags
+    semester_flags = get_historical_university_semester_flags(date_obj)
+
+    # Build full feature set
+    input_features = {
+        'day_of_week': weekday,
+        'is_holiday': is_any_holiday(date_obj, holiday_set, local_holiday_set),
+        'is_friday': 1 if weekday == 4 else 0,
+        'is_saturday': 1 if weekday == 5 else 0,
+        'is_local_event': check_local_event_flag(date_obj),
+        'is_others': check_others_event_flag(date_obj),
+        'is_flagged': 0,
+        'is_day_before_holiday': is_day_before_any_holiday(date_obj, holiday_set, local_holiday_set),
+        'is_long_weekend': is_any_long_weekend(date_obj, holiday_set, local_holiday_set),
+        'is_day_before_long_weekend': is_day_before_any_long_weekend(date_obj, holiday_set, local_holiday_set),
+        'is_end_of_sem': semester_flags['is_end_of_sem'],
+        'is_day_before_end_of_sem': semester_flags['is_day_before_end_of_sem'],
+        'is_day_after_end_of_sem': semester_flags['is_day_after_end_of_sem'],
+        'is_2days_after_end_of_sem': semester_flags['is_2days_after_end_of_sem'],
+        'is_local_holiday': check_local_holiday_flag(date_obj),
+        'is_start_of_sem': semester_flags['is_start_of_sem'],
+        'is_week_after_end_of_sem': semester_flags['is_week_after_end_of_sem'],
+        'is_week_before_end_of_sem': semester_flags['is_week_before_end_of_sem'],
+        'is_within_ay': semester_flags['is_within_ay']
+    }
+
+    try:
+        ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
+        predicted_commuters = model.predict(ordered_input)[0]
+        predicted_commuters = round(predicted_commuters, 2)
+        print(f"📍 Predicted commuters: {predicted_commuters}")
+        # return JsonResponse({'predicted_commuters': predicted_commuters})
+        return JsonResponse({'prediction': predicted_commuters})
 
     except Exception as e:
-        print(f"Prediction Error: {e}")
-        return JsonResponse({'error': str(e)}, status=500)
+        print(f"❌ Prediction error: {e}")
+        return JsonResponse({'error': 'Prediction failed'}, status=500)
 
-       
+  
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -1013,6 +1137,7 @@ def parse_date_strict(date_str):
     print(f"Could not parse: {original}")
     return None  # Explicit return if parsing fails
 
+#-------------------------------------------------------------------------
 
 from django.shortcuts import render, redirect
 from django.http import JsonResponse
@@ -1127,6 +1252,7 @@ def historical_dataset_upload_list(request):
             filename=dataset_file.name,
 
             day_of_week=day_of_week,
+            # day=date_val.strftime("%A"), 
             month=month,
 
             is_friday=is_friday,
@@ -1258,6 +1384,11 @@ def historical_dataset_event_list(request):
     holidays = HolidayEvent.objects.all().order_by('date')
     events = HistoricalTemporalEvent.objects.all().order_by('-date')
 
+    has_missing_dates = recent_events.filter(date__isnull=True).exists()
+    is_event_list_empty = not datasets.exists()
+    can_train_model = not has_missing_dates and not is_event_list_empty
+
+
     user_map = {user.user_code: user for user in User.objects.all()}
 
     for event in events:
@@ -1273,14 +1404,19 @@ def historical_dataset_event_list(request):
         'recent_events': recent_events,
         'holidays': holidays,
         'historical_events': events,
+
+        'has_missing_dates': has_missing_dates,
+        'is_event_list_empty': is_event_list_empty,
+        'can_train_model': can_train_model,
     }
+
+    # print("has_missing_dates:", has_missing_dates)
+    # print("is_event_list_empty:", is_event_list_empty)
+    # print("can_train_model:", can_train_model)
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
 
 
-
-
-#-------------------------------------------------------------------------
 
 def add_historical_event(request):
     if request.method == 'POST':
@@ -1397,25 +1533,6 @@ def delete_historical_event(request):
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
 
-#-------------------------------------------------------------------------
-
-
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
 def group_semester_dates_historical():
     grouped_dates = {
         'Start of 1st Sem': [],
@@ -1444,14 +1561,6 @@ def group_semester_dates_historical():
     return grouped_dates
 
 
-# # Calling the function to group dates
-# grouped_dates_historical = group_semester_dates_historical()
-
-# # Output the grouped dates
-# for event_type, date_list in grouped_dates_historical.items():
-#     print(f"{event_type}: {date_list}")
-
-#-------------------------------------------------------------------------
 from datetime import timedelta
 
 def get_historical_university_semester_flags(target_date):
@@ -1501,6 +1610,7 @@ def get_historical_university_semester_flags(target_date):
 #-------------------------------------------------------------------------
 
 
+#-------------------------------------------------------------------------
 
 
 #-------------------------------------------------------------------------

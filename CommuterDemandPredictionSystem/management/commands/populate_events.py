@@ -26,7 +26,8 @@ class Command(BaseCommand):
         
         ("Loyalty Day", 5, datetime.date(2025, 10, 10)),
         ("UPLB Foundation Day", 1, datetime.date(2024, 3, 6)),
-        ("test1", 6, datetime.date(2024, 1, 20)),
+        # ("test1", 6, datetime.date(2024, 1, 20)),
+        ("test100", 6, None),
     ]
 
         for name, order, event_date in university_events:

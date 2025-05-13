@@ -61,7 +61,7 @@ urlpatterns = [
 
     path('admin/historicalDatasetUpload/admin/historicalDatasetUpload/export', views.historical_dataset_export, name='historical_dataset_export'),
 
-    path('admin/historicalDatasetUpload/train-model/', views.train_random_forest_model_view, name='train_random_forest_model'),
+    path('admin/historicalDatasetUpload/admin/train-model/', views.train_random_forest_model_view, name='train_random_forest_model'),
 
 
  

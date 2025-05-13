@@ -1,4 +1,4 @@
 Random Forest Model Evaluation Results
-RMSE: 14.64
-MAE: 11.60
-Date of Training: 2025-05-13 16:08:34.148173
+RMSE: 13.38
+MAE: 11.02
+Date of Training: 2025-05-13 23:32:57.653303
