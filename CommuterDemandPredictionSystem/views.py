@@ -834,7 +834,6 @@ def dataset_graph(request):
         
         elif graph_type == "rf_prediction":
             print("FROM: rf_prediction")
-            
             return rf_predict_commuters(route, time_str, selected_date)
 
             
@@ -1019,6 +1018,95 @@ def load_feature_list():
         print(f"❌ Exception: {str(e)}")
         return None
 
+def load_route_encoder():
+    try:
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        encoder_path = os.path.join(current_dir, 'model', 'route_encoder.pkl')
+
+        print(f"📍 Route Encoder Path: {encoder_path}")
+        print(f"📁 File Exists: {os.path.exists(encoder_path)}")
+
+        if not os.path.exists(encoder_path):
+            return None
+
+        route_encoder = joblib.load(encoder_path)
+        print("✅ Route encoder loaded!")
+        return route_encoder
+
+    except Exception as e:
+        print("❌ Error loading route encoder")
+        print(f"❌ Exception: {str(e)}")
+        return None
+
+
+# import pandas as pd
+# import joblib
+# from datetime import datetime
+# from django.http import JsonResponse
+
+# def rf_predict_commuters(route, time_str, selected_date):
+#     model = load_pretrained_model()
+#     features_to_use = load_feature_list()
+    
+#     if model is None or features_to_use is None:
+#         return JsonResponse({'error': 'Model or feature list loading failed'}, status=500)
+
+#     # Parse inputs
+#     try:
+#         date_obj = datetime.strptime(selected_date, "%Y-%m-%d").date()
+#         time_obj = datetime.strptime(time_str, "%I:%M%p").time()  # 12hr to 24hr
+#     except ValueError:
+#         return JsonResponse({'error': 'Invalid date or time format'}, status=400)
+
+#     hour = time_obj.hour
+#     weekday = date_obj.weekday()
+
+#     # Build sets
+#     holiday_set = build_holiday_set()
+#     local_holiday_set = build_local_holiday_set()
+
+#     # Encode route (simple example)
+#     route_code = hash(route) % 1000
+
+#     # Semester flags
+#     semester_flags = get_historical_university_semester_flags(date_obj)
+
+#     # Build full feature set
+#     input_features = {
+#         'hour': hour,
+#         'route_code': route_code,
+#         'day_of_week': weekday,
+#         'is_holiday': is_any_holiday(date_obj, holiday_set, local_holiday_set),
+#         'is_friday': 1 if weekday == 4 else 0,
+#         'is_saturday': 1 if weekday == 5 else 0,
+#         'is_local_event': check_local_event_flag(date_obj),
+#         'is_others': check_others_event_flag(date_obj),
+#         'is_flagged': 0,
+#         'is_day_before_holiday': is_day_before_any_holiday(date_obj, holiday_set, local_holiday_set),
+#         'is_long_weekend': is_any_long_weekend(date_obj, holiday_set, local_holiday_set),
+#         'is_day_before_long_weekend': is_day_before_any_long_weekend(date_obj, holiday_set, local_holiday_set),
+#         'is_end_of_sem': semester_flags['is_end_of_sem'],
+#         'is_day_before_end_of_sem': semester_flags['is_day_before_end_of_sem'],
+#         'is_day_after_end_of_sem': semester_flags['is_day_after_end_of_sem'],
+#         'is_2days_after_end_of_sem': semester_flags['is_2days_after_end_of_sem'],
+#         'is_local_holiday': check_local_holiday_flag(date_obj),
+#         'is_start_of_sem': semester_flags['is_start_of_sem'],
+#         'is_week_after_end_of_sem': semester_flags['is_week_after_end_of_sem'],
+#         'is_week_before_end_of_sem': semester_flags['is_week_before_end_of_sem'],
+#         'is_within_ay': semester_flags['is_within_ay']
+#     }
+
+#     try:
+#         ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
+#         predicted_commuters = model.predict(ordered_input)[0]
+#         predicted_commuters = round(predicted_commuters, 2)
+#         print(f"📍 Predicted commuters: {predicted_commuters}")
+#         # return JsonResponse({'predicted_commuters': predicted_commuters})
+#         return JsonResponse({'prediction': predicted_commuters})
+
+#     except Exception as e:
+#         print(f"❌ Prediction error: {e}")
+#         return JsonResponse({'error': 'Prediction failed'}, status=500)
 
 import pandas as pd
 import joblib
@@ -1046,14 +1134,24 @@ def rf_predict_commuters(route, time_str, selected_date):
     holiday_set = build_holiday_set()
     local_holiday_set = build_local_holiday_set()
 
-    # Encode route (simple example)
-    route_code = hash(route) % 1000
+    # ✅ Load the LabelEncoder for route
+    route_encoder = load_route_encoder()
+    if route_encoder is None:
+        return JsonResponse({'error': 'Route encoder loading failed'}, status=500)
+
+    try:
+        route_code = route_encoder.transform([route])[0]
+    except Exception as e:
+        return JsonResponse({'error': f'Route encoding failed: {e}'}, status=500)
+
 
     # Semester flags
     semester_flags = get_historical_university_semester_flags(date_obj)
 
     # Build full feature set
     input_features = {
+        'hour': hour,
+        'route': route_code,
         'day_of_week': weekday,
         'is_holiday': is_any_holiday(date_obj, holiday_set, local_holiday_set),
         'is_friday': 1 if weekday == 4 else 0,
@@ -1080,7 +1178,6 @@ def rf_predict_commuters(route, time_str, selected_date):
         predicted_commuters = model.predict(ordered_input)[0]
         predicted_commuters = round(predicted_commuters, 2)
         print(f"📍 Predicted commuters: {predicted_commuters}")
-        # return JsonResponse({'predicted_commuters': predicted_commuters})
         return JsonResponse({'prediction': predicted_commuters})
 
     except Exception as e:
