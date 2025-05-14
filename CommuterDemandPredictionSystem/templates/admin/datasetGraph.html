@@ -85,6 +85,40 @@
       </div>
     </div>  
 
+    <div style="height: 25px;"></div>
+
+    <!-- Predictions Table -->
+    <div class="col-12">
+      <div class="card" style="min-height: 600px;">
+        <div class="card-body pb-0">
+          <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="fw-bold mb-0">
+              <span class="text-muted fw-light">Predictions /</span> Next 2 Weeks
+            </h4>
+          </div>
+
+          <div class="table-responsive card-datatable" style="overflow-x: auto;">
+            <table id="predictionsTable" class="table border-top w-100">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Route</th>
+                  <th>Time</th>
+                  <th>Predicted Commuters</th>
+                </tr>
+              </thead>
+              <tbody id="predictionsTableBody">
+                <!-- Filled by JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+
+
+    <div style="height: 25px;"></div>
 
     <div class="col-12 mb-4">
       <div class="card">
@@ -113,7 +147,6 @@
 
 <!-- Scipt  -->
 <script>
-
     //Calendar Today
     function setToday() {
     const today = new Date().toISOString().split('T')[0];
@@ -186,6 +219,7 @@
 
                 sendAverageCommuterAjax();
                 sendRfPredictionAjax();
+                fetchTwoWeekPredictions();
                 
 
                 // Update previous values
@@ -196,7 +230,7 @@
         }
     }
 
-
+    // Average Commuter Count
     function sendAverageCommuterAjax() {
         $.ajax({
             url: "{% url 'dataset_graph' %}",
@@ -219,6 +253,7 @@
         });
     }
 
+    // Random Forest Prediction
     function sendRfPredictionAjax() {
         $.ajax({
             url: "{% url 'dataset_graph' %}",
@@ -239,11 +274,7 @@
             }
         });
     }
-    
-
-    //
-   
-
+  
     //Bar Graph
     const routeTimes = {
       "A to B": ["5:00AM", "1:00PM", "6:00PM"],
@@ -252,33 +283,6 @@
   
     let lastSelectedRoute = "";
     let lastSelectedTime = "";
-  
-    // function updateChart() {
-    //   if (lastSelectedRoute && lastSelectedTime) {
-    //     $.ajax({
-    //       url: "{% url 'dataset_graph' %}",
-    //       type: "POST",
-    //       data: {
-    //         'route': lastSelectedRoute,
-    //         'time': lastSelectedTime,
-    //         'csrfmiddlewaretoken': '{{ csrf_token }}',
-    //       },
-    //       success: function (response) {
-    //         const data = JSON.parse(response.chart_data);
-    //         const chartElement = document.querySelector("#chart1");
-    //         chartElement.innerHTML = "";
-    //         const chart = new ApexCharts(chartElement, {
-    //           chart: { type: 'line', height: 350 },
-    //           series: [{ name: `${lastSelectedRoute} (${lastSelectedTime})`, data: data.num_commuters }],
-    //           xaxis: { categories: data.dates },
-    //           title: { text: `${lastSelectedRoute} - ${lastSelectedTime} Commuter Trend`, align: 'center' }       //! title
-    //         });
-    //         chart.render();
-    //       },
-    //       error: () => alert("Error fetching data")
-    //     });
-    //   }
-    // }
   
     function updateChart() {
       if (lastSelectedRoute && lastSelectedTime) {
@@ -328,16 +332,6 @@
       updateChart();
     }
   
-    document.getElementById('route').addEventListener('change', updateTimeOptions); 
-    
-    //try to add when date changes
-    document.getElementById('time').addEventListener('change', function () {
-      lastSelectedTime = this.value;
-      handleInputChange()
-      updateChart();
-    });
-
-
     // Initialize chart with default zero values (for 7 days)
     function initializeEmptyChart() {
       const chartElement = document.querySelector("#chart1");
@@ -355,7 +349,71 @@
 
       chart.render();
     }
-  
+    
+
+    //
+    $(document).ready(function() {
+        $('#predictionsTable').DataTable({
+            "order": [[0, "desc"]],
+            "pageLength": 5,
+            "scrollY": "400px",
+            "scrollCollapse": true,
+            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
+            "language": {
+                "search": "_INPUT_",
+                "searchPlaceholder": "Search..."
+            }
+        });
+    });
+
+    function fetchTwoWeekPredictions() {
+      if (selectedRoute && selectedTime && selectedDate) {
+        $.ajax({
+          url: "{% url 'dataset_graph' %}",
+          type: "POST",
+          data: {
+            graph_type: "two_week_predictions",
+            route: selectedRoute,
+            time: selectedTime,
+            date: selectedDate,
+            csrfmiddlewaretoken: '{{ csrf_token }}',
+          },
+          success: function (response) {
+            const tableBody = document.getElementById('predictionsTableBody');
+            tableBody.innerHTML = "";  // Clear previous rows
+
+            if (response.predictions && response.predictions.length > 0) {
+              response.predictions.forEach(pred => {
+                const row = `<tr>
+                  <td>${pred.date}</td>
+                  <td>${pred.route}</td>
+                  <td>${pred.time}</td>
+                  <td>${pred.predicted_commuters}</td>
+                </tr>`;
+                tableBody.innerHTML += row;
+              });
+            } else {
+              tableBody.innerHTML = "<tr><td colspan='4'>No predictions available.</td></tr>";
+            }
+          },
+          error: () => {
+            alert("Error fetching 2-week predictions.");
+          }
+        });
+      }
+    }
+    //
+
+
+    document.getElementById('route').addEventListener('change', updateTimeOptions); 
+    
+    document.getElementById('time').addEventListener('change', function () {
+      lastSelectedTime = this.value;
+      handleInputChange()
+      updateChart();
+    });
+
+
     window.onload = function () {
       initializeEmptyChart();  // 
       updateTimeOptions();

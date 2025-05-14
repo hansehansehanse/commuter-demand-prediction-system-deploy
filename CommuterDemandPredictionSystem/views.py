@@ -836,6 +836,10 @@ def dataset_graph(request):
             print("FROM: rf_prediction")
             return rf_predict_commuters(route, time_str, selected_date)
 
+        elif graph_type == 'two_week_predictions':
+            print("FROM: two_week_predictions")
+            return rf_predict_commuters_2weeks(route, time_str, selected_date)
+
             
 
 
@@ -1097,7 +1101,89 @@ def rf_predict_commuters(route, time_str, selected_date):
         print(f"❌ Prediction error: {e}")
         return JsonResponse({'error': 'Prediction failed'}, status=500)
 
-  
+from datetime import datetime, timedelta
+import pandas as pd
+from django.http import JsonResponse
+
+def rf_predict_commuters_2weeks(route, time_str, selected_date):
+    model = load_pretrained_model()
+    features_to_use = load_feature_list()
+    
+    if model is None or features_to_use is None:
+        return JsonResponse({'error': 'Model or feature list loading failed'}, status=500)
+
+    # Parse inputs
+    try:
+        start_date = datetime.strptime(selected_date, "%Y-%m-%d").date()
+        time_obj = datetime.strptime(time_str, "%I:%M%p").time()
+    except ValueError:
+        return JsonResponse({'error': 'Invalid date or time format'}, status=400)
+
+    hour = time_obj.hour
+
+    # Load helpers
+    holiday_set = build_holiday_set()
+    local_holiday_set = build_local_holiday_set()
+    route_encoder = load_route_encoder()
+
+    if route_encoder is None:
+        return JsonResponse({'error': 'Route encoder loading failed'}, status=500)
+
+    try:
+        route_code = route_encoder.transform([route])[0]
+    except Exception as e:
+        return JsonResponse({'error': f'Route encoding failed: {e}'}, status=500)
+
+    predictions = []
+
+    for i in range(14):
+        current_date = start_date + timedelta(days=i)
+        weekday = current_date.weekday()
+
+        semester_flags = get_historical_university_semester_flags(current_date)
+
+        input_features = {
+            'hour': hour,
+            'route': route_code,
+            'day_of_week': weekday,
+            'is_holiday': is_any_holiday(current_date, holiday_set, local_holiday_set),
+            'is_friday': 1 if weekday == 4 else 0,
+            'is_saturday': 1 if weekday == 5 else 0,
+            'is_local_event': check_local_event_flag(current_date),
+            'is_others': check_others_event_flag(current_date),
+            'is_flagged': 0,
+            'is_day_before_holiday': is_day_before_any_holiday(current_date, holiday_set, local_holiday_set),
+            'is_long_weekend': is_any_long_weekend(current_date, holiday_set, local_holiday_set),
+            'is_day_before_long_weekend': is_day_before_any_long_weekend(current_date, holiday_set, local_holiday_set),
+            'is_end_of_sem': semester_flags['is_end_of_sem'],
+            'is_day_before_end_of_sem': semester_flags['is_day_before_end_of_sem'],
+            'is_day_after_end_of_sem': semester_flags['is_day_after_end_of_sem'],
+            'is_2days_after_end_of_sem': semester_flags['is_2days_after_end_of_sem'],
+            'is_local_holiday': check_local_holiday_flag(current_date),
+            'is_start_of_sem': semester_flags['is_start_of_sem'],
+            'is_week_after_end_of_sem': semester_flags['is_week_after_end_of_sem'],
+            'is_week_before_end_of_sem': semester_flags['is_week_before_end_of_sem'],
+            'is_within_ay': semester_flags['is_within_ay']
+        }
+
+        try:
+            ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
+            predicted_commuters = model.predict(ordered_input)[0]
+            predicted_commuters = round(predicted_commuters, 2)
+        except Exception as e:
+            return JsonResponse({'error': f'Prediction failed on {current_date}: {e}'}, status=500)
+
+        predictions.append({
+            'date': current_date.strftime('%Y-%m-%d'),
+            'route': route,
+            'time': time_str,
+            'predicted_commuters': predicted_commuters
+        })
+        print(f"{current_date.strftime('%Y-%m-%d')} | Route: {route} | Time: {time_str} | Predicted: {predicted_commuters}")
+
+
+    return JsonResponse({'predictions': predictions})
+
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
@@ -1376,10 +1462,13 @@ def train_random_forest_model_view(request):
 
             # Redirect back to the original page after success
             # return redirect('historical_dataset_upload_list')  # Redirect to the upload list page (adjust the name as necessary)
+            
             return redirect('historical_dataset_event_list')
+            
     
         except Exception as e:
-            messages.error(request, f"Error during model training: {str(e)}")
+            
+            # messages.error(request, f"Error during model training: {str(e)}")
             return redirect('historical_dataset_upload_list')
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
