@@ -186,6 +186,7 @@
 
                 sendAverageCommuterAjax();
                 sendRfPredictionAjax();
+                
 
                 // Update previous values
                 prevRoute = selectedRoute;
@@ -194,7 +195,6 @@
             }
         }
     }
-
 
 
     function sendAverageCommuterAjax() {
@@ -339,25 +339,25 @@
 
 
     // Initialize chart with default zero values (for 7 days)
-    // function initializeEmptyChart() {
-    //   const chartElement = document.querySelector("#chart1");
-    //   chartElement.innerHTML = "";
+    function initializeEmptyChart() {
+      const chartElement = document.querySelector("#chart1");
+      chartElement.innerHTML = "";
 
-    //   const defaultDates = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
-    //   const zeroData = [0, 0, 0, 0, 0, 0, 0];
+      const defaultDates = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
+      const zeroData = [0, 0, 0, 0, 0, 0, 0];
 
-    //   const chart = new ApexCharts(chartElement, {
-    //     chart: { type: 'line', height: 350 },
-    //     series: [{ name: "No Data", data: zeroData }],
-    //     xaxis: { categories: defaultDates },
-    //     title: { text: "Commuter Trend (No Filter Selected)", align: 'center' }
-    //   });
+      const chart = new ApexCharts(chartElement, {
+        chart: { type: 'line', height: 350 },
+        series: [{ name: "No Data", data: zeroData }],
+        xaxis: { categories: defaultDates },
+        title: { text: "Commuter Trend (No Filter Selected)", align: 'center' }
+      });
 
-    //   chart.render();
-    // }
+      chart.render();
+    }
   
     window.onload = function () {
-      // initializeEmptyChart();  // 
+      initializeEmptyChart();  // 
       updateTimeOptions();
     };
 
