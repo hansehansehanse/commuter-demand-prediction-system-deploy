@@ -56,47 +56,42 @@
         </a>
       </li> -->
       <li class="menu-item">
+        <a href="{% url 'dashboard' %}" class="menu-link">
+          <i class="menu-icon tf-icons ti ti-layout-dashboard"></i>
+          <div data-i18n="Dashboard">Dashboard</div>
+        </a>
+      </li>
+      
+      <li class="menu-item">
+        <a href="{% url 'historical_dataset_event_list' %}" class="menu-link">
+          <i class="menu-icon tf-icons ti ti-cpu"></i>
+          <div data-i18n="Dataset">Dataset</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
+        <a href="{% url 'dataset_graph' %}" class="menu-link">
+          <i class="menu-icon tf-icons ti ti-chart-line"></i>
+          <div data-i18n="Graphs">Custom Forecast</div>
+        </a>
+      </li>
+
+      <li class="menu-item">
         <a href="{% url 'account_management' %}" class="menu-link">                 <!-- Use this format instead -->                       
           <i class="menu-icon tf-icons ti ti-users"></i>
           <div data-i18n="Account Management">Account Management</div>
         </a>
       </li>
+      
       <li class="menu-item">
         <a href="{% url 'action_log_list' %}" class="menu-link">
           <i class="menu-icon tf-icons ti ti-clock"></i>
           <div data-i18n="Action Log">Action Log</div>
         </a>
       </li>
-      <li class="menu-item">
-        <a href="{% url 'historical_dataset_upload_list' %}" class="menu-link">
-          <i class="menu-icon tf-icons ti ti-file-spreadsheet"></i>
-          <div data-i18n="Dataset Upload">Dataset Upload</div>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'event_list' %}" class="menu-link">
-          <i class="menu-icon tf-icons ti ti-star"></i>
-          <div>Important Events</div>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'datasetprediction_list' %}" class="menu-link">
-          <i class="menu-icon tf-icons ti ti-clock"></i>
-          <div>CDPS</div>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'dataset_graph' %}" class="menu-link">
-          <i class="menu-icon tf-icons ti ti-chart-line"></i>
-          <div data-i18n="Graphs">Graphs</div>
-        </a>
-      </li>
-      <li class="menu-item">
-        <a href="{% url 'historical_dataset_event_list' %}" class="menu-link">
-          <i class="menu-icon tf-icons ti ti-upload"></i>
-          <div data-i18n="Train Model">Train Model</div>
-        </a>
-      </li>
+      
+
+
     </ul>
   </aside>
 

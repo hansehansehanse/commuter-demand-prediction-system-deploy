@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-xxl flex-grow-1 container-p-y">
   <h4 class="fw-bold py-3 mb-4">
-    <span class="text-muted fw-light">Dataset /</span> Commuter Chart
+    <span class="text-muted fw-light">Forecast /</span> Custom Forecast
   </h4>
 
   <div class="row">
@@ -120,17 +120,6 @@
 
     <div style="height: 25px;"></div>
 
-    <div class="col-12 mb-4">
-      <div class="card">
-        <div class="card-header d-flex justify-content-between"></div>
-            <h5 class="card-header">Historical Commuter Count (Last 7 Instances Based on Current Filter)</h5>  
-            <div id="chart1">           
-            </div>
-      </div>
-      <div class="card p-3"></div>
-    </div>
-
-
 
   </row>
 
@@ -153,37 +142,6 @@
     document.getElementById('datePicker').value = today;
     }
     //!Calendar Today
-
-
-    //
-    // let selectedRoute = '';
-    // let selectedTime = '';
-    // let selectedDate = '';
-
-    // let prevRoute = '';
-    // let prevTime = '';
-    // let prevDate = '';
-
-    // // Add event listeners
-    // document.getElementById('route').addEventListener('change', handleInputChange);
-    // document.getElementById('time').addEventListener('change', handleInputChange);
-    // document.getElementById('datePicker').addEventListener('change', handleInputChange);
-
-    // function handleInputChange() {
-    //     selectedRoute = document.getElementById('route').value;
-    //     selectedTime = document.getElementById('time').value;
-    //     selectedDate = document.getElementById('datePicker').value; 
-
-    //     // Ensure all values are present before making AJAX calls
-    //     if (selectedRoute !== '' && selectedTime !== '' && selectedDate !== '') {
-    //         console.log(`Selected Route: ${selectedRoute}`);
-    //         console.log(`Selected Time: ${selectedTime}`);
-    //         console.log(`Selected Date: ${selectedDate}`);
-
-    //         sendAverageCommuterAjax();
-    //         sendRfPredictionAjax();
-    //     }
-    // }
     let selectedRoute = '';
     let selectedTime = '';
     let selectedDate = '';

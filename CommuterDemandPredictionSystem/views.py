@@ -225,7 +225,7 @@ def login_view(request):
 
                 if user.access_level == 'Admin':
                     log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
-                    return redirect(reverse('account_management'))
+                    return redirect(reverse('dashboard'))
                 
                 elif user.access_level == 'Bus Manager':
                     log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
@@ -377,8 +377,6 @@ def log_action(request, action_type, details=""):
     else:
         print("No user is logged in!")
 
-
-
 from django.shortcuts import render
 from .models import ActionLog
 
@@ -396,154 +394,152 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
+# XXX
+# from django.contrib.auth import get_user_model
+# from .models import Dataset, HolidayEvent, TemporalEvent
+# import pandas as pd
+# from datetime import datetime
+# from django.shortcuts import render, redirect
 
-from django.contrib.auth import get_user_model
-from .models import Dataset, HolidayEvent, TemporalEvent
-import pandas as pd
-from datetime import datetime
-from django.shortcuts import render, redirect
+# User = get_user_model()
 
-User = get_user_model()
-
-def dataset_upload_list(request):
-    if request.method == 'POST':
-        dataset_file = request.FILES.get('dataset_file')
-        if dataset_file:
-            file_extension = dataset_file.name.split('.')[-1]
-            if file_extension == 'xlsx':
-                df = pd.read_excel(dataset_file)
+# def dataset_upload_list(request):
+#     if request.method == 'POST':
+#         dataset_file = request.FILES.get('dataset_file')
+#         if dataset_file:
+#             file_extension = dataset_file.name.split('.')[-1]
+#             if file_extension == 'xlsx':
+#                 df = pd.read_excel(dataset_file)
                 
-            elif file_extension == 'csv':
-                df = pd.read_csv(dataset_file)
+#             elif file_extension == 'csv':
+#                 df = pd.read_csv(dataset_file)
                 
 
-            user = request.user
-            # print(f"User Code: {user.user_code}")  # Debug
+#             user = request.user
+#             # print(f"User Code: {user.user_code}")  # Debug
 
-            holidays = build_holiday_set()  # Build once
+#             holidays = build_holiday_set()  # Build once
 
-            for _, row in df.iterrows():
-                try:
-                    date_val = pd.to_datetime(row['Date']).date()
-                except Exception as e:
-                    print(f"Error parsing date: {e}")
-                    continue
+#             for _, row in df.iterrows():
+#                 try:
+#                     date_val = pd.to_datetime(row['Date']).date()
+#                 except Exception as e:
+#                     print(f"Error parsing date: {e}")
+#                     continue
 
-                route = row['Route']
-                try:
-                    time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-                except ValueError as e:
-                    print(f"Error parsing time: {e}")
-                    continue
-
-
-                num_commuters = row['Commuters']
-
-                day_of_week = date_val.strftime("%A")
-                month = date_val.strftime("%B")
-                weekday = date_val.weekday()
-                is_friday = weekday == 4
-                is_saturday = weekday == 5
-
-                is_holiday = date_val in holidays
-                is_before_holiday = is_day_before_holiday(date_val, holidays)
-                is_lweekend = is_long_weekend(date_val, holidays)
-                is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
-
-                is_local_holiday = check_local_holiday_flag(date_val)
-                is_university_event = check_university_event_flag(date_val)
-                is_local_event = check_local_event_flag(date_val)
-                is_others = check_others_event_flag(date_val)
-
-                semester_flags = get_university_semester_flags(date_val)
-
-                is_within_ay = semester_flags['is_within_ay']
-                is_start_of_sem = semester_flags['is_start_of_sem']
-                is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
-                is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
-                is_end_of_sem = semester_flags['is_end_of_sem']
-                is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
-                is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
-                is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
+#                 route = row['Route']
+#                 try:
+#                     time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
+#                 except ValueError as e:
+#                     print(f"Error parsing time: {e}")
+#                     continue
 
 
-                # print(
-                #     f"Date: {date_val} | "
-                #     f"is_within_ay: {is_within_ay}, "
-                #     f"is_start_of_sem: {is_start_of_sem}, "
-                #     f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
-                #     f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
-                #     # f"is_end_of_sem: {is_end_of_sem}, "
-                #     # f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
-                #     # f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
-                #     # f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
-                # )
+#                 num_commuters = row['Commuters']
 
-                # print(
-                #     f"Date: {date_val} | "
-                #     # f"is_within_ay: {is_within_ay}, "
-                #     # f"is_start_of_sem: {is_start_of_sem}, "
-                #     # f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
-                #     # f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
-                #     f"is_end_of_sem: {is_end_of_sem}, "
-                #     f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
-                #     f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
-                #     f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
-                # )
+#                 day_of_week = date_val.strftime("%A")
+#                 month = date_val.strftime("%B")
+#                 weekday = date_val.weekday()
+#                 is_friday = weekday == 4
+#                 is_saturday = weekday == 5
 
+#                 is_holiday = date_val in holidays
+#                 is_before_holiday = is_day_before_holiday(date_val, holidays)
+#                 is_lweekend = is_long_weekend(date_val, holidays)
+#                 is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
 
-                Dataset.objects.create(
-                    date=date_val,
-                    route=route,
-                    time=time_val,
-                    num_commuters=num_commuters,
-                    user_code=user.user_code,
-                    filename=dataset_file.name,
+#                 is_local_holiday = check_local_holiday_flag(date_val)
+#                 is_university_event = check_university_event_flag(date_val)
+#                 is_local_event = check_local_event_flag(date_val)
+#                 is_others = check_others_event_flag(date_val)
 
-                    day=day_of_week,
-                    month=month,
-                    is_friday=is_friday,
-                    is_saturday=is_saturday,
-                    is_holiday=is_holiday,
-                    is_day_before_holiday=is_before_holiday,
-                    is_long_weekend=is_lweekend,
-                    is_day_before_long_weekend=is_before_lweekend,
+#                 semester_flags = get_university_semester_flags(date_val)
 
-                    # Temporal event flags
-                    is_local_holiday=is_local_holiday,
-                    is_university_event=is_university_event,
-                    is_local_event=is_local_event,
-                    is_others=is_others,
-
-                    # Semester-related flags
-                    is_within_ay=is_within_ay,
-                    is_start_of_sem=is_start_of_sem,
-                    is_day_before_end_of_sem=is_day_before_end_of_sem,
-                    is_week_before_end_of_sem=is_week_before_end_of_sem,
-                    is_end_of_sem=is_end_of_sem,
-                    is_day_after_end_of_sem=is_day_after_end_of_sem,
-                    is_2days_after_end_of_sem=is_2days_after_end_of_sem,
-                    is_week_after_end_of_sem=is_week_after_end_of_sem
-                )
-
-                log_action(request, 'Dataset Upload', f"User {user.first_name} {user.last_name} upload dataset.")
+#                 is_within_ay = semester_flags['is_within_ay']
+#                 is_start_of_sem = semester_flags['is_start_of_sem']
+#                 is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
+#                 is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
+#                 is_end_of_sem = semester_flags['is_end_of_sem']
+#                 is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
+#                 is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
+#                 is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
 
 
-            return redirect('dataset_upload_list')
+#                 # print(
+#                 #     f"Date: {date_val} | "
+#                 #     f"is_within_ay: {is_within_ay}, "
+#                 #     f"is_start_of_sem: {is_start_of_sem}, "
+#                 #     f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
+#                 #     f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
+#                 #     # f"is_end_of_sem: {is_end_of_sem}, "
+#                 #     # f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
+#                 #     # f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
+#                 #     # f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
+#                 # )
 
-    datasets = Dataset.objects.all()
+#                 # print(
+#                 #     f"Date: {date_val} | "
+#                 #     # f"is_within_ay: {is_within_ay}, "
+#                 #     # f"is_start_of_sem: {is_start_of_sem}, "
+#                 #     # f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
+#                 #     # f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
+#                 #     f"is_end_of_sem: {is_end_of_sem}, "
+#                 #     f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
+#                 #     f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
+#                 #     f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
+#                 # )
 
-    user_map = {
-        u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
-    }
 
-    for d in datasets:
-        d.uploader = user_map.get(d.user_code)
+#                 Dataset.objects.create(
+#                     date=date_val,
+#                     route=route,
+#                     time=time_val,
+#                     num_commuters=num_commuters,
+#                     user_code=user.user_code,
+#                     filename=dataset_file.name,
 
-    return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+#                     day=day_of_week,
+#                     month=month,
+#                     is_friday=is_friday,
+#                     is_saturday=is_saturday,
+#                     is_holiday=is_holiday,
+#                     is_day_before_holiday=is_before_holiday,
+#                     is_long_weekend=is_lweekend,
+#                     is_day_before_long_weekend=is_before_lweekend,
 
-#-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
+#                     # Temporal event flags
+#                     is_local_holiday=is_local_holiday,
+#                     is_university_event=is_university_event,
+#                     is_local_event=is_local_event,
+#                     is_others=is_others,
+
+#                     # Semester-related flags
+#                     is_within_ay=is_within_ay,
+#                     is_start_of_sem=is_start_of_sem,
+#                     is_day_before_end_of_sem=is_day_before_end_of_sem,
+#                     is_week_before_end_of_sem=is_week_before_end_of_sem,
+#                     is_end_of_sem=is_end_of_sem,
+#                     is_day_after_end_of_sem=is_day_after_end_of_sem,
+#                     is_2days_after_end_of_sem=is_2days_after_end_of_sem,
+#                     is_week_after_end_of_sem=is_week_after_end_of_sem
+#                 )
+
+#                 log_action(request, 'Dataset Upload', f"User {user.first_name} {user.last_name} upload dataset.")
+
+
+#             return redirect('dataset_upload_list')
+
+#     datasets = Dataset.objects.all()
+
+#     user_map = {
+#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
+#     }
+
+#     for d in datasets:
+#         d.uploader = user_map.get(d.user_code)
+
+#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
+
 #-------------------------------------------------------------------------
 
 # views.py
@@ -574,7 +570,7 @@ def event_list(request):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
+#CRUD FOR RECENT EVENTS!
 from django.shortcuts import render
 from django.http import JsonResponse
 from .models import TemporalEvent
@@ -589,6 +585,7 @@ logger = logging.getLogger(__name__)
 User = get_user_model()
 
 def add_event(request):
+    # print("------------------------------------------------------------------------------Add event view triggered!")
     if request.method == 'POST':
         try:
             # Get data from the request body (parsed from JSON)
@@ -645,6 +642,7 @@ def edit_event(request):
             # Parse incoming data
             data = json.loads(request.body)
             event_code = data.get("event_code")  # Get the event code to identify the event
+            print(f"EDIT EVENT: Received event code to edit: {event_code}")
             event = get_object_or_404(TemporalEvent, event_code=event_code)  # Find event by event_code
 
             # Capture the logged-in user's UUID
@@ -693,6 +691,7 @@ def delete_event(request):
             data = json.loads(request.body)
             event_code = data.get("event_code")
 
+            print(f"DELETE EVENT: Received event code to delete: {event_code}")
             if not event_code:
                 return JsonResponse({'status': 'error', 'message': 'Event code is required.'}, status=400)
 
@@ -765,49 +764,24 @@ def edit_holiday_event(request):
 
 
 #-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
 
-from django.shortcuts import render
-from .cdps import train_and_predict_random_forest
+# XXX
+# from django.shortcuts import render
+# from .cdps import train_and_predict_random_forest
 
-def predict_commuters(request):
-    # Get the predictions for the next 2 weeks
-    predictions = train_and_predict_random_forest()
+# def predict_commuters(request):
+#     # Get the predictions for the next 2 weeks
+#     predictions = train_and_predict_random_forest()
 
-    # Render the predictions in the table format
-    return render(request, 'admin/datasetPrediction.html', {'predictions': predictions})
-
-
-
+#     # Render the predictions in the table format
+#     return render(request, 'admin/datasetPrediction.html', {'predictions': predictions})
 
 #-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-from django.shortcuts import render
-from django.db.models import Avg
-from .models import Dataset
-import json
-
-from django.http import JsonResponse
-from django.db.models import Sum
-from .models import Dataset
-
-
-
-def dataset_graph_data(request):
-    print("✅ dataset_graph_data called")
-
-    recent_dates = Dataset.objects.values_list('date', flat=True).distinct().order_by('-date')[:7]
-    data = Dataset.objects.filter(date__in=recent_dates).values('date', 'route', 'time').annotate(
-        total_commuters=Sum('num_commuters')
-    ).order_by('date', 'route', 'time')
-    return JsonResponse(list(data), safe=False)
-
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
+#datasetGraph.html
 def dataset_graph(request):
-    # test_load_model(request)
 
     if request.method == "POST":
         graph_type = request.POST.get("graph_type")  
@@ -821,7 +795,6 @@ def dataset_graph(request):
         if not route or not time_str:
             return JsonResponse({'error': 'Missing route or time'})
 
-        
         # Handle different graph types
         if graph_type == "last7":
             print("FROM: last7")
@@ -839,9 +812,6 @@ def dataset_graph(request):
         elif graph_type == 'two_week_predictions':
             print("FROM: two_week_predictions")
             return rf_predict_commuters_2weeks(route, time_str, selected_date)
-
-            
-
 
         return JsonResponse({'error': 'Unknown graph_type'})
 
@@ -880,7 +850,7 @@ def get_last_7_records_chart_data(route, time_str):
     return JsonResponse({'chart_data': json.dumps(chart_data)})
 
 
-from .models import Dataset
+from .models import HistoricalDataset
 from django.db.models import Avg
 from datetime import datetime
 from django.http import JsonResponse
@@ -952,10 +922,7 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         print("❌ Error in get_average_commuters_from_date:", e)
         return JsonResponse({'error': 'Failed to compute average'}, status=500)
 
-
-
 ####
-
 
 import os
 import joblib
@@ -1419,12 +1386,27 @@ def historical_dataset_export(request):
     print(f"Export successful! File sent: {filename}")
     return response
 
+
+# views.py
+from django.shortcuts import redirect
+from django.contrib import messages
+from .models import HistoricalDataset
+
+def delete_all_historical_datasets(request):
+    if request.method == "POST":
+        HistoricalDataset.objects.all().delete()
+        messages.success(request, "All historical datasets have been deleted.")
+    return redirect('historical_dataset_event_list')  # Redirect back to the dataset list
+
+
+
 import os
 import glob
 import joblib
 from django.conf import settings
 from django.utils.timezone import now
 from .randomForest import train_random_forest_model
+from .models import ModelTrainingHistory
 
 from django.shortcuts import redirect
 from django.contrib import messages
@@ -1435,6 +1417,13 @@ def train_random_forest_model_view(request):
             # Train model and get performance report
             model, performance_report = train_random_forest_model()
 
+            #problem in adding the trained_by value so this is a proposed fix given that there will always be one object in the model
+            latest_model = ModelTrainingHistory.objects.latest('trained_at')
+            latest_model.trained_by = request.user.user_code
+            latest_model.save(update_fields=["trained_by"])
+            print("------------------------------------------------------Model trained by:", latest_model.trained_by)
+
+            
             # Create unique timestamp-based filename
             timestamp = now().strftime('%Y%m%d_%H%M%S')
             base_filename = f"random_forest_model_{timestamp}"
@@ -1460,9 +1449,6 @@ def train_random_forest_model_view(request):
             # Success message
             messages.success(request, "Model trained successfully and saved!")
 
-            # Redirect back to the original page after success
-            # return redirect('historical_dataset_upload_list')  # Redirect to the upload list page (adjust the name as necessary)
-            
             return redirect('historical_dataset_event_list')
             
     
@@ -1507,6 +1493,8 @@ def historical_dataset_event_list(request):
         'has_missing_dates': has_missing_dates,
         'is_event_list_empty': is_event_list_empty,
         'can_train_model': can_train_model,
+
+        "has_historical_data": HistoricalDataset.objects.exists(),
     }
 
     # print("has_missing_dates:", has_missing_dates)
@@ -1514,7 +1502,6 @@ def historical_dataset_event_list(request):
     # print("can_train_model:", can_train_model)
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
-
 
 
 def add_historical_event(request):
@@ -1594,8 +1581,6 @@ def edit_historical_event(request):
             print(f"Error editing historical event: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-
-
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth import get_user_model
 from django.http import JsonResponse
@@ -1613,6 +1598,7 @@ def delete_historical_event(request):
             data = json.loads(request.body)
             event_code = data.get("event_code")
 
+            print(f"historicalDataset...Received event code to delete: {event_code}")
             if not event_code:
                 return JsonResponse({'status': 'error', 'message': 'Event code is required.'}, status=400)
 
@@ -1711,8 +1697,490 @@ def get_historical_university_semester_flags(target_date):
 
 #-------------------------------------------------------------------------
 
+# Dashboard
+from django.shortcuts import render
+from datetime import datetime, timedelta
+
+def dashboard(request):
+    # upcoming_events_view(request)
+    ##MODIFY THIS LATER BUT CANNOT REMOVE THESE TEMP VALUES YET
+    # Placeholder values – replace these with real queries later
+    # avg_commuters = 1200
+    # rf_prediction = 1280
+
+    # # Generate mock 2-week predictions
+    # today = datetime.now().date()
+    # predictions = []
+    # for i in range(14):
+    #     date = today + timedelta(days=i)
+    #     predictions.append({
+    #         'date': date.strftime('%Y-%m-%d'),
+    #         'route': 'A to B' if i % 2 == 0 else 'A to C',
+    #         'time': '07:00 AM',
+    #         'predicted_commuters': 100 + i * 10  # dummy numbers
+    #     })
+
+    context = {
+        'test': None
+    }
+
+    # return render(request, 'admin/dashboard.html', context)
+    return render(request, 'admin/dashboard.html', context)
+
 
 #-------------------------------------------------------------------------
+#-------------------------------------------------------------------------
+
+from django.http import JsonResponse
+from .models import HistoricalDataset
+from django.db.models import Sum
+from collections import OrderedDict
+
+def monthly_commuter_stats(request):
+    qs = HistoricalDataset.objects.order_by("-date").values_list("date", flat=True)
+
+    seen = set()
+    recent_months = []
+
+    for date in qs:
+        year_month = (date.year, date.month)
+        if year_month not in seen:
+            seen.add(year_month)
+            recent_months.append(year_month)
+        if len(recent_months) == 5:  # Now need 5 for comparison
+            break
+
+    recent_months = sorted(recent_months)
+
+    labels = []
+    data = []
+
+    month_data = {}
+
+    for year, month in recent_months:
+        count = HistoricalDataset.objects.filter(
+            date__year=year, date__month=month
+        ).aggregate(total=Sum("num_commuters"))["total"] or 0
+
+        label = f"{datetime(year, month, 1).strftime('%b %Y')}"
+        labels.append(label)
+        data.append(count)
+        month_data[(year, month)] = count
+
+    current = recent_months[-1]
+    previous = recent_months[-2] if len(recent_months) > 1 else None
+
+    current_count = month_data.get(current, 0)
+    prev_count = month_data.get(previous, 0)
+
+    # Compute percentage change
+    if prev_count > 0:
+        change_percent = round(((current_count - prev_count) / prev_count) * 100, 2)
+    else:
+        change_percent = 0
+
+    return JsonResponse({
+        "labels": labels,
+        "data": data,
+        "current_month_count": current_count,
+        "current_month_name": f"{datetime(*current, 1).strftime('%b %Y')}",
+        "change_percent": change_percent
+    })
 
 
 
+from django.http import JsonResponse
+from django.db.models import Sum, Max
+from .models import HistoricalDataset
+import calendar
+
+def route_commuter_percentages(request):
+    print("✅ Route commuter percentages view called")
+
+    # Get the latest available date in the dataset
+    latest_date = HistoricalDataset.objects.aggregate(latest=Max('date'))['latest']
+    if not latest_date:
+        print("⚠️ No data in HistoricalDataset")
+        return JsonResponse({
+            "labels": [],
+            "data": []
+        })
+
+    # Determine the first and last day of the latest month
+    year = latest_date.year
+    month = latest_date.month
+    start_date = latest_date.replace(day=1)
+    last_day = calendar.monthrange(year, month)[1]
+    end_date = latest_date.replace(day=last_day)
+
+    print(f"📅 Filtering for month: {year}-{month:02d} ({start_date} to {end_date})")
+
+    # Get total commuters per route for that month
+    route_counts = (
+        HistoricalDataset.objects
+        .filter(date__range=(start_date, end_date))
+        .values("route")
+        .annotate(total_commuters=Sum("num_commuters"))
+        .order_by("-total_commuters")
+    )
+
+    labels = [entry["route"] for entry in route_counts]
+    data = [entry["total_commuters"] for entry in route_counts]
+
+    print(f"📊 Routes: {labels}")
+    print(f"👥 Totals: {data}")
+
+    return JsonResponse({
+        "labels": labels,
+        "data": data
+    })
+
+
+from django.http import JsonResponse
+from django.db.models import Sum, Max
+from datetime import timedelta
+from .models import HistoricalDataset  # Adjust import as needed
+
+def top_commuter_times(request):
+    # Get the latest date in the dataset
+    latest_date = HistoricalDataset.objects.aggregate(latest=Max('date'))['latest']
+    if not latest_date:
+        return JsonResponse({"labels": [], "data": []})
+
+    # Get the first day of that month
+    first_day_of_month = latest_date.replace(day=1)
+
+    # Aggregate total commuters by time for the latest month
+    time_counts = (
+        HistoricalDataset.objects
+        .filter(date__range=(first_day_of_month, latest_date))
+        .values('time')
+        .annotate(total_commuters=Sum('num_commuters'))
+        .order_by('-total_commuters')[:3]  # top 3 times
+    )
+
+    labels = [entry['time'] for entry in time_counts]
+    data = [entry['total_commuters'] for entry in time_counts]
+
+    return JsonResponse({
+        'labels': labels,
+        'data': data,
+    })
+
+
+
+from django.http import JsonResponse
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
+from .models import HistoricalDataset
+from datetime import timedelta
+
+def commuters_heatmap_data(request):
+    # Get the most recent date in the dataset
+    latest_entry = HistoricalDataset.objects.order_by('-date').first()
+    if not latest_entry:
+        return JsonResponse({'dates': [], 'counts': [], 'flags': {}})
+
+    latest_date = latest_entry.date
+    month_start = latest_date.replace(day=1)
+    next_month = (month_start.replace(day=28) + timedelta(days=4)).replace(day=1)
+
+    # Aggregate commuter counts
+    daily_totals = (
+        HistoricalDataset.objects
+        .filter(date__gte=month_start, date__lt=next_month)
+        .annotate(day=TruncDate('date'))
+        .values('day')
+        .annotate(total=Sum('num_commuters'))
+        .order_by('day')
+    )
+    daily_dict = {entry['day']: entry['total'] for entry in daily_totals}
+
+    # Build complete data
+    current_day = month_start
+    full_dates = []
+    full_counts = []
+    flags_dict = {}
+
+    while current_day < next_month:
+        full_dates.append(current_day.isoformat())
+        full_counts.append(daily_dict.get(current_day, 0))
+
+        # Fetch the first dataset entry for that day
+        ds = HistoricalDataset.objects.filter(date=current_day).first()
+        if ds:
+            flags_dict[current_day.isoformat()] = {
+                'is_holiday': ds.is_holiday,
+                'is_friday': ds.is_friday,
+                'is_saturday': ds.is_saturday,
+                'is_day_before_holiday': ds.is_day_before_holiday,
+                'is_long_weekend': ds.is_long_weekend,
+                'is_day_before_long_weekend': ds.is_day_before_long_weekend,
+                'is_local_holiday': ds.is_local_holiday,
+                'is_university_event': ds.is_university_event,
+                'is_local_event': ds.is_local_event,
+                'is_others': ds.is_others,
+                'is_flagged': ds.is_flagged,
+                'is_within_ay': ds.is_within_ay,
+                'is_start_of_sem': ds.is_start_of_sem,
+                'is_day_before_end_of_sem': ds.is_day_before_end_of_sem,
+                'is_week_before_end_of_sem': ds.is_week_before_end_of_sem,
+                'is_end_of_sem': ds.is_end_of_sem,
+                'is_day_after_end_of_sem': ds.is_day_after_end_of_sem,
+                'is_2days_after_end_of_sem': ds.is_2days_after_end_of_sem,
+                'is_week_after_end_of_sem': ds.is_week_after_end_of_sem
+            }
+        else:
+            flags_dict[current_day.isoformat()] = {}
+
+        current_day += timedelta(days=1)
+
+    return JsonResponse({
+        'dates': full_dates,
+        'counts': full_counts,
+        'flags': flags_dict
+    })
+
+
+from django.http import JsonResponse
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
+from datetime import timedelta
+from .models import HistoricalDataset
+
+def daily_commuter_trend(request):
+    latest_entry = HistoricalDataset.objects.order_by('-date').first()
+    if not latest_entry:
+        return JsonResponse({"labels": [], "data": []})
+
+    latest_date = latest_entry.date
+    start_date = latest_date - timedelta(days=29)
+
+    daily_data = (
+        HistoricalDataset.objects
+        .filter(date__range=(start_date, latest_date))
+        .annotate(day=TruncDate('date'))
+        .values('day')
+        .annotate(total_commuters=Sum('num_commuters'))
+        .order_by('day')
+    )
+
+    labels = [entry['day'].strftime('%b %d') for entry in daily_data]
+    data = [entry['total_commuters'] for entry in daily_data]
+
+    return JsonResponse({
+        "labels": labels,
+        "data": data
+    })
+
+
+
+from collections import defaultdict
+from django.db.models.functions import TruncDate
+from django.db.models import Sum
+from datetime import timedelta
+
+def daily_commuter_trend_per_route(request):
+    latest_entry = HistoricalDataset.objects.order_by('-date').first()
+    if not latest_entry:
+        return JsonResponse({"labels": [], "routes": [], "datasets": {}})
+
+    latest_date = latest_entry.date
+    start_date = latest_date - timedelta(days=29)
+
+    # Query daily totals grouped by day and route
+    qs = (
+        HistoricalDataset.objects
+        .filter(date__range=(start_date, latest_date))
+        .annotate(day=TruncDate('date'))
+        .values('day', 'route')
+        .annotate(total_commuters=Sum('num_commuters'))
+        .order_by('day')
+    )
+
+    # Get all unique dates and routes
+    dates = sorted({entry['day'] for entry in qs})
+    routes = sorted({entry['route'] for entry in qs})
+
+    # Initialize dictionary: {route: [0, 0, ...]} with length = number of dates
+    route_data = {route: [0]*len(dates) for route in routes}
+
+    # Map each date to its index for quick filling
+    date_index = {date: idx for idx, date in enumerate(dates)}
+
+    # Fill the commuter counts per route and date
+    for entry in qs:
+        idx = date_index[entry['day']]
+        route_data[entry['route']][idx] = entry['total_commuters']
+
+    # Format dates for labels
+    labels = [date.strftime('%b %d') for date in dates]
+
+    return JsonResponse({
+        "labels": labels,
+        "routes": routes,
+        "datasets": route_data
+    })
+
+
+from django.http import JsonResponse
+from django.db.models import Sum
+from django.db.models.functions import TruncDate
+from datetime import timedelta
+from collections import defaultdict
+from .models import HistoricalDataset
+
+def daily_commuter_trend_per_time(request):
+    latest_entry = HistoricalDataset.objects.order_by('-date').first()
+    if not latest_entry:
+        return JsonResponse({"labels": [], "times": [], "datasets": {}})
+
+    latest_date = latest_entry.date
+    start_date = latest_date - timedelta(days=29)
+
+    # Group by date and time
+    qs = (
+        HistoricalDataset.objects
+        .filter(date__range=(start_date, latest_date))
+        .annotate(day=TruncDate('date'))
+        .values('day', 'time')
+        .annotate(total_commuters=Sum('num_commuters'))
+        .order_by('day')
+    )
+
+    # Extract unique dates and time strings
+    dates = sorted({entry['day'] for entry in qs})
+    times = sorted({entry['time'].strftime('%H:%M') for entry in qs})
+
+    # Build index map for dates
+    date_index = {date: i for i, date in enumerate(dates)}
+    time_data = {time: [0] * len(dates) for time in times}
+
+    # Fill commuter counts
+    for entry in qs:
+        idx = date_index[entry['day']]
+        time_str = entry['time'].strftime('%H:%M')
+        time_data[time_str][idx] = entry['total_commuters']
+
+    labels = [d.strftime('%b %d') for d in dates]
+
+    return JsonResponse({
+        "labels": labels,
+        "times": times,
+        "datasets": time_data
+    })
+
+
+from django.http import JsonResponse
+from django.utils.timezone import now
+from .models import ModelTrainingHistory
+
+from datetime import timezone
+
+from .models import CustomUser 
+
+
+from django.http import JsonResponse
+from .models import ModelTrainingHistory, CustomUser
+from datetime import datetime
+
+def get_latest_model_info(request):
+    latest_model = ModelTrainingHistory.objects.order_by('-trained_at').first()
+
+    # upcoming_events_view(request)                                                               #!!!!
+
+    if not latest_model:
+        return JsonResponse({'error': 'No model found'})
+
+    try:
+        user = CustomUser.objects.get(user_code=latest_model.trained_by)
+        trained_by_name = f"{user.first_name} {user.last_name}"
+    except CustomUser.DoesNotExist:
+        trained_by_name = "Unknown"
+
+    days_since_training = (datetime.now().date() - latest_model.trained_at.date()).days
+
+    return JsonResponse({
+        'model_name': latest_model.model_name,
+        'trained_by': trained_by_name,
+        'trained_at': latest_model.trained_at.strftime("%Y-%m-%d %H:%M:%S"),
+        'days_since_training': days_since_training,
+        'rmse': latest_model.rmse,
+        'mae': latest_model.mae
+    })
+
+
+# from django.http import JsonResponse
+# from datetime import date, timedelta
+# from .models import HolidayEvent, TemporalEvent
+
+def upcoming_events_view(request):
+    events = []
+    # today = date.today()
+    
+    today = date(2024, 12, 20)
+    thirty_days_later = today + timedelta(days=30)
+    print("---------------------------------------------------Upcoming events view called")
+
+    print(f"[INFO] Today: {today}")
+    print(f"[INFO] 30 Days Later: {thirty_days_later}")
+
+    temporal_events = TemporalEvent.objects.filter(date__range=(today, thirty_days_later))
+    # holiday_events = HolidayEvent.objects.filter(date__range=(today, thirty_days_later))
+    holiday_events = HolidayEvent.objects.all()
+
+    # temporal_events = TemporalEvent.objects.all()
+    # holiday_events = HolidayEvent.objects.all()
+
+    
+    print(f"[INFO] Found {temporal_events.count()} temporal events")
+    print(f"[INFO] Found {holiday_events.count()} holiday events")
+
+
+    #---------------------------------------------------------------------------
+    date_range_md = set()
+    current_date = today
+    while current_date <= thirty_days_later:
+        date_range_md.add(current_date.strftime('%m-%d'))
+        current_date += timedelta(days=1)
+
+    # Then, filter holidays
+    for h in holiday_events:
+        md = h.date.strftime('%m-%d')
+        if md in date_range_md:
+            # print(f"[HOLIDAY] {h.date}: {h.event_type} - {h.event_name}")
+            events.append({
+                'name': h.event_name,   
+                'type': h.event_type, 
+                'date': h.date.strftime('%Y-%m-%d'),
+            })
+    #---------------------------------------------------------------------------
+
+    for e in temporal_events:
+        # print(f"[TEMPORAL] {e.date}: {e.event_type} - {e.event_name}")
+        events.append({
+            'name': e.event_name,  
+            'type': e.event_type,
+            'date': e.date.strftime('%Y-%m-%d'),
+            
+            
+        })
+
+    
+    # After appending holidays and temporal events...
+
+    print("[INFO] Combined events:")
+    for event in events:
+        # print(f"{event['date']} - {event['type']} - {event['name']}")
+        print(f"{{'name': '{event['name']}', 'type': '{event['type']}', 'date': '{event['date']}'}},")
+    
+    print("---------------------------------------------------Upcoming events view called")
+
+    return JsonResponse({'data': events})
+
+
+
+
+
+#-------------------------------------------------------------------------
+#-------------------------------------------------------------------------

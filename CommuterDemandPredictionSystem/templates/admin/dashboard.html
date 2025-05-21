@@ -1,0 +1,1015 @@
+{% extends 'admin_base_graph.html' %}
+
+{% block content %}
+<div class="container-xxl flex-grow-1 container-p-y">
+  <h4 class="fw-bold py-3 mb-4">
+    <span class="text-muted fw-light">Dashboard /</span> Dashboard
+  </h4>
+
+  <div class="row">
+    <!-- Key Insights -->
+    <div class="col-12">
+        <div class="card" style="min-height: 300px;">
+          <div class="card-body pb-0">
+
+
+
+            <div class="row g-0 justify-content-center align-items-center">
+              <!-- 1 -->
+              <div class="row g-0 justify-content-center align-items-stretch">
+                <!-- Current Model Info -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between h-100">
+                      <div class="mb-3">
+                        <div class="d-flex align-items-center mb-1">
+                          <small class="text-muted d-block fw-semibold mb-1">Current Model:</small>
+                          <div style="flex-grow: 1;"></div>
+                            <span class="badge bg-label-primary rounded-pill p-2" style="flex-shrink: 0;">
+                              <i class="ti ti-cpu ti-sm"></i>
+                            </span>
+                        </div>
+                        <h5 class="mb-1 fw-semibold" id="modelName">--</h5>
+                        <p class="mb-0 text-muted small">
+                          <strong>Trained by:</strong> <span id="trainedBy">--</span><br>
+                          <strong>Trained at:</strong> <span id="trainedAt">--</span>
+                        </p>
+
+                        <div class="d-flex justify-content-end">
+                          <span class="text-muted small fw-semibold" id="daysSinceTraining">-- days ago</span>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Model Performance -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between h-100">
+                      <div class="mb-3">
+                        <div class="d-flex align-items-center justify-content-between mb-2">
+                          <div>
+                            <small class="text-muted d-block fw-semibold mb-1">Current Model Performance:</small>
+                            
+                          </div>
+                          <span class="badge bg-label-info rounded-pill p-2" style="flex-shrink: 0;">
+                            <i class="ti ti-activity ti-sm"></i>
+                          </span>
+                        </div>
+                      
+                        <div class="text-muted small fw-semibold mb-2">
+                          <div class="d-flex justify-content-between text-nowrap">
+                            <span><i class="ti ti-chart-bar"></i> RMSE:</span>
+                            <span id="modelRmse">--</span>
+                          </div>
+                          <div class="d-flex justify-content-between text-nowrap">
+                            <span><i class="ti ti-wave-sine"></i> MAE:</span>
+                            <span id="modelMae">--</span>
+                          </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center">
+                          <p class="mb-0 text-muted small fw-semibold" id="modelPerformanceStatus">--</p>
+                        </div>
+                      
+                        
+                      </div>
+                      
+                    </div>
+                  </div>
+                </div>
+              
+              </div>
+              <!-- 2 -->
+              <div class="row g-0 justify-content-center align-items-stretch">
+                <!-- totalCommutersMonth / bar chart -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
+
+                      <!-- Top: value + label -->
+                      <div class="mb-1">
+                        <h5 class="mb-1 fw-semibold">Total Commuters This Month:</h5>
+                        <h4 class="mb-1 fw-semibold" id="totalCommutersValue">--</h4>
+                        <small class="text-muted" id="totalCommutersMonth">this month</small>
+                        <small class="text-muted d-block" id="monthChangePercent">
+                          <i class="ti ti-arrow-up-right text-success me-1"></i> --
+                        </small>
+                      </div>
+
+                      <!-- Bottom: chart -->
+                      <div style="width: 100%; max-width: 400px; display: flex; justify-content: center;">
+                        <canvas id="monthlyCommutersChart" style="width: 100% !important; height: auto !important;" width="400" height="200"></canvas>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+
+                <!-- Daily Commuter Heatmap -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-start align-items-center text-center">
+                      
+                      <!-- Top: heading -->
+                      <div class="mb-1">
+                        <h5 class="mb-1 fw-semibold">Daily Commuter Heatmap</h5>
+                      </div>
+
+                      <!-- Bottom: heatmap container -->
+                      <div style="display: flex; flex-direction: column; align-items: center;">
+                        
+                        <!-- Header -->
+                        <div class="calendar-header" style="display: grid; grid-template-columns: repeat(7, 35px); gap: 6px; margin-bottom: 6px; font-weight: bold; text-align: center;">
+                          <div>Sun</div>
+                          <div>Mon</div>
+                          <div>Tue</div>
+                          <div>Wed</div>
+                          <div>Thu</div>
+                          <div>Fri</div>
+                          <div>Sat</div>
+                        </div>
+
+                        <!-- Heatmap Grid -->
+                        <div id="heatmapContainer" style="display: grid; grid-template-columns: repeat(7, 35px); gap: 6px;"></div>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+              <!-- 3 -->
+              <div class="row g-0 justify-content-center align-items-stretch">
+                <!-- Top 3 Commuter Times (Most Recent Month) -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
+
+                      <!-- Top: title + description -->
+                      <div class="mb-1">
+                        <h5 class="mb-0 fw-semibold">Top 3 Commuter Times</h5>
+                      </div>
+
+                      <!-- Bottom: horizontal bar chart -->
+                      <div style="width: 250px; height: 120px;">
+                        <canvas id="topTimesChart"></canvas>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+
+
+
+
+                <!-- pie chart -->
+                <div class="col-lg-4 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body d-flex flex-column justify-content-between align-items-center text-center">
+
+                      <!-- Top: title -->
+                      <div class="mb-1">
+                        <h5 class="mb-0 fw-semibold">Commuters by Route</h5>
+                      </div>
+
+                      <!-- Bottom: pie chart -->
+                      <div style="width: 150px; height: 150px;">
+                        <canvas id="commutersPerRouteChart"></canvas>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+
+
+
+              </div>
+            
+              <!-- 4 -->
+              <div class="row g-0 justify-content-center align-items-stretch">
+                <!-- Daily Commuter Trend (Last 30 Days) -->
+                <div class="col-lg-6 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="mb-3 fw-semibold">Daily Commuter Count (Last 30 Days)</h5>
+                      <canvas id="dailyCommuterTrendChart" style="height: 250px;"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Daily Commuter Trend (Last 30 Days) per Route -->
+                <div class="col-lg-6 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="mb-3 fw-semibold">Daily Commuter Count per Route (Last 30 Days)</h5>
+                      <canvas id="dailyCommuterTrendChartPerRoute" style="height: 250px;"></canvas>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Daily Commuter Trend (Last 30 Days) per Time Slot -->
+                <div class="col-lg-6 col-sm-12 mb-4">
+                  <div class="card h-100">
+                    <div class="card-body">
+                      <h5 class="mb-3 fw-semibold">Daily Commuter Count per Time Slot (Last 30 Days)</h5>
+                      <canvas id="dailyCommuterTrendPerTimeChart" style="height: 250px;"></canvas>
+                    </div>
+                  </div>
+                </div>
+              
+              </div>
+            
+            
+            </div>
+            
+
+            </div>
+
+        </div>
+  </div>
+
+  <div id="heatmapTooltip" style="
+  position: absolute;
+  background: white;
+  padding: 6px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+  pointer-events: none;
+  font-size: 0.75rem;
+  display: none;
+  z-index: 1000;
+  max-width: 200px; /* Adjust this value as needed */
+  word-wrap: break-word;
+  white-space: pre-line;
+"></div>
+
+
+  <script>
+    import StatisticCardHorizontal from '@core/components/statistics-cards/StatisticCardHorizontal.vue'
+    
+    export default {
+      components: {
+        StatisticCardHorizontal,
+      },
+    }
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  
+  <
+  <script>
+    let commutersChart;
+  
+    function updateMonthlyCommuterChart(labels, data) {
+      const ctx = document.getElementById("monthlyCommutersChart").getContext("2d");
+  
+      if (commutersChart) commutersChart.destroy();
+  
+      commutersChart = new Chart(ctx, {
+        type: "bar",
+        data: {
+          labels: labels,
+          datasets: [{
+            data: data,
+            backgroundColor: "#696CFF",
+            borderRadius: 7,
+            barPercentage: 0.6,
+            categoryPercentage: 0.6,
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { grid: { display: false } },
+            y: { display: false }
+          }
+        }
+      });
+    }
+  
+    function fetchMonthlyCommuterStats() {
+      $.ajax({
+        url: "{% url 'monthly_commuter_stats' %}",
+        method: "GET",
+        success: function(response) {
+          // Format number with commas
+          const formattedCount = response.current_month_count?.toLocaleString() ?? "--";
+          const currentMonth = response.current_month_name ?? "";
+  
+          // Update DOM
+          document.getElementById("totalCommutersValue").textContent = `${formattedCount} commuters`;
+          document.getElementById("totalCommutersMonth").textContent = currentMonth;
+  
+          const change = response.change_percent;
+          const changeElement = document.getElementById("monthChangePercent");
+  
+          if (change > 0) {
+            changeElement.innerHTML = `<i class="ti ti-arrow-up-right text-success me-1"></i> +${change}% from last month`;
+          } else if (change < 0) {
+            changeElement.innerHTML = `<i class="ti ti-arrow-down-right text-danger me-1"></i> ${change}% from last month`;
+          } else {
+            changeElement.innerHTML = `<i class="ti ti-minus text-muted me-1"></i> No change from last month`;
+          }
+  
+          updateMonthlyCommuterChart(response.labels, response.data);
+        },
+        error: function() {
+          // alert("Failed to fetch monthly commuter stats.");
+        }
+      });
+    }
+  
+    // Trigger on page load
+    document.addEventListener("DOMContentLoaded", fetchMonthlyCommuterStats);
+  </script>
+  
+
+  <!-- loadRoutePieChart -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      loadRoutePieChart();
+    });
+
+    function loadRoutePieChart() {
+      fetch("{% url 'route_commuter_percentages' %}")
+        .then(response => response.json())
+        .then(data => {
+          console.log("📊 Pie chart data received:", data);  // ✅ Should now show up
+          const ctx = document.getElementById('commutersPerRouteChart');
+          if (!ctx) {
+            console.warn("❌ commutersPerRouteChart canvas not found!");
+            return;
+          }
+
+          new Chart(ctx, {
+            type: 'pie',
+            data: {
+              labels: data.labels,
+              datasets: [{
+                data: data.data,
+                backgroundColor: [
+                  '#4CAF50', '#2196F3', '#FFC107', '#FF5722',
+                  '#9C27B0', '#00BCD4', '#E91E63', '#795548'
+                ]
+              }]
+            },
+            options: {
+              responsive: true,
+              plugins: {
+                legend: {
+                  display: true
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function (context) {
+                      const total = context.dataset.data.reduce((sum, val) => sum + val, 0);
+                      const value = context.raw;
+                      const percent = ((value / total) * 100).toFixed(1);
+                      return `${context.label}: ${percent}% (${value})`;
+                    }
+                  }
+                }
+              }
+            }
+          });
+        })
+        .catch(error => {
+          console.error("❌ Failed to load route pie chart:", error);
+        });
+    }
+  </script>
+
+  <!-- loadTopTimesChart -->
+  <script>
+    function loadTopTimesChart() {
+  $.ajax({
+    url: "{% url 'top_commuter_times' %}",
+    type: "GET",
+    success: function(response) {
+      const ctx = document.getElementById('topTimesChart').getContext('2d');
+
+      new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: response.labels,
+          datasets: [{
+            label: 'Commuters',
+            data: response.data,
+            backgroundColor: '#4CAF50',
+            borderRadius: 4,
+          }]
+        },
+        options: {
+          indexAxis: 'y', // horizontal bar chart
+          responsive: true,
+          scales: {
+            x: {
+              beginAtZero: true,
+              ticks: {
+                precision: 0
+              }
+            },
+            y: {
+              beginAtZero: true
+            }
+          },
+          plugins: {
+            legend: {
+              display: false
+            },
+            tooltip: {
+              callbacks: {
+                label: ctx => `${ctx.parsed.x} commuters`
+              }
+            }
+          }
+        }
+      });
+    },
+    error: function() {
+      console.error("Failed to load top commuter times chart.");
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", loadTopTimesChart);
+
+  </script>
+
+  <!-- loadHeatmap -->
+  <script>
+  // function loadHeatmap() {
+  //   fetch("{% url 'commuters_heatmap_data' %}")
+  //     .then(response => response.json())
+  //     .then(data => {
+  //       const container = document.getElementById('heatmapContainer');
+  //       const tooltip = document.getElementById('heatmapTooltip');
+  //       container.innerHTML = ''; // Clear old content
+
+  //       const counts = data.counts;
+  //       const dates = data.dates;
+
+  //       if (!dates.length) return;
+
+  //       // Get unique counts sorted descending for ranking
+  //       const uniqueSortedCounts = [...new Set(counts)].sort((a, b) => b - a);
+
+  //       // Helper: get day index (Sunday=0 ... Saturday=6)
+  //       function getSundayBasedDayIndex(dateStr) {
+  //         return new Date(dateStr).getDay();
+  //       }
+
+  //       // Add empty boxes to pad before first day of month
+  //       const firstDayIndex = getSundayBasedDayIndex(dates[0]);
+  //       for (let i = 0; i < firstDayIndex; i++) {
+  //         const emptyBox = document.createElement('div');
+  //         container.appendChild(emptyBox);
+  //       }
+
+  //       counts.forEach((count, idx) => {
+  //         const dateStr = dates[idx];
+  //         const dateObj = new Date(dateStr);
+  //         const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'long' });
+  //         const dayNum = dateObj.getDate();
+
+  //         // Determine color tier by rank of count
+  //         let bgColor = 'transparent'; // Default
+  //         if (count === 0) {
+  //           bgColor = '#F0F0F0'; // Light gray for zero counts
+  //         } else {
+  //           const rank = uniqueSortedCounts.indexOf(count) + 1;
+  //           if (rank >= 1 && rank <= 3) {
+  //             bgColor = '#800026'; // Dark red
+  //           } else if (rank >= 4 && rank <= 6) {
+  //             bgColor = '#BD0026'; // Crimson red
+  //           } else if (rank >= 7 && rank <= 9) {
+  //             bgColor = '#E31A1C'; // Bright red
+  //           } else {
+  //             bgColor = '#FC4E2A'; // Orange-red for remaining non-zero counts
+  //           }
+  //         }
+
+
+  //         const dayBox = document.createElement('div');
+  //         dayBox.style.width = '40px';
+  //         dayBox.style.height = '40px';
+  //         dayBox.style.backgroundColor = bgColor;
+  //         dayBox.style.borderRadius = '4px';
+  //         dayBox.style.display = 'flex';
+  //         dayBox.style.flexDirection = 'column';
+  //         dayBox.style.alignItems = 'center';
+  //         dayBox.style.justifyContent = 'center';
+  //         dayBox.style.color = (count !== 0 && uniqueSortedCounts.indexOf(count) < 3) ? 'white' : 'black';
+  //         dayBox.style.fontSize = '0.75rem';
+  //         dayBox.style.cursor = 'default';
+  //         dayBox.title = `${dayName}, ${dateStr}: ${count} commuters`;
+
+  //         dayBox.addEventListener('mouseenter', (e) => {
+  //           tooltip.style.display = 'block';
+
+  //           const formattedDate = dateObj.toLocaleDateString('en-US', {
+  //             year: 'numeric',
+  //             month: 'long',
+  //             day: 'numeric'
+  //           });
+
+  //           tooltip.textContent = `${dayName}\n${formattedDate}\n${count} commuters`;
+  //         });
+
+  //         dayBox.addEventListener('mousemove', (e) => {
+  //           const offsetX = 10;
+  //           const offsetY = 20;
+  //           tooltip.style.left = (e.pageX + offsetX) + 'px';
+  //           tooltip.style.top = (e.pageY + offsetY) + 'px';
+  //         });
+
+  //         dayBox.addEventListener('mouseleave', () => {
+  //           tooltip.style.display = 'none';
+  //         });
+
+  //         // Show day number on top, count below
+  //         const dayNumEl = document.createElement('div');
+  //         dayNumEl.textContent = dayNum;
+  //         dayNumEl.style.fontWeight = '600';
+  //         dayNumEl.style.lineHeight = '1';
+
+  //         // If you want count below, uncomment this:
+  //         // const countEl = document.createElement('div');
+  //         // countEl.textContent = count;
+  //         // countEl.style.lineHeight = '1';
+
+  //         dayBox.appendChild(dayNumEl);
+  //         // dayBox.appendChild(countEl);
+
+  //         container.appendChild(dayBox);
+  //       });
+  //     })
+  //     .catch(err => {
+  //       console.error('Error loading heatmap data:', err);
+  //     });
+  // }
+
+  function loadHeatmap() {
+  fetch("{% url 'commuters_heatmap_data' %}")
+    .then(response => response.json())
+    .then(data => {
+      const container = document.getElementById('heatmapContainer');
+      const tooltip = document.getElementById('heatmapTooltip');
+      container.innerHTML = '';
+
+      const counts = data.counts;
+      const dates = data.dates;
+      const flags = data.flags;
+
+      if (!dates.length) return;
+
+      const uniqueSortedCounts = [...new Set(counts)].sort((a, b) => b - a);
+
+      function getSundayBasedDayIndex(dateStr) {
+        return new Date(dateStr).getDay();
+      }
+
+      const firstDayIndex = getSundayBasedDayIndex(dates[0]);
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyBox = document.createElement('div');
+        container.appendChild(emptyBox);
+      }
+
+      counts.forEach((count, idx) => {
+        const dateStr = dates[idx];
+        const dateObj = new Date(dateStr);
+        const dayName = dateObj.toLocaleDateString(undefined, { weekday: 'long' });
+        const dayNum = dateObj.getDate();
+        const flag = flags[dateStr];
+
+        let bgColor = 'transparent';
+        if (count === 0) {
+          bgColor = '#F0F0F0';
+        } else {
+          const rank = uniqueSortedCounts.indexOf(count) + 1;
+          if (rank >= 1 && rank <= 3) bgColor = '#800026';
+          else if (rank <= 6) bgColor = '#BD0026';
+          else if (rank <= 9) bgColor = '#E31A1C';
+          else bgColor = '#FC4E2A';
+        }
+
+        const dayBox = document.createElement('div');
+        dayBox.style.width = '30px';
+        dayBox.style.height = '30px';
+        dayBox.style.backgroundColor = bgColor;
+        dayBox.style.borderRadius = '7px';
+        dayBox.style.display = 'flex';
+        dayBox.style.flexDirection = 'column';
+        dayBox.style.alignItems = 'center';
+        dayBox.style.justifyContent = 'center';
+        dayBox.style.color = (count !== 0 && uniqueSortedCounts.indexOf(count) < 3) ? 'white' : 'black';
+        dayBox.style.fontSize = '0.75rem';
+        dayBox.style.cursor = 'default';
+
+        dayBox.title = `${dayName}, ${dateStr}: ${count} commuters`;
+
+        dayBox.addEventListener('mouseenter', (e) => {
+          tooltip.style.display = 'block';
+          const formattedDate = dateObj.toLocaleDateString('en-US', {
+            year: 'numeric', month: 'long', day: 'numeric'
+          });
+
+          let flagInfo = "";
+          for (const key in flag) {
+            if (flag[key]) {
+              const label = key.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+              flagInfo += `\n✓ ${label}`;
+            }
+          }
+
+          tooltip.textContent = `\n${count} commuters\n${dayName}\n${formattedDate}\n${flagInfo}`;
+        });
+
+        dayBox.addEventListener('mousemove', (e) => {
+          const offsetX = 10;
+          const offsetY = 20;
+          tooltip.style.left = (e.pageX + offsetX) + 'px';
+          tooltip.style.top = (e.pageY + offsetY) + 'px';
+        });
+
+        dayBox.addEventListener('mouseleave', () => {
+          tooltip.style.display = 'none';
+        });
+
+        const dayNumEl = document.createElement('div');
+        dayNumEl.textContent = dayNum;
+        dayNumEl.style.fontWeight = '600';
+        dayNumEl.style.lineHeight = '1';
+
+        dayBox.appendChild(dayNumEl);
+        container.appendChild(dayBox);
+      });
+    })
+    .catch(err => {
+      console.error('Error loading heatmap data:', err);
+    });
+}
+
+
+  document.addEventListener('DOMContentLoaded', loadHeatmap);
+
+  </script>
+  
+  <!-- dailyCommuterLineChart -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    loadDailyCommuterTrendChart();
+  });
+
+  function loadDailyCommuterTrendChart() {
+    fetch("{% url 'daily_commuter_trend' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('dailyCommuterTrendChart');
+        if (!ctx) {
+          console.warn("❌ dailyCommuterTrendChart canvas not found!");
+          return;
+        }
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: 'Total Commuters',
+              data: data.data,
+              fill: true,
+              borderColor: '#007bff',
+              backgroundColor: 'rgba(0, 123, 255, 0.3)',
+              tension: 0.3,
+              pointRadius: 3,
+              pointHoverRadius: 6,
+            }]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Commuter Count'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Date'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              intersect: false
+            }
+          }
+        });
+      })
+      .catch(error => {
+        console.error("❌ Failed to load daily commuter trend chart:", error);
+      });
+  }
+
+  </script>
+  
+  <!-- dailyCommuterTrendPerRoute -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    loadDailyCommuterTrendPerRouteChart();
+  });
+
+  function loadDailyCommuterTrendPerRouteChart() {
+    fetch("{% url 'daily_commuter_trend_per_route' %}")
+      .then(response => response.json())
+      .then(data => {
+        const ctx = document.getElementById('dailyCommuterTrendChartPerRoute');
+        if (!ctx) {
+          console.warn("❌ dailyCommuterTrendChartPerRoute canvas not found!");
+          return;
+        }
+
+        const colors = [
+          '#007bff', '#28a745', '#ffc107', '#dc3545',
+          '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+        ];
+
+        const datasets = data.routes.map((route, i) => ({
+          label: route,
+          data: data.datasets[route],
+          fill: false,
+          borderColor: colors[i % colors.length],
+          backgroundColor: colors[i % colors.length],
+          tension: 0.3,
+          pointRadius: 3,
+          pointHoverRadius: 6,
+        }));
+
+        new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: datasets
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Commuter Count'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Date'
+                }
+              }
+            },
+            plugins: {
+              legend: {
+                display: true,
+                position: 'top'
+              },
+              tooltip: {
+                mode: 'index',
+                intersect: false,
+              }
+            },
+            interaction: {
+              mode: 'nearest',
+              intersect: false
+            }
+          }
+        });
+      })
+      .catch(error => {
+        console.error("❌ Failed to load daily commuter trend per route chart:", error);
+      });
+  }
+  </script>
+
+  <!-- dailyCommuterTrendPerTime -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+    loadDailyCommuterTrendPerTimeChart();
+    });
+
+    function loadDailyCommuterTrendPerTimeChart() {
+      fetch("{% url 'daily_commuter_trend_per_time' %}")
+        .then(response => response.json())
+        .then(data => {
+          const ctx = document.getElementById('dailyCommuterTrendPerTimeChart');
+          if (!ctx) {
+            console.warn("❌ dailyCommuterTrendPerTimeChart canvas not found!");
+            return;
+          }
+
+          const colors = [
+            '#007bff', '#28a745', '#ffc107', '#dc3545',
+            '#17a2b8', '#6f42c1', '#fd7e14', '#20c997'
+          ];
+
+          const datasets = data.times.map((time, i) => ({
+            label: time,
+            data: data.datasets[time],
+            fill: false,
+            borderColor: colors[i % colors.length],
+            backgroundColor: colors[i % colors.length],
+            tension: 0.3,
+            pointRadius: 3,
+            pointHoverRadius: 6,
+          }));
+
+          new Chart(ctx, {
+            type: 'line',
+            data: {
+              labels: data.labels,
+              datasets: datasets
+            },
+            options: {
+              responsive: true,
+              scales: {
+                y: {
+                  beginAtZero: true,
+                  title: {
+                    display: true,
+                    text: 'Commuter Count'
+                  }
+                },
+                x: {
+                  title: {
+                    display: true,
+                    text: 'Date'
+                  }
+                }
+              },
+              plugins: {
+                legend: {
+                  display: true,
+                  position: 'top'
+                },
+                tooltip: {
+                  mode: 'index',
+                  intersect: false,
+                }
+              },
+              interaction: {
+                mode: 'nearest',
+                intersect: false
+              }
+            }
+          });
+        })
+        .catch(error => {
+          console.error("❌ Failed to load daily commuter trend per time chart:", error);
+        });
+    }
+
+  </script>
+
+  <!-- latestModelInfo -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch("{% url 'latest_model_info' %}")
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.warn("No model data available.");
+            return;
+          }
+
+          document.getElementById("modelName").textContent = data.model_name;
+          document.getElementById("trainedBy").textContent = data.trained_by;
+          document.getElementById("trainedAt").textContent = data.trained_at;
+          // document.getElementById("daysSinceTraining").textContent = `${data.days_since_training} days ago`;
+          const days = data.days_since_training;
+          document.getElementById("daysSinceTraining").textContent = `${days} day${days === 1 ? '' : 's'} ago`;
+
+        })
+        .catch(error => {
+          console.error("Error fetching model info:", error);
+        });
+    });
+  </script>
+
+  <!-- modelPerformance -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      fetch("{% url 'latest_model_info' %}")
+        .then(response => response.json())
+        .then(data => {
+          if (data.error) {
+            console.warn("No model data available.");
+            return;
+          }
+
+          // Update model scores
+          document.getElementById("modelRmse").textContent = data.rmse.toFixed(2);
+          document.getElementById("modelMae").textContent = data.mae.toFixed(2);
+
+          // Evaluate model performance
+          let status = "";
+          if (data.rmse < 20 && data.mae < 15) {
+            status = "✅ Model is performing well. No retraining needed.";
+          } else if (data.rmse < 30 && data.mae < 25) {
+            status = "⚠️ Performance is acceptable, but monitor closely.";
+          } else {
+            status = "❌ Model performance is poor. Consider retraining.";
+          }
+          document.getElementById("modelPerformanceStatus").textContent = status;
+        })
+        .catch(error => {
+          console.error("Error fetching model info:", error);
+        });
+    });
+  </script>
+
+  
+
+  <!-- <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script> -->
+  <!-- <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>  -->
+
+  <script>
+    $(document).ready(function () {
+        console.log("Sending AJAX request for upcoming events...");
+
+        // Mapping for type capitalization
+        const typeMapping = {
+            'local_holiday': 'Local Holiday',
+            'university_event': 'University Event',
+            'local_event': 'Local Event',
+            'others': 'Others',
+            'holiday': 'Holiday',
+        };
+
+        // Function to convert date to "Month Day" format
+        function formatDate(dateStr) {
+            const options = { month: 'long', day: 'numeric' };
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        $.ajax({
+            url: "{% url 'upcoming_events' %}",
+            method: "GET",
+            dataType: "json",
+            success: function (response) {
+                console.log("[✅ AJAX SUCCESS - Upcoming Events]", response);
+                const tableBody = document.getElementById('upcomingEventTable');
+                tableBody.innerHTML = ""; // Clear previous rows
+
+                if (response.data && response.data.length > 0) {
+                    response.data.forEach(event => {
+                        const formattedType = typeMapping[event.type] || event.type;
+                        const formattedDate = formatDate(event.date);
+                        const row = `<tr>
+                            <td>${event.name}</td>
+                            <td>${formattedType}</td>
+                            <td>${formattedDate}</td>
+                        </tr>`;
+                        tableBody.innerHTML += row;
+                    });
+                } else {
+                    tableBody.innerHTML = "<tr><td colspan='3'>No upcoming events found.</td></tr>";
+                }
+            },
+            error: function (xhr, status, error) {
+                console.error("[❌ AJAX ERROR - Upcoming Events]", status, error);
+                console.error("Response Text:", xhr.responseText);
+                const tableBody = document.getElementById('upcomingEventTable');
+                tableBody.innerHTML = "<tr><td colspan='3'>Error loading data.</td></tr>";
+            }
+        });
+    });
+</script>
+
+
+
+</div>
+{% endblock %}

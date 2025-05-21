@@ -43,11 +43,14 @@ document.querySelectorAll("form[id^='editEventForm']").forEach((form) => {
   
 
   
-  document.querySelectorAll(".delete-event-btn").forEach((button) => {
+  document.querySelectorAll(".delete-event-btn-1").forEach((button) => {
     button.addEventListener("click", function () {
         const eventId = this.getAttribute("data-event-id");
         const eventCode = document.getElementById(`delete_event_code${eventId}`).value;
+        
         const csrfToken = getCSRFToken();
+
+        console.log("JS DELETE BUTTON:Delete modal set with event_code:", eventCode);  
   
         fetch("/cdps/admin/datasetTemporal/delete-event/", {
             method: "POST",

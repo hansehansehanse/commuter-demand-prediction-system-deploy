@@ -128,34 +128,34 @@ document.querySelectorAll("form[id^='editHistoricalEventForm']").forEach((form) 
 
 
 //!!!! bat 2 delete ko
-document.querySelectorAll(".delete-event-btn").forEach((button) => {
-    button.addEventListener("click", function () {
-        const eventId = this.getAttribute("data-event-id");
-        const eventCode = document.getElementById(`delete_event_code${eventId}`).value;
-        const csrfToken = getCSRFToken();
+// document.querySelectorAll(".delete-event-btn").forEach((button) => {
+//     button.addEventListener("click", function () {
+//         const eventId = this.getAttribute("data-event-id");
+//         const eventCode = document.getElementById(`delete_event_code${eventId}`).value;
+//         const csrfToken = getCSRFToken();
   
-        fetch("/cdps/admin/historicalDatasetUpload/deleteHistoricalEvent/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRFToken": csrfToken,
-            },
-            body: JSON.stringify({ event_code: eventCode }),
-        })
-        .then(response => {
-            if (!response.ok) throw new Error("Delete failed");
-            return response.json();
-        })
-        .then(result => {
-            console.log("🗑️ Event deleted:", result);
-            window.location.reload();
-        })
-        .catch(error => {
-            console.error("❌ Delete error:", error);
-            alert("Something went wrong. See console for details.");
-        });
-    });
-  });
+//         fetch("/cdps/admin/historicalDatasetUpload/deleteHistoricalEvent/", {
+//             method: "POST",
+//             headers: {
+//                 "Content-Type": "application/json",
+//                 "X-CSRFToken": csrfToken,
+//             },
+//             body: JSON.stringify({ event_code: eventCode }),
+//         })
+//         .then(response => {
+//             if (!response.ok) throw new Error("Delete failed");
+//             return response.json();
+//         })
+//         .then(result => {
+//             console.log("🗑️ Event deleted:", result);
+//             window.location.reload();
+//         })
+//         .catch(error => {
+//             console.error("❌ Delete error:", error);
+//             alert("Something went wrong. See console for details.");
+//         });
+//     });
+//   });
 
 
 

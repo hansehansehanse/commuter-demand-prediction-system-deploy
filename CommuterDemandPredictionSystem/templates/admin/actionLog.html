@@ -2,26 +2,15 @@
 
 {% block content %}
     <!-- Content -->
-    <!-- <div class="container-xxl flex-grow-1 container-p-y">
 
-    </div> -->
     <div class="container-xxl flex-grow-1 container-p-y">
         <div class="row">
-          <!-- Controls: Search -->
-          <div class="col-12 mb-3">
-            <div class="d-flex justify-content-between">
-              <!-- Search Bar -->
-              <div class="d-flex">
-                <input type="text" class="form-control me-2" placeholder="Search..." aria-label="Search">
-              </div>
-            </div>
-          </div>
       
           <!-- Action Log Table -->
           <div class="col-12">
             <div class="card" style="min-height: 600px;">
               <div class="table-responsive card-datatable" style="overflow-x: auto;">
-                <table class="table border-top w-100">
+                <table id="actionLog" class="table border-top w-100">
                   <thead>
                     <tr>
                       <th>ID</th>
@@ -58,5 +47,30 @@
       </div>
       
     <!-- / Content -->
+
+<!-- DataTables Bootstrap 5 CSS -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/dataTables.bootstrap5.min.css">
+
+<!-- jQuery and DataTables JS -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/dataTables.bootstrap5.min.js"></script>
+<script>
+  $(document).ready(function() {
+      $('#actionLog').DataTable({
+          "order": [[0, "desc"]],
+
+          "pageLength": 5,
+          "scrollY": "400px",
+          "scrollCollapse": true,
+          "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
+
+          "language": {
+              "search": "_INPUT_",
+              "searchPlaceholder": "Search..."
+          }
+      });
+  });
+</script>
 
 {% endblock %}

@@ -62,7 +62,7 @@ class ActionLog(models.Model):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-######################################################################### OG DONT DELETE!!!
+
 # from django.db import models
 # from django.contrib.auth import get_user_model
 # import uuid
@@ -79,55 +79,35 @@ class ActionLog(models.Model):
 #     user_code = models.UUIDField()                                                                  #!!!
 #     filename = models.CharField(max_length=255, blank=True, null=True)
 #     date_uploaded = models.DateTimeField(auto_now_add=True)
-######################################################################### OG DONT DELETE!!!
-from django.db import models
-from django.contrib.auth import get_user_model
-import uuid
 
-User = get_user_model()
+#     day_of_week = models.CharField(max_length=20, blank=True)
+#     day = models.CharField(max_length=20, null=True, blank=True)
+#     month = models.CharField(max_length=20, blank=True)
+#     is_holiday = models.BooleanField(default=False)
+#     is_friday = models.BooleanField(default=False)
+#     is_saturday = models.BooleanField(default=False)
 
-class Dataset(models.Model):
-    dataset_code = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
-    date = models.DateField()
-    route = models.CharField(max_length=100)
-    time = models.TimeField()
-    num_commuters = models.IntegerField()
-    uploaded_at = models.DateTimeField(auto_now_add=True)
-    user_code = models.UUIDField()                                                                  #!!!
-    filename = models.CharField(max_length=255, blank=True, null=True)
-    date_uploaded = models.DateTimeField(auto_now_add=True)
+#     is_day_before_holiday = models.BooleanField(default=False)                                      #!!!
+#     is_long_weekend = models.BooleanField(default=False)                                            #!!!
+#     is_day_before_long_weekend = models.BooleanField(default=False)                                 #!!!      
 
-    day_of_week = models.CharField(max_length=20, blank=True)
-    day = models.CharField(max_length=20, null=True, blank=True)
-    month = models.CharField(max_length=20, blank=True)
-    is_holiday = models.BooleanField(default=False)
-    is_friday = models.BooleanField(default=False)
-    is_saturday = models.BooleanField(default=False)
-
-    is_day_before_holiday = models.BooleanField(default=False)                                      #!!!
-    is_long_weekend = models.BooleanField(default=False)                                            #!!!
-    is_day_before_long_weekend = models.BooleanField(default=False)                                 #!!!      
-
-    is_local_holiday = models.BooleanField(default=False)
-    is_university_event = models.BooleanField(default=False)
-    is_local_event = models.BooleanField(default=False)
-    is_others = models.BooleanField(default=False)
-    is_flagged = models.BooleanField(default=False)
+#     is_local_holiday = models.BooleanField(default=False)
+#     is_university_event = models.BooleanField(default=False)
+#     is_local_event = models.BooleanField(default=False)
+#     is_others = models.BooleanField(default=False)
+#     is_flagged = models.BooleanField(default=False)
 
 
-    is_within_ay = models.BooleanField(default=False)
+#     is_within_ay = models.BooleanField(default=False)
 
-    is_start_of_sem=models.BooleanField(default=False)
+#     is_start_of_sem=models.BooleanField(default=False)
 
-    is_day_before_end_of_sem=models.BooleanField(default=False)
-    is_week_before_end_of_sem=models.BooleanField(default=False)
-    is_end_of_sem=models.BooleanField(default=False)    
-    is_day_after_end_of_sem=models.BooleanField(default=False)
-    is_2days_after_end_of_sem=models.BooleanField(default=False)
-    is_week_after_end_of_sem=models.BooleanField(default=False)
-
-
-    
+#     is_day_before_end_of_sem=models.BooleanField(default=False)
+#     is_week_before_end_of_sem=models.BooleanField(default=False)
+#     is_end_of_sem=models.BooleanField(default=False)    
+#     is_day_after_end_of_sem=models.BooleanField(default=False)
+#     is_2days_after_end_of_sem=models.BooleanField(default=False)
+#     is_week_after_end_of_sem=models.BooleanField(default=False)
 
 
 #-------------------------------------------------------------------------
@@ -260,3 +240,29 @@ class HistoricalTemporalEvent(models.Model):
     
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+
+
+from django.db import models
+from django.utils import timezone
+import uuid
+
+class ModelTrainingHistory(models.Model):
+    training_id = models.UUIDField(default=uuid.uuid4, editable=False, unique=True)
+    trained_by = models.UUIDField(null=True, blank=True)
+    trained_at = models.DateTimeField(auto_now_add=True)
+
+    model_type = models.CharField(max_length=100, default='Random Forest')
+    model_name = models.CharField(max_length=255, editable=False)
+
+    rmse = models.FloatField()
+    mae = models.FloatField()
+
+    oldest_date = models.DateField()
+    latest_date = models.DateField()
+
+    notes = models.TextField(blank=True, null=True)
+
+
+    def __str__(self):
+        return f"{self.model_name} (Trained by {self.trained_by})"
