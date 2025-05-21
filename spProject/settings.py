@@ -36,7 +36,11 @@ FEATURES_PATH = config('FEATURES_PATH')
 # DEBUG = True
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = ['cdps-deploy.onrender.com', 'localhost', '127.0.0.1']
+# ALLOWED_HOSTS = ['cdps-deploy.onrender.com', 'localhost', '127.0.0.1']
+
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
+
 
 
 
