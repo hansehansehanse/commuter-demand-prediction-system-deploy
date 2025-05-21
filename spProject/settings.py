@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from decouple import config
-from dj_database_url import parse as db_url  # for parsing DATABASE_URL
+from dj_database_url import parse as db_url  
 
 
 import os
@@ -36,7 +36,8 @@ FEATURES_PATH = config('FEATURES_PATH')
 # DEBUG = True
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['cdps-deploy.onrender.com', 'localhost', '127.0.0.1']
+
 
 
 # Application definition
