@@ -13,8 +13,15 @@ from django.core.wsgi import get_wsgi_application
 
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'spProject.settings')
 
+import os
+from django.core.wsgi import get_wsgi_application
 from whitenoise import WhiteNoise
 
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'spProject.settings')  # change if your settings module is different
+
 application = get_wsgi_application()
-application = WhiteNoise(application, root=os.path.join(BASE_DIR, 'staticfiles'))
+
+# Serve static files from the 'staticfiles' folder
+application = WhiteNoise(application, root=os.path.join(os.path.dirname(os.path.abspath(__file__)), 'staticfiles'))
+
 
