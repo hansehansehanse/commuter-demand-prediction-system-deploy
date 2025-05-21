@@ -690,6 +690,7 @@ def delete_event(request):
         try:
             data = json.loads(request.body)
             event_code = data.get("event_code")
+            
 
             print(f"DELETE EVENT: Received event code to delete: {event_code}")
             if not event_code:
@@ -923,23 +924,86 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         return JsonResponse({'error': 'Failed to compute average'}, status=500)
 
 ####
+# from django.conf import settings
+# import os
+# import joblib
+# from django.http import JsonResponse
+# from datetime import datetime
+
+# # Load the pre-trained model using the method you suggested
+# def load_pretrained_model():
+#     try:
+#         current_dir = os.path.dirname(os.path.abspath(__file__))
+#         model_path = os.path.join(current_dir, 'model', 'random_forest_model.pkl')
+
+#         print(f"📍 Corrected Model Path: {model_path}")
+#         print(f"📁 File Exists: {os.path.exists(model_path)}")
+
+#         if not os.path.exists(model_path):
+#             return None  # Model not found
+
+#         model = joblib.load(model_path)
+#         print("✅ Model loaded!")
+#         print(f"📦 Model Type: {type(model)}")
+#         return model
+
+#     except Exception as e:
+#         print("❌ Error loading model")
+#         print(f"❌ Exception: {str(e)}")
+#         return None
+
+# def load_feature_list():
+#     try:
+#         current_dir = os.path.dirname(os.path.abspath(__file__))
+#         features_path = os.path.join(current_dir, 'model', 'features_used.pkl')
+
+#         print(f"📍 Feature List Path: {features_path}")
+#         print(f"📁 File Exists: {os.path.exists(features_path)}")
+
+#         if not os.path.exists(features_path):
+#             return None  # Feature list not found
+
+#         features = joblib.load(features_path)
+#         print("✅ Features loaded!")
+#         return features
+
+#     except Exception as e:
+#         print("❌ Error loading features list")
+#         print(f"❌ Exception: {str(e)}")
+#         return None
+
+# def load_route_encoder():
+#     try:
+#         current_dir = os.path.dirname(os.path.abspath(__file__))
+#         encoder_path = os.path.join(current_dir, 'model', 'route_encoder.pkl')
+
+#         print(f"📍 Route Encoder Path: {encoder_path}")
+#         print(f"📁 File Exists: {os.path.exists(encoder_path)}")
+
+#         if not os.path.exists(encoder_path):
+#             return None
+
+#         route_encoder = joblib.load(encoder_path)
+#         print("✅ Route encoder loaded!")
+#         return route_encoder
+
+#     except Exception as e:
+#         print("❌ Error loading route encoder")
+#         print(f"❌ Exception: {str(e)}")
+#         return None
 
 import os
 import joblib
-from django.http import JsonResponse
-from datetime import datetime
+from django.conf import settings
 
-# Load the pre-trained model using the method you suggested
 def load_pretrained_model():
     try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        model_path = os.path.join(current_dir, 'model', 'random_forest_model.pkl')
-
-        print(f"📍 Corrected Model Path: {model_path}")
+        model_path = settings.MODEL_PATH
+        print(f"📍 Model Path from settings: {model_path}")
         print(f"📁 File Exists: {os.path.exists(model_path)}")
 
         if not os.path.exists(model_path):
-            return None  # Model not found
+            return None
 
         model = joblib.load(model_path)
         print("✅ Model loaded!")
@@ -953,14 +1017,12 @@ def load_pretrained_model():
 
 def load_feature_list():
     try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        features_path = os.path.join(current_dir, 'model', 'features_used.pkl')
-
-        print(f"📍 Feature List Path: {features_path}")
+        features_path = settings.FEATURES_PATH
+        print(f"📍 Feature List Path from settings: {features_path}")
         print(f"📁 File Exists: {os.path.exists(features_path)}")
 
         if not os.path.exists(features_path):
-            return None  # Feature list not found
+            return None
 
         features = joblib.load(features_path)
         print("✅ Features loaded!")
@@ -973,10 +1035,8 @@ def load_feature_list():
 
 def load_route_encoder():
     try:
-        current_dir = os.path.dirname(os.path.abspath(__file__))
-        encoder_path = os.path.join(current_dir, 'model', 'route_encoder.pkl')
-
-        print(f"📍 Route Encoder Path: {encoder_path}")
+        encoder_path = settings.ROUTE_ENCODER_PATH
+        print(f"📍 Route Encoder Path from settings: {encoder_path}")
         print(f"📁 File Exists: {os.path.exists(encoder_path)}")
 
         if not os.path.exists(encoder_path):

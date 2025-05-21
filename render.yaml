@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: sp-cdps
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn spProject.wsgi:application
+    envVars:
+      - key: DJANGO_SETTINGS_MODULE
+        value: spProject.settings
+      - key: DATABASE_URL
+        fromDatabase:
+          name: sp_cdps_h
+          property: connectionString
+      - key: SECRET_KEY
+        value: your-django-secret-key
+      - key: DEBUG
+        value: False
+      - key: MODEL_PATH
+        value: model/random_forest_model.pkl
+      - key: ROUTE_ENCODER_PATH
+        value: model/route_encoder.pkl
+      - key: FEATURES_PATH
+        value: model/features_used.pkl
