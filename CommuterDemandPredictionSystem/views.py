@@ -1434,9 +1434,9 @@ def train_random_forest_model_view(request):
             list_supabase_files("models")
             print("------------------------------------------------------")
 
-            load_pretrained_model()
-            load_feature_list()
-            load_route_encoder()
+            # load_pretrained_model()
+            # load_feature_list()
+            # load_route_encoder()
 
 
             # # Create unique timestamp-based filename
