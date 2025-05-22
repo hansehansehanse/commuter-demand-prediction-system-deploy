@@ -1,10 +1,10 @@
 
 import os
-# from dotenv import load_dotenv
+from dotenv import load_dotenv
 from supabase import create_client, Client
 import joblib
 
-# load_dotenv()  # This will load the variables from .env
+load_dotenv()  # This will load the variables from .env
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
