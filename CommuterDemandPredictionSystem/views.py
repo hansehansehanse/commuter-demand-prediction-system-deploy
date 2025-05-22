@@ -690,7 +690,6 @@ def delete_event(request):
         try:
             data = json.loads(request.body)
             event_code = data.get("event_code")
-            
 
             print(f"DELETE EVENT: Received event code to delete: {event_code}")
             if not event_code:
@@ -766,20 +765,7 @@ def edit_holiday_event(request):
 
 #-------------------------------------------------------------------------
 
-# XXX
-# from django.shortcuts import render
-# from .cdps import train_and_predict_random_forest
 
-# def predict_commuters(request):
-#     # Get the predictions for the next 2 weeks
-#     predictions = train_and_predict_random_forest()
-
-#     # Render the predictions in the table format
-#     return render(request, 'admin/datasetPrediction.html', {'predictions': predictions})
-
-#-------------------------------------------------------------------------
-
-#-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #datasetGraph.html
 def dataset_graph(request):
@@ -924,13 +910,14 @@ def get_average_commuters_from_date(route, time_str, selected_date):
         return JsonResponse({'error': 'Failed to compute average'}, status=500)
 
 ####
-# from django.conf import settings
-# import os
-# import joblib
-# from django.http import JsonResponse
-# from datetime import datetime
 
-# # Load the pre-trained model using the method you suggested
+import os
+import joblib
+from django.http import JsonResponse
+from datetime import datetime
+from .supabase_utils import download_and_load_file
+
+# Load the pre-trained model using the method you suggested
 # def load_pretrained_model():
 #     try:
 #         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -992,64 +979,23 @@ def get_average_commuters_from_date(route, time_str, selected_date):
 #         print(f"❌ Exception: {str(e)}")
 #         return None
 
-import os
-import joblib
-from django.conf import settings
-
 def load_pretrained_model():
-    try:
-        model_path = settings.MODEL_PATH
-        print(f"📍 Model Path from settings: {model_path}")
-        print(f"📁 File Exists: {os.path.exists(model_path)}")
-
-        if not os.path.exists(model_path):
-            return None
-
-        model = joblib.load(model_path)
-        print("✅ Model loaded!")
-        print(f"📦 Model Type: {type(model)}")
-        return model
-
-    except Exception as e:
-        print("❌ Error loading model")
-        print(f"❌ Exception: {str(e)}")
-        return None
+    print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
+    model = download_and_load_file("random_forest_model.pkl")
+    print("✅ Random Forest Model downloaded and loaded successfully from Supabase.")
+    return model
 
 def load_feature_list():
-    try:
-        features_path = settings.FEATURES_PATH
-        print(f"📍 Feature List Path from settings: {features_path}")
-        print(f"📁 File Exists: {os.path.exists(features_path)}")
-
-        if not os.path.exists(features_path):
-            return None
-
-        features = joblib.load(features_path)
-        print("✅ Features loaded!")
-        return features
-
-    except Exception as e:
-        print("❌ Error loading features list")
-        print(f"❌ Exception: {str(e)}")
-        return None
+    print("📦 Attempting to download and load feature list from Supabase (models/features_used.pkl)...")
+    features = download_and_load_file("features_used.pkl")
+    print("✅ Feature list downloaded and loaded successfully from Supabase.")
+    return features
 
 def load_route_encoder():
-    try:
-        encoder_path = settings.ROUTE_ENCODER_PATH
-        print(f"📍 Route Encoder Path from settings: {encoder_path}")
-        print(f"📁 File Exists: {os.path.exists(encoder_path)}")
-
-        if not os.path.exists(encoder_path):
-            return None
-
-        route_encoder = joblib.load(encoder_path)
-        print("✅ Route encoder loaded!")
-        return route_encoder
-
-    except Exception as e:
-        print("❌ Error loading route encoder")
-        print(f"❌ Exception: {str(e)}")
-        return None
+    print("📦 Attempting to download and load route encoder from Supabase (models/route_encoder.pkl)...")
+    encoder = download_and_load_file("route_encoder.pkl")
+    print("✅ Route encoder downloaded and loaded successfully from Supabase.")
+    return encoder
 
 
 import pandas as pd
@@ -1471,6 +1417,8 @@ from .models import ModelTrainingHistory
 from django.shortcuts import redirect
 from django.contrib import messages
 
+from .supabase_utils import download_and_load_file, list_supabase_files
+
 def train_random_forest_model_view(request):
     if request.method == 'POST':
         try:
@@ -1483,28 +1431,35 @@ def train_random_forest_model_view(request):
             latest_model.save(update_fields=["trained_by"])
             print("------------------------------------------------------Model trained by:", latest_model.trained_by)
 
-            
-            # Create unique timestamp-based filename
-            timestamp = now().strftime('%Y%m%d_%H%M%S')
-            base_filename = f"random_forest_model_{timestamp}"
+            list_supabase_files("models")
+            print("------------------------------------------------------")
 
-            # Directory to save model and report
-            output_dir = os.path.join(settings.MEDIA_ROOT, 'ml_models')
-            os.makedirs(output_dir, exist_ok=True)
+            load_pretrained_model()
+            load_feature_list()
+            load_route_encoder()
 
-            # Remove previous .pkl and .txt files
-            for ext in ('*.pkl', '*.txt'):
-                for old_file in glob.glob(os.path.join(output_dir, ext)):
-                    os.remove(old_file)
 
-            # Save model
-            model_path = os.path.join(output_dir, f"{base_filename}.pkl")
-            joblib.dump(model, model_path)
+            # # Create unique timestamp-based filename
+            # timestamp = now().strftime('%Y%m%d_%H%M%S')
+            # base_filename = f"random_forest_model_{timestamp}"
 
-            # Save report as a string (avoids TypeError)
-            report_path = os.path.join(output_dir, f"{base_filename}.txt")
-            with open(report_path, 'w') as f:
-                f.write(str(performance_report))  # Ensures it’s a string
+            # # Directory to save model and report
+            # output_dir = os.path.join(settings.MEDIA_ROOT, 'ml_models')
+            # os.makedirs(output_dir, exist_ok=True)
+
+            # # Remove previous .pkl and .txt files
+            # for ext in ('*.pkl', '*.txt'):
+            #     for old_file in glob.glob(os.path.join(output_dir, ext)):
+            #         os.remove(old_file)
+
+            # # Save model
+            # model_path = os.path.join(output_dir, f"{base_filename}.pkl")
+            # joblib.dump(model, model_path)
+
+            # # Save report as a string (avoids TypeError)
+            # report_path = os.path.join(output_dir, f"{base_filename}.txt")
+            # with open(report_path, 'w') as f:
+            #     f.write(str(performance_report))  # Ensures it’s a string
 
             # Success message
             messages.success(request, "Model trained successfully and saved!")
@@ -1515,7 +1470,7 @@ def train_random_forest_model_view(request):
         except Exception as e:
             
             # messages.error(request, f"Error during model training: {str(e)}")
-            return redirect('historical_dataset_upload_list')
+            return redirect('historical_dataset_event_list')
 
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 

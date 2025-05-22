@@ -72,76 +72,65 @@ def train_random_forest_model():
     return model, f"RMSE: {rmse:.2f}, MAE: {mae:.2f}"
 
 
-
-# def save_model_and_results(model, rmse, mae, features_to_use, route_encoder):
-#     model_dir = os.path.join(os.path.dirname(__file__), 'model')
-#     os.makedirs(model_dir, exist_ok=True)
-
-#     # Save model
-#     joblib.dump(model, os.path.join(model_dir, 'random_forest_model.pkl'))
-
-#     # Save features
-#     joblib.dump(features_to_use, os.path.join(model_dir, 'features_used.pkl'))
-
-#     # Save encoder
-#     joblib.dump(route_encoder, os.path.join(model_dir, 'route_encoder.pkl'))
-
-#     # Save metrics
-#     with open(os.path.join(model_dir, 'model_results.txt'), 'w') as f:
-#         f.write("Random Forest Model Evaluation Results\n")
-#         f.write(f"RMSE: {rmse:.2f}\n")
-#         f.write(f"MAE: {mae:.2f}\n")
-#         f.write(f"Date of Training: {datetime.now()}\n")
-
-#     print("✅ Successfully saved model, features, encoder, and evaluation results.")
-
-
-
 import os
 import joblib
 from datetime import datetime
-from .models import ModelTrainingHistory  # Make sure path is correct
-from CommuterDemandPredictionSystem.models import HistoricalDataset  # or wherever it is
-from django.contrib.auth import get_user_model
+from .models import ModelTrainingHistory
+from CommuterDemandPredictionSystem.models import HistoricalDataset
+from .supabase_utils import upload_file
 
 def save_model_and_results(model, rmse, mae, features_to_use, route_encoder, trained_by=None):
+
+
+    print(f"[{datetime.now()}] 🚀 Starting model saving process...")
+
     model_dir = os.path.join(os.path.dirname(__file__), 'model')
     os.makedirs(model_dir, exist_ok=True)
 
-    # Save model
-    joblib.dump(model, os.path.join(model_dir, 'random_forest_model.pkl'))
+    model_path = os.path.join(model_dir, 'random_forest_model.pkl')
+    features_path = os.path.join(model_dir, 'features_used.pkl')
+    encoder_path = os.path.join(model_dir, 'route_encoder.pkl')
+    metrics_path = os.path.join(model_dir, 'model_results.txt')
 
-    # Save features
-    joblib.dump(features_to_use, os.path.join(model_dir, 'features_used.pkl'))
+    print(f"[{datetime.now()}] 💾 Saving model to {model_path}")
+    joblib.dump(model, model_path)
 
-    # Save encoder
-    joblib.dump(route_encoder, os.path.join(model_dir, 'route_encoder.pkl'))
+    print(f"[{datetime.now()}] 💾 Saving features to {features_path}")
+    joblib.dump(features_to_use, features_path)
 
-    # Save metrics to file (optional)
-    with open(os.path.join(model_dir, 'model_results.txt'), 'w') as f:
+    print(f"[{datetime.now()}] 💾 Saving route encoder to {encoder_path}")
+    joblib.dump(route_encoder, encoder_path)
+
+    print(f"[{datetime.now()}] 📄 Writing metrics to {metrics_path}")
+    with open(metrics_path, 'w') as f:
         f.write("Random Forest Model Evaluation Results\n")
         f.write(f"RMSE: {rmse:.2f}\n")
         f.write(f"MAE: {mae:.2f}\n")
         f.write(f"Date of Training: {datetime.now()}\n")
 
-    # Get oldest and latest dates from HistoricalDataset
+    print(f"[{datetime.now()}] 📅 Fetching date range from HistoricalDataset")
     oldest_date = HistoricalDataset.objects.order_by('date').first().date
     latest_date = HistoricalDataset.objects.order_by('-date').first().date
 
     model_type = 'Random Forest'
     model_name = f"{model_type} ({oldest_date.strftime('%Y-%m-%d')} to {latest_date.strftime('%Y-%m-%d')})"
 
-
-    # !makes sure that the object will be the latest
+    print(f"[{datetime.now()}] 🧹 Clearing old training history")
     ModelTrainingHistory.objects.all().delete()
-    # Save to DB
+
+    print(f"[{datetime.now()}] 🧾 Saving training metadata to DB")
     ModelTrainingHistory.objects.create(
         model_type=model_type,
-        model_name=model_name,  # This matches the format you want
+        model_name=model_name,
         rmse=rmse,
         mae=mae,
         oldest_date=oldest_date,
         latest_date=latest_date,
     )
-    print("✅ Successfully saved model, features, encoder, and training record.")
+    
+    print(f"[{datetime.now()}] ☁️ Uploading files to Supabase")
+    upload_file(model_path, 'models/random_forest_model.pkl')
+    upload_file(features_path, 'models/features_used.pkl')
+    upload_file(encoder_path, 'models/route_encoder.pkl')
+    upload_file(metrics_path, 'models/model_results.txt')
 
