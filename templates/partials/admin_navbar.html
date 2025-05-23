@@ -127,8 +127,12 @@ id="layout-navbar"
                 </div>
               </div>
               <div class="flex-grow-1">
-                <span class="fw-semibold d-block">John Doe</span>
-                <small class="text-muted">Admin</small>
+                <span class="fw-semibold d-block">
+                  {{ request.user.first_name }} {{ request.user.last_name }}
+                </span>
+                <small class="text-muted">
+                  {{ request.user.access_level }}
+                </small>
               </div>
             </div>
           </a>
