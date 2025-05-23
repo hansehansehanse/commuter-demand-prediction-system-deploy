@@ -11,13 +11,16 @@ import logging
 from .models import ActionLog  
 from django.contrib import messages
 
+from django.views.decorators.cache import never_cache
+from django.contrib.auth.decorators import login_required
+
 
 
 #-------------------------------------------------------------------------
 from datetime import date
 from .models import HolidayEvent, TemporalEvent, HistoricalTemporalEvent
 
-
+@login_required
 def build_holiday_set():
     holidays = set()
     holiday_events = HolidayEvent.objects.all()
@@ -32,6 +35,7 @@ def build_holiday_set():
     # print(f"[build_holiday_set] Total generated holiday dates: {len(holidays)}")
     return holidays
 
+@login_required
 def build_local_holiday_set():
     local_holidays = set()
 
@@ -52,12 +56,14 @@ def build_local_holiday_set():
     # print(f"[build_local_holiday_set] Total unique local holiday dates: {len(local_holidays)}")
     return local_holidays
 
+@login_required
 def is_any_holiday(d, holiday_set, local_holiday_set):
     return any(d == holiday for holiday in holiday_set) or \
            any(d == local_holiday for local_holiday in local_holiday_set)
 
 from datetime import timedelta
 
+@login_required
 def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
     return (
         (d + timedelta(days=1)) in holiday_set or
@@ -66,6 +72,7 @@ def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
 from datetime import timedelta
 
 # !!! still needs some tweaking
+@login_required
 def is_any_long_weekend(d, holiday_set, local_holiday_set):
     def is_long_weekend_for_set(date, holidays):
         weekday = date.weekday()
@@ -96,7 +103,7 @@ def is_any_long_weekend(d, holiday_set, local_holiday_set):
         is_long_weekend_for_set(d, local_holiday_set)
     )
 
-
+@login_required
 def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
     next_day = d + timedelta(days=1)
     return is_any_long_weekend(next_day, holiday_set, local_holiday_set)
@@ -107,32 +114,35 @@ def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
 
 #-------------------------------------------------------------------------
 
-
+@login_required
 def check_local_holiday_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
     )
 
+@login_required
 def check_university_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
     )
 
+@login_required
 def check_local_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
     )
 
+@login_required
 def check_others_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='others').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='others').exists()
     )
 
-
+@login_required
 def get_university_semester_flags(target_date):
     flags = {
         'is_within_ay': False,
@@ -205,6 +215,7 @@ import datetime
 
 User = get_user_model()
 
+# @login_required
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -243,6 +254,16 @@ def login_view(request):
 
     return render(request, 'login.html')
 
+
+from django.contrib.auth import logout
+from django.shortcuts import redirect
+
+@login_required
+def logout_view(request):
+    logout(request)
+    return redirect('login')  # Use the name from your url pattern
+
+
 #--
 
 
@@ -253,7 +274,7 @@ def login_view(request):
 #-------------------------------------------------------------------------
 # from django.shortcuts import render
 # from .models import CustomUser
-
+@login_required
 def user_list(request):
     print("✅ user_list being called")
     users = CustomUser.objects.all()
@@ -272,6 +293,7 @@ logger = logging.getLogger(__name__)
 # Get the user model dynamically
 User = get_user_model()
 
+@login_required
 def add_user(request):
     if request.method == 'POST':
         try:
@@ -311,7 +333,7 @@ def add_user(request):
 
 
 #-------------------------------------------------------------------------
-
+@login_required
 def edit_user(request):
     if request.method == "POST":
         try:
@@ -345,6 +367,7 @@ def edit_user(request):
 # from django.views.decorators.http import require_POST
 
 @require_POST
+@login_required
 def delete_user(request):
     try:
         data = json.loads(request.body)
@@ -364,6 +387,7 @@ from .models import ActionLog
 
 User = get_user_model()
 
+@login_required
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
     user = request.user  # This is the correct way to access the logged-in user
@@ -380,6 +404,7 @@ def log_action(request, action_type, details=""):
 from django.shortcuts import render
 from .models import ActionLog
 
+@login_required
 def action_log_list(request):
     print("✅ action_log_list being called")
     
@@ -394,153 +419,7 @@ def action_log_list(request):
 
 
 #-------------------------------------------------------------------------
-# XXX
-# from django.contrib.auth import get_user_model
-# from .models import Dataset, HolidayEvent, TemporalEvent
-# import pandas as pd
-# from datetime import datetime
-# from django.shortcuts import render, redirect
 
-# User = get_user_model()
-
-# def dataset_upload_list(request):
-#     if request.method == 'POST':
-#         dataset_file = request.FILES.get('dataset_file')
-#         if dataset_file:
-#             file_extension = dataset_file.name.split('.')[-1]
-#             if file_extension == 'xlsx':
-#                 df = pd.read_excel(dataset_file)
-                
-#             elif file_extension == 'csv':
-#                 df = pd.read_csv(dataset_file)
-                
-
-#             user = request.user
-#             # print(f"User Code: {user.user_code}")  # Debug
-
-#             holidays = build_holiday_set()  # Build once
-
-#             for _, row in df.iterrows():
-#                 try:
-#                     date_val = pd.to_datetime(row['Date']).date()
-#                 except Exception as e:
-#                     print(f"Error parsing date: {e}")
-#                     continue
-
-#                 route = row['Route']
-#                 try:
-#                     time_val = datetime.strptime(row['Time'], "%I:%M %p").strftime("%H:%M")
-#                 except ValueError as e:
-#                     print(f"Error parsing time: {e}")
-#                     continue
-
-
-#                 num_commuters = row['Commuters']
-
-#                 day_of_week = date_val.strftime("%A")
-#                 month = date_val.strftime("%B")
-#                 weekday = date_val.weekday()
-#                 is_friday = weekday == 4
-#                 is_saturday = weekday == 5
-
-#                 is_holiday = date_val in holidays
-#                 is_before_holiday = is_day_before_holiday(date_val, holidays)
-#                 is_lweekend = is_long_weekend(date_val, holidays)
-#                 is_before_lweekend = is_day_before_long_weekend(date_val, holidays)
-
-#                 is_local_holiday = check_local_holiday_flag(date_val)
-#                 is_university_event = check_university_event_flag(date_val)
-#                 is_local_event = check_local_event_flag(date_val)
-#                 is_others = check_others_event_flag(date_val)
-
-#                 semester_flags = get_university_semester_flags(date_val)
-
-#                 is_within_ay = semester_flags['is_within_ay']
-#                 is_start_of_sem = semester_flags['is_start_of_sem']
-#                 is_day_before_end_of_sem = semester_flags['is_day_before_end_of_sem']
-#                 is_week_before_end_of_sem = semester_flags['is_week_before_end_of_sem']
-#                 is_end_of_sem = semester_flags['is_end_of_sem']
-#                 is_day_after_end_of_sem = semester_flags['is_day_after_end_of_sem']
-#                 is_2days_after_end_of_sem = semester_flags['is_2days_after_end_of_sem']
-#                 is_week_after_end_of_sem = semester_flags['is_week_after_end_of_sem']
-
-
-#                 # print(
-#                 #     f"Date: {date_val} | "
-#                 #     f"is_within_ay: {is_within_ay}, "
-#                 #     f"is_start_of_sem: {is_start_of_sem}, "
-#                 #     f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
-#                 #     f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
-#                 #     # f"is_end_of_sem: {is_end_of_sem}, "
-#                 #     # f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
-#                 #     # f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
-#                 #     # f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
-#                 # )
-
-#                 # print(
-#                 #     f"Date: {date_val} | "
-#                 #     # f"is_within_ay: {is_within_ay}, "
-#                 #     # f"is_start_of_sem: {is_start_of_sem}, "
-#                 #     # f"is_day_before_end_of_sem: {is_day_before_end_of_sem}, "
-#                 #     # f"is_week_before_end_of_sem: {is_week_before_end_of_sem}, "
-#                 #     f"is_end_of_sem: {is_end_of_sem}, "
-#                 #     f"is_day_after_end_of_sem: {is_day_after_end_of_sem}, "
-#                 #     f"is_2days_after_end_of_sem: {is_2days_after_end_of_sem}, "
-#                 #     f"is_week_after_end_of_sem: {is_week_after_end_of_sem}"
-#                 # )
-
-
-#                 Dataset.objects.create(
-#                     date=date_val,
-#                     route=route,
-#                     time=time_val,
-#                     num_commuters=num_commuters,
-#                     user_code=user.user_code,
-#                     filename=dataset_file.name,
-
-#                     day=day_of_week,
-#                     month=month,
-#                     is_friday=is_friday,
-#                     is_saturday=is_saturday,
-#                     is_holiday=is_holiday,
-#                     is_day_before_holiday=is_before_holiday,
-#                     is_long_weekend=is_lweekend,
-#                     is_day_before_long_weekend=is_before_lweekend,
-
-#                     # Temporal event flags
-#                     is_local_holiday=is_local_holiday,
-#                     is_university_event=is_university_event,
-#                     is_local_event=is_local_event,
-#                     is_others=is_others,
-
-#                     # Semester-related flags
-#                     is_within_ay=is_within_ay,
-#                     is_start_of_sem=is_start_of_sem,
-#                     is_day_before_end_of_sem=is_day_before_end_of_sem,
-#                     is_week_before_end_of_sem=is_week_before_end_of_sem,
-#                     is_end_of_sem=is_end_of_sem,
-#                     is_day_after_end_of_sem=is_day_after_end_of_sem,
-#                     is_2days_after_end_of_sem=is_2days_after_end_of_sem,
-#                     is_week_after_end_of_sem=is_week_after_end_of_sem
-#                 )
-
-#                 log_action(request, 'Dataset Upload', f"User {user.first_name} {user.last_name} upload dataset.")
-
-
-#             return redirect('dataset_upload_list')
-
-#     datasets = Dataset.objects.all()
-
-#     user_map = {
-#         u.user_code: u for u in User.objects.filter(user_code__in=[d.user_code for d in datasets])
-#     }
-
-#     for d in datasets:
-#         d.uploader = user_map.get(d.user_code)
-
-#     return render(request, 'admin/datasetUpload.html', {'datasets': datasets})
-
-#-------------------------------------------------------------------------
 
 # views.py
 from django.shortcuts import render
@@ -549,6 +428,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
+@login_required
 def event_list(request):
     # Fetch all records
     holidays = HolidayEvent.objects.all().order_by('date')
@@ -584,6 +464,7 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
+@login_required
 def add_event(request):
     # print("------------------------------------------------------------------------------Add event view triggered!")
     if request.method == 'POST':
@@ -635,6 +516,7 @@ from .models import TemporalEvent  # Import the model
 
 User = get_user_model()
 
+@login_required
 def edit_event(request):
     print("Edit event view triggered!") 
     if request.method == "POST":
@@ -683,6 +565,7 @@ from django.shortcuts import get_object_or_404
 import json
 from .models import TemporalEvent
 
+@login_required
 def delete_event(request):
     print("Delete event view triggered!")
 
@@ -721,6 +604,7 @@ from .models import HolidayEvent  # Import your HolidayEvent model
 
 User = get_user_model()
 
+@login_required
 def edit_holiday_event(request):
     print("Edit holiday event view triggered!") 
     if request.method == "POST":
@@ -768,6 +652,7 @@ def edit_holiday_event(request):
 
 #-------------------------------------------------------------------------
 #datasetGraph.html
+@login_required
 def dataset_graph(request):
 
     if request.method == "POST":
@@ -816,6 +701,7 @@ from datetime import datetime, timedelta
 from .models import HistoricalDataset
 import json
 
+@login_required
 def get_last_7_records_chart_data(route, time_str):
     try:
         time_obj = datetime.strptime(time_str, "%I:%M%p").time()
@@ -842,6 +728,7 @@ from django.db.models import Avg
 from datetime import datetime
 from django.http import JsonResponse
 
+@login_required
 def get_average_commuters_from_date(route, time_str, selected_date):
     
     try:
@@ -917,80 +804,21 @@ from django.http import JsonResponse
 from datetime import datetime
 from .supabase_utils import download_and_load_file
 
-# Load the pre-trained model using the method you suggested
-# def load_pretrained_model():
-#     try:
-#         current_dir = os.path.dirname(os.path.abspath(__file__))
-#         model_path = os.path.join(current_dir, 'model', 'random_forest_model.pkl')
-
-#         print(f"📍 Corrected Model Path: {model_path}")
-#         print(f"📁 File Exists: {os.path.exists(model_path)}")
-
-#         if not os.path.exists(model_path):
-#             return None  # Model not found
-
-#         model = joblib.load(model_path)
-#         print("✅ Model loaded!")
-#         print(f"📦 Model Type: {type(model)}")
-#         return model
-
-#     except Exception as e:
-#         print("❌ Error loading model")
-#         print(f"❌ Exception: {str(e)}")
-#         return None
-
-# def load_feature_list():
-#     try:
-#         current_dir = os.path.dirname(os.path.abspath(__file__))
-#         features_path = os.path.join(current_dir, 'model', 'features_used.pkl')
-
-#         print(f"📍 Feature List Path: {features_path}")
-#         print(f"📁 File Exists: {os.path.exists(features_path)}")
-
-#         if not os.path.exists(features_path):
-#             return None  # Feature list not found
-
-#         features = joblib.load(features_path)
-#         print("✅ Features loaded!")
-#         return features
-
-#     except Exception as e:
-#         print("❌ Error loading features list")
-#         print(f"❌ Exception: {str(e)}")
-#         return None
-
-# def load_route_encoder():
-#     try:
-#         current_dir = os.path.dirname(os.path.abspath(__file__))
-#         encoder_path = os.path.join(current_dir, 'model', 'route_encoder.pkl')
-
-#         print(f"📍 Route Encoder Path: {encoder_path}")
-#         print(f"📁 File Exists: {os.path.exists(encoder_path)}")
-
-#         if not os.path.exists(encoder_path):
-#             return None
-
-#         route_encoder = joblib.load(encoder_path)
-#         print("✅ Route encoder loaded!")
-#         return route_encoder
-
-#     except Exception as e:
-#         print("❌ Error loading route encoder")
-#         print(f"❌ Exception: {str(e)}")
-#         return None
-
+@login_required
 def load_pretrained_model():
     print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
     model = download_and_load_file("random_forest_model.pkl")
     print("✅ Random Forest Model downloaded and loaded successfully from Supabase.")
     return model
 
+@login_required
 def load_feature_list():
     print("📦 Attempting to download and load feature list from Supabase (models/features_used.pkl)...")
     features = download_and_load_file("features_used.pkl")
     print("✅ Feature list downloaded and loaded successfully from Supabase.")
     return features
 
+@login_required
 def load_route_encoder():
     print("📦 Attempting to download and load route encoder from Supabase (models/route_encoder.pkl)...")
     encoder = download_and_load_file("route_encoder.pkl")
@@ -1003,6 +831,7 @@ import joblib
 from datetime import datetime
 from django.http import JsonResponse
 
+@login_required
 def rf_predict_commuters(route, time_str, selected_date):
     model = load_pretrained_model()
     features_to_use = load_feature_list()
@@ -1078,6 +907,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from django.http import JsonResponse
 
+@login_required
 def rf_predict_commuters_2weeks(route, time_str, selected_date):
     model = load_pretrained_model()
     features_to_use = load_feature_list()
@@ -1164,6 +994,7 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
 
 from datetime import datetime
 #used in HistoricalDatasetUpload.html
+@login_required
 def parse_date_strict(date_str):
     original = str(date_str).strip()
     print("Original:", original)
@@ -1214,6 +1045,7 @@ import pandas as pd
 from .models import HistoricalDataset
 from datetime import datetime
 
+@login_required
 def historical_dataset_upload_list(request):
     
     if request.method == 'GET':
@@ -1362,7 +1194,7 @@ from .models import HistoricalDataset
 from .randomForest import train_random_forest_model
 from datetime import datetime
 
-
+@login_required
 def historical_dataset_export(request):
     """Exports the HistoricalDataset data to a CSV file."""
     print("Export function triggered!")  # Debug output
@@ -1398,6 +1230,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from .models import HistoricalDataset
 
+@login_required
 def delete_all_historical_datasets(request):
     if request.method == "POST":
         HistoricalDataset.objects.all().delete()
@@ -1419,6 +1252,7 @@ from django.contrib import messages
 
 from .supabase_utils import download_and_load_file, list_supabase_files
 
+@login_required
 def train_random_forest_model_view(request):
     if request.method == 'POST':
         try:
@@ -1434,9 +1268,9 @@ def train_random_forest_model_view(request):
             list_supabase_files("models")
             print("------------------------------------------------------")
 
-            # load_pretrained_model()
-            # load_feature_list()
-            # load_route_encoder()
+            load_pretrained_model()
+            load_feature_list()
+            load_route_encoder()
 
 
             # # Create unique timestamp-based filename
@@ -1477,6 +1311,7 @@ def train_random_forest_model_view(request):
 
 #-------------------------------------------------------------------------
 
+@login_required
 def historical_dataset_event_list(request):
     # Load data
     datasets = HistoricalDataset.objects.all().order_by('-id')
@@ -1518,7 +1353,7 @@ def historical_dataset_event_list(request):
 
     return render(request, 'admin/historicalDatasetUpload.html', context)
 
-
+@login_required
 def add_historical_event(request):
     if request.method == 'POST':
         try:
@@ -1559,7 +1394,7 @@ from django.shortcuts import get_object_or_404
 import json
 
 User = get_user_model()
-
+@login_required
 def edit_historical_event(request):
     print("Edit historical event view triggered!") 
     if request.method == "POST":
@@ -1606,6 +1441,7 @@ from .models import HistoricalTemporalEvent  # ✅ Correct model
 User = get_user_model()
 
 # @csrf_exempt
+@login_required
 def delete_historical_event(request):
     
     if request.method == "POST":
@@ -1632,7 +1468,7 @@ def delete_historical_event(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-
+@login_required
 def group_semester_dates_historical():
     grouped_dates = {
         'Start of 1st Sem': [],
@@ -1662,7 +1498,7 @@ def group_semester_dates_historical():
 
 
 from datetime import timedelta
-
+@login_required
 def get_historical_university_semester_flags(target_date):
     flags = {
         'is_within_ay': False,
@@ -1716,6 +1552,7 @@ def get_historical_university_semester_flags(target_date):
 from django.shortcuts import render
 from datetime import datetime, timedelta
 
+@login_required
 def dashboard(request):
     # upcoming_events_view(request)
     ##MODIFY THIS LATER BUT CANNOT REMOVE THESE TEMP VALUES YET
@@ -1751,6 +1588,7 @@ from .models import HistoricalDataset
 from django.db.models import Sum
 from collections import OrderedDict
 
+@login_required
 def monthly_commuter_stats(request):
     qs = HistoricalDataset.objects.order_by("-date").values_list("date", flat=True)
 
@@ -1809,6 +1647,7 @@ from django.db.models import Sum, Max
 from .models import HistoricalDataset
 import calendar
 
+@login_required
 def route_commuter_percentages(request):
     print("✅ Route commuter percentages view called")
 
@@ -1856,6 +1695,7 @@ from django.db.models import Sum, Max
 from datetime import timedelta
 from .models import HistoricalDataset  # Adjust import as needed
 
+@login_required
 def top_commuter_times(request):
     # Get the latest date in the dataset
     latest_date = HistoricalDataset.objects.aggregate(latest=Max('date'))['latest']
@@ -1890,6 +1730,7 @@ from django.db.models.functions import TruncDate
 from .models import HistoricalDataset
 from datetime import timedelta
 
+@login_required
 def commuters_heatmap_data(request):
     # Get the most recent date in the dataset
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
@@ -1963,6 +1804,7 @@ from django.db.models.functions import TruncDate
 from datetime import timedelta
 from .models import HistoricalDataset
 
+@login_required
 def daily_commuter_trend(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -1995,6 +1837,7 @@ from django.db.models.functions import TruncDate
 from django.db.models import Sum
 from datetime import timedelta
 
+@login_required
 def daily_commuter_trend_per_route(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -2045,6 +1888,7 @@ from datetime import timedelta
 from collections import defaultdict
 from .models import HistoricalDataset
 
+@login_required
 def daily_commuter_trend_per_time(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -2099,6 +1943,7 @@ from django.http import JsonResponse
 from .models import ModelTrainingHistory, CustomUser
 from datetime import datetime
 
+@login_required
 def get_latest_model_info(request):
     latest_model = ModelTrainingHistory.objects.order_by('-trained_at').first()
 
@@ -2129,6 +1974,7 @@ def get_latest_model_info(request):
 # from datetime import date, timedelta
 # from .models import HolidayEvent, TemporalEvent
 
+@login_required
 def upcoming_events_view(request):
     events = []
     # today = date.today()
