@@ -10,6 +10,10 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from decouple import config
+from dj_database_url import parse as db_url  
+
+
 import os
 from pathlib import Path
 
@@ -17,25 +21,39 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
+
+STATIC_URL = '/static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+
+# Enable GZip compression and caching headers
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/5.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-sv@wh3q7oq4ci2!b4b+9!h(6!f%cz0os8@^qkt-u6tz8f$d3hf'
+# SECRET_KEY = 'django-insecure-sv@wh3q7oq4ci2!b4b+9!h(6!f%cz0os8@^qkt-u6tz8f$d3hf'
+SECRET_KEY = config('SECRET_KEY')
+
+MODEL_PATH = config('MODEL_PATH')
+ROUTE_ENCODER_PATH = config('ROUTE_ENCODER_PATH')
+FEATURES_PATH = config('FEATURES_PATH')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+# DEBUG = True
+DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = []
+# ALLOWED_HOSTS = ['cdps-deploy.onrender.com', 'localhost', '127.0.0.1']
 
+
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='localhost,127.0.0.1').split(',')
 
 from django.urls import reverse_lazy
 
 LOGIN_URL = reverse_lazy('login')
-
-
-
-
 
 
 # Application definition
@@ -56,6 +74,7 @@ AUTH_USER_MODEL = 'CommuterDemandPredictionSystem.CustomUser'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -64,7 +83,6 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 
     'CommuterDemandPredictionSystem.middleware.NoCacheMiddleware',
-    
 ]
 
 ROOT_URLCONF = 'spProject.urls'
@@ -91,17 +109,19 @@ WSGI_APPLICATION = 'spProject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': 'account_management_db',
+#         'USER': 'postgres',
+#         'PASSWORD': 'cdps1104()',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
+#     }
+# }
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'account_management_db',
-        'USER': 'postgres',
-        'PASSWORD': 'cdps1104()',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
+    'default': config('DATABASE_URL', cast=db_url),
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -137,12 +157,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.1/howto/static-files/
 
-STATIC_URL = 'static/'
 
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
