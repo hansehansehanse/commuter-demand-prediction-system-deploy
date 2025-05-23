@@ -20,7 +20,7 @@ from django.contrib.auth.decorators import login_required
 from datetime import date
 from .models import HolidayEvent, TemporalEvent, HistoricalTemporalEvent
 
-@login_required
+# @login_required
 def build_holiday_set():
     holidays = set()
     holiday_events = HolidayEvent.objects.all()
@@ -35,7 +35,7 @@ def build_holiday_set():
     # print(f"[build_holiday_set] Total generated holiday dates: {len(holidays)}")
     return holidays
 
-@login_required
+# @login_required
 def build_local_holiday_set():
     local_holidays = set()
 
@@ -56,14 +56,14 @@ def build_local_holiday_set():
     # print(f"[build_local_holiday_set] Total unique local holiday dates: {len(local_holidays)}")
     return local_holidays
 
-@login_required
+# @login_required
 def is_any_holiday(d, holiday_set, local_holiday_set):
     return any(d == holiday for holiday in holiday_set) or \
            any(d == local_holiday for local_holiday in local_holiday_set)
 
 from datetime import timedelta
 
-@login_required
+# @login_required
 def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
     return (
         (d + timedelta(days=1)) in holiday_set or
@@ -72,7 +72,7 @@ def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
 from datetime import timedelta
 
 # !!! still needs some tweaking
-@login_required
+# @login_required
 def is_any_long_weekend(d, holiday_set, local_holiday_set):
     def is_long_weekend_for_set(date, holidays):
         weekday = date.weekday()
@@ -103,7 +103,7 @@ def is_any_long_weekend(d, holiday_set, local_holiday_set):
         is_long_weekend_for_set(d, local_holiday_set)
     )
 
-@login_required
+# @login_required
 def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
     next_day = d + timedelta(days=1)
     return is_any_long_weekend(next_day, holiday_set, local_holiday_set)
@@ -114,35 +114,35 @@ def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
 
 #-------------------------------------------------------------------------
 
-@login_required
+# @login_required
 def check_local_holiday_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
     )
 
-@login_required
+# @login_required
 def check_university_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
     )
 
-@login_required
+# @login_required
 def check_local_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
     )
 
-@login_required
+# @login_required
 def check_others_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='others').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='others').exists()
     )
 
-@login_required
+# @login_required
 def get_university_semester_flags(target_date):
     flags = {
         'is_within_ay': False,
@@ -293,7 +293,7 @@ logger = logging.getLogger(__name__)
 # Get the user model dynamically
 User = get_user_model()
 
-@login_required
+# @login_required
 def add_user(request):
     if request.method == 'POST':
         try:
@@ -333,7 +333,7 @@ def add_user(request):
 
 
 #-------------------------------------------------------------------------
-@login_required
+# @login_required
 def edit_user(request):
     if request.method == "POST":
         try:
@@ -367,7 +367,7 @@ def edit_user(request):
 # from django.views.decorators.http import require_POST
 
 @require_POST
-@login_required
+# @login_required
 def delete_user(request):
     try:
         data = json.loads(request.body)
@@ -387,7 +387,7 @@ from .models import ActionLog
 
 User = get_user_model()
 
-@login_required
+# @login_required
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
     user = request.user  # This is the correct way to access the logged-in user
@@ -428,7 +428,7 @@ from django.contrib.auth import get_user_model
 
 User = get_user_model()
 
-@login_required
+# @login_required
 def event_list(request):
     # Fetch all records
     holidays = HolidayEvent.objects.all().order_by('date')
@@ -464,7 +464,7 @@ logger = logging.getLogger(__name__)
 
 User = get_user_model()
 
-@login_required
+# @login_required
 def add_event(request):
     # print("------------------------------------------------------------------------------Add event view triggered!")
     if request.method == 'POST':
@@ -516,7 +516,7 @@ from .models import TemporalEvent  # Import the model
 
 User = get_user_model()
 
-@login_required
+# @login_required
 def edit_event(request):
     print("Edit event view triggered!") 
     if request.method == "POST":
@@ -565,7 +565,7 @@ from django.shortcuts import get_object_or_404
 import json
 from .models import TemporalEvent
 
-@login_required
+# @login_required
 def delete_event(request):
     print("Delete event view triggered!")
 
@@ -604,7 +604,7 @@ from .models import HolidayEvent  # Import your HolidayEvent model
 
 User = get_user_model()
 
-@login_required
+# @login_required
 def edit_holiday_event(request):
     print("Edit holiday event view triggered!") 
     if request.method == "POST":
@@ -701,7 +701,7 @@ from datetime import datetime, timedelta
 from .models import HistoricalDataset
 import json
 
-@login_required
+# @login_required
 def get_last_7_records_chart_data(route, time_str):
     try:
         time_obj = datetime.strptime(time_str, "%I:%M%p").time()
@@ -728,7 +728,7 @@ from django.db.models import Avg
 from datetime import datetime
 from django.http import JsonResponse
 
-@login_required
+# @login_required
 def get_average_commuters_from_date(route, time_str, selected_date):
     
     try:
@@ -804,21 +804,21 @@ from django.http import JsonResponse
 from datetime import datetime
 from .supabase_utils import download_and_load_file
 
-@login_required
+
 def load_pretrained_model():
     print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
     model = download_and_load_file("random_forest_model.pkl")
     print("✅ Random Forest Model downloaded and loaded successfully from Supabase.")
     return model
 
-@login_required
+
 def load_feature_list():
     print("📦 Attempting to download and load feature list from Supabase (models/features_used.pkl)...")
     features = download_and_load_file("features_used.pkl")
     print("✅ Feature list downloaded and loaded successfully from Supabase.")
     return features
 
-@login_required
+
 def load_route_encoder():
     print("📦 Attempting to download and load route encoder from Supabase (models/route_encoder.pkl)...")
     encoder = download_and_load_file("route_encoder.pkl")
@@ -831,7 +831,7 @@ import joblib
 from datetime import datetime
 from django.http import JsonResponse
 
-@login_required
+
 def rf_predict_commuters(route, time_str, selected_date):
     model = load_pretrained_model()
     features_to_use = load_feature_list()
@@ -907,7 +907,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from django.http import JsonResponse
 
-@login_required
+
 def rf_predict_commuters_2weeks(route, time_str, selected_date):
     model = load_pretrained_model()
     features_to_use = load_feature_list()
@@ -994,7 +994,7 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
 
 from datetime import datetime
 #used in HistoricalDatasetUpload.html
-@login_required
+
 def parse_date_strict(date_str):
     original = str(date_str).strip()
     print("Original:", original)
@@ -1045,7 +1045,7 @@ import pandas as pd
 from .models import HistoricalDataset
 from datetime import datetime
 
-@login_required
+# @login_required
 def historical_dataset_upload_list(request):
     
     if request.method == 'GET':
@@ -1194,7 +1194,7 @@ from .models import HistoricalDataset
 from .randomForest import train_random_forest_model
 from datetime import datetime
 
-@login_required
+# @login_required
 def historical_dataset_export(request):
     """Exports the HistoricalDataset data to a CSV file."""
     print("Export function triggered!")  # Debug output
@@ -1230,7 +1230,7 @@ from django.shortcuts import redirect
 from django.contrib import messages
 from .models import HistoricalDataset
 
-@login_required
+# @login_required
 def delete_all_historical_datasets(request):
     if request.method == "POST":
         HistoricalDataset.objects.all().delete()
@@ -1252,7 +1252,7 @@ from django.contrib import messages
 
 from .supabase_utils import download_and_load_file, list_supabase_files
 
-@login_required
+
 def train_random_forest_model_view(request):
     if request.method == 'POST':
         try:
@@ -1468,7 +1468,7 @@ def delete_historical_event(request):
 
     return JsonResponse({'status': 'error', 'message': 'Invalid request method'}, status=405)
 
-@login_required
+
 def group_semester_dates_historical():
     grouped_dates = {
         'Start of 1st Sem': [],
@@ -1498,7 +1498,7 @@ def group_semester_dates_historical():
 
 
 from datetime import timedelta
-@login_required
+
 def get_historical_university_semester_flags(target_date):
     flags = {
         'is_within_ay': False,
