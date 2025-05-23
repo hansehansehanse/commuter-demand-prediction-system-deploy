@@ -8,6 +8,7 @@ urlpatterns = [
     path('login/', login_view, name='login'),
     # path('logout/', logout_view, name='logout'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/cdps/login/'), name='logout'),
+    path('profile/', profile_view, name='profile_view'),
 
 
 
