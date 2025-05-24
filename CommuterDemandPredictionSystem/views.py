@@ -1,26 +1,61 @@
-
-from django.shortcuts import render
-from django.http import HttpResponse, JsonResponse
+# Django core
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse, HttpResponse
+from django.urls import reverse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
-from django.contrib.auth.hashers import make_password
-from .models import CustomUser
+from django.views.decorators.cache import never_cache
+from django.contrib import messages
+from django.utils.timezone import now
+from django.conf import settings
+
+# Django auth
+from django.contrib.auth import (
+    login, logout, get_user_model, get_backends
+)
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.hashers import make_password, check_password
+
+# Models
+from .models import (
+    CustomUser,
+    ActionLog,
+    HolidayEvent,
+    TemporalEvent,
+    HistoricalTemporalEvent,
+    HistoricalDataset,
+    ModelTrainingHistory
+)
+
+# External libraries
 import json
 import uuid
 import logging
-from .models import ActionLog  
-from django.contrib import messages
+import os
+import glob
+import pandas as pd
+import joblib
+import calendar
 
-from django.views.decorators.cache import never_cache
-from django.contrib.auth.decorators import login_required
+# Date/time
+from datetime import datetime, date, timedelta, timezone
+
+# Django ORM utilities
+from django.db.models import Sum, Avg, Max
+from django.db.models.functions import TruncDate
+
+# Collections
+from collections import defaultdict, OrderedDict
+
+# Custom modules
+from .randomForest import train_random_forest_model
+from .supabase_utils import download_and_load_file, list_supabase_files
+
 
 
 
 #-------------------------------------------------------------------------
-from datetime import date
-from .models import HolidayEvent, TemporalEvent, HistoricalTemporalEvent
-
-# @login_required
+#-------------------------------------------------------------------------
 def build_holiday_set():
     holidays = set()
     holiday_events = HolidayEvent.objects.all()
@@ -35,7 +70,7 @@ def build_holiday_set():
     # print(f"[build_holiday_set] Total generated holiday dates: {len(holidays)}")
     return holidays
 
-# @login_required
+
 def build_local_holiday_set():
     local_holidays = set()
 
@@ -56,14 +91,14 @@ def build_local_holiday_set():
     # print(f"[build_local_holiday_set] Total unique local holiday dates: {len(local_holidays)}")
     return local_holidays
 
-# @login_required
+
 def is_any_holiday(d, holiday_set, local_holiday_set):
     return any(d == holiday for holiday in holiday_set) or \
            any(d == local_holiday for local_holiday in local_holiday_set)
 
 from datetime import timedelta
 
-# @login_required
+
 def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
     return (
         (d + timedelta(days=1)) in holiday_set or
@@ -72,7 +107,6 @@ def is_day_before_any_holiday(d, holiday_set, local_holiday_set):
 from datetime import timedelta
 
 # !!! still needs some tweaking
-# @login_required
 def is_any_long_weekend(d, holiday_set, local_holiday_set):
     def is_long_weekend_for_set(date, holidays):
         weekday = date.weekday()
@@ -103,7 +137,7 @@ def is_any_long_weekend(d, holiday_set, local_holiday_set):
         is_long_weekend_for_set(d, local_holiday_set)
     )
 
-# @login_required
+
 def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
     next_day = d + timedelta(days=1)
     return is_any_long_weekend(next_day, holiday_set, local_holiday_set)
@@ -114,35 +148,34 @@ def is_day_before_any_long_weekend(d, holiday_set, local_holiday_set):
 
 #-------------------------------------------------------------------------
 
-# @login_required
 def check_local_holiday_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_holiday').exists()
     )
 
-# @login_required
+
 def check_university_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='university_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='university_event').exists()
     )
 
-# @login_required
+
 def check_local_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='local_event').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='local_event').exists()
     )
 
-# @login_required
+
 def check_others_event_flag(target_date):
     return (
         TemporalEvent.objects.filter(date=target_date, event_type='others').exists() or
         HistoricalTemporalEvent.objects.filter(date=target_date, event_type='others').exists()
     )
 
-# @login_required
+
 def get_university_semester_flags(target_date):
     flags = {
         'is_within_ay': False,
@@ -204,15 +237,6 @@ def get_university_semester_flags(target_date):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
-
-from django.contrib.auth import login
-from django.contrib.auth.hashers import check_password
-from django.shortcuts import render, redirect
-from django.urls import reverse
-from django.contrib.auth import get_backends
-from django.contrib.auth import get_user_model
-import datetime
-
 User = get_user_model()
 
 # @login_required
@@ -236,6 +260,7 @@ def login_view(request):
 
                 if user.access_level == 'Admin':
                     log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
+                    
                     return redirect(reverse('dashboard'))
                 
                 elif user.access_level == 'Bus Manager':
@@ -255,31 +280,32 @@ def login_view(request):
     return render(request, 'login.html')
 
 
+
+# @login_required
+# def logout_view(request):
+#     log_action(request, 'Logout', f"User {request.user.first_name} {request.user.last_name} logged out.")
+
+#     logout(request)
+#     return redirect('login')  # Use the name from your url pattern
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 
-@login_required
 def logout_view(request):
+    log_action(request, 'Logout', f"User {request.user.first_name} {request.user.last_name} logged out.")                   #!!! not working because of the next function!!!
     logout(request)
-    return redirect('login')  # Use the name from your url pattern
+
+    return redirect('login')  # Change this to wherever you want to go
 
 
 #--
 # @login_required
 def profile_view(request):
-
     return render(request, 'admin/profile.html')
     
 
-    
-
-#--
-
-
 #-------------------------------------------------------------------------
-#-------------------------------------------------------------------------
-# from django.shortcuts import render
-# from .models import CustomUser
+
+
 @login_required
 def user_list(request):
     print("✅ user_list being called")
@@ -288,11 +314,7 @@ def user_list(request):
     return render(request, 'admin/accountManagement.html', {'users': users})
 
 #-------------------------------------------------------------------------
-from django.contrib.auth import get_user_model
-import json
-import uuid
-import logging
-from django.http import JsonResponse
+
 
 logger = logging.getLogger(__name__)
 
@@ -370,7 +392,6 @@ def edit_user(request):
     return JsonResponse({"error": "Invalid request method."}, status=405)
 
 #-------------------------------------------------------------------------
-# from django.views.decorators.http import require_POST
 
 @require_POST
 # @login_required
@@ -389,8 +410,6 @@ def delete_user(request):
 
 #-------------------------------------------------------------------------
 
-from .models import ActionLog
-
 User = get_user_model()
 
 # @login_required
@@ -407,8 +426,6 @@ def log_action(request, action_type, details=""):
     else:
         print("No user is logged in!")
 
-from django.shortcuts import render
-from .models import ActionLog
 
 @login_required
 def action_log_list(request):
@@ -428,9 +445,7 @@ def action_log_list(request):
 
 
 # views.py
-from django.shortcuts import render
-from CommuterDemandPredictionSystem.models import HolidayEvent, TemporalEvent
-from django.contrib.auth import get_user_model
+
 
 User = get_user_model()
 
@@ -457,13 +472,6 @@ def event_list(request):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 #CRUD FOR RECENT EVENTS!
-from django.shortcuts import render
-from django.http import JsonResponse
-from .models import TemporalEvent
-from django.contrib.auth import get_user_model
-import json
-import logging
-import uuid
 
 # Logger
 logger = logging.getLogger(__name__)
@@ -514,11 +522,6 @@ def add_event(request):
             return JsonResponse({'status': 'error', 'message': 'Error occurred while adding event.'}, status=500)
 
 #-------------------------------------------------------------------------
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-import json
-from .models import TemporalEvent  # Import the model
 
 User = get_user_model()
 
@@ -564,12 +567,6 @@ def edit_event(request):
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
 
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-import json
-from .models import TemporalEvent
 
 # @login_required
 def delete_event(request):
@@ -602,11 +599,7 @@ def delete_event(request):
 
 
 #-------------------------------------------------------------------------
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-import json
-from .models import HolidayEvent  # Import your HolidayEvent model
+
 
 User = get_user_model()
 
@@ -660,7 +653,7 @@ def edit_holiday_event(request):
 #datasetGraph.html
 @login_required
 def dataset_graph(request):
-
+    log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
     if request.method == "POST":
         graph_type = request.POST.get("graph_type")  
         route = request.POST.get("route")
@@ -700,13 +693,6 @@ def dataset_graph(request):
         }
     })
 
-
-from django.shortcuts import render
-from django.http import JsonResponse
-from datetime import datetime, timedelta
-from .models import HistoricalDataset
-import json
-
 # @login_required
 def get_last_7_records_chart_data(route, time_str):
     try:
@@ -728,11 +714,6 @@ def get_last_7_records_chart_data(route, time_str):
     # print("get_last_7_records_chart_data")
     return JsonResponse({'chart_data': json.dumps(chart_data)})
 
-
-from .models import HistoricalDataset
-from django.db.models import Avg
-from datetime import datetime
-from django.http import JsonResponse
 
 # @login_required
 def get_average_commuters_from_date(route, time_str, selected_date):
@@ -804,12 +785,6 @@ def get_average_commuters_from_date(route, time_str, selected_date):
 
 ####
 
-import os
-import joblib
-from django.http import JsonResponse
-from datetime import datetime
-from .supabase_utils import download_and_load_file
-
 
 def load_pretrained_model():
     print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
@@ -831,11 +806,6 @@ def load_route_encoder():
     print("✅ Route encoder downloaded and loaded successfully from Supabase.")
     return encoder
 
-
-import pandas as pd
-import joblib
-from datetime import datetime
-from django.http import JsonResponse
 
 
 def rf_predict_commuters(route, time_str, selected_date):
@@ -909,9 +879,6 @@ def rf_predict_commuters(route, time_str, selected_date):
         print(f"❌ Prediction error: {e}")
         return JsonResponse({'error': 'Prediction failed'}, status=500)
 
-from datetime import datetime, timedelta
-import pandas as pd
-from django.http import JsonResponse
 
 
 def rf_predict_commuters_2weeks(route, time_str, selected_date):
@@ -998,7 +965,6 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-from datetime import datetime
 #used in HistoricalDatasetUpload.html
 
 def parse_date_strict(date_str):
@@ -1045,11 +1011,6 @@ def parse_date_strict(date_str):
 
 #-------------------------------------------------------------------------
 
-from django.shortcuts import render, redirect
-from django.http import JsonResponse
-import pandas as pd
-from .models import HistoricalDataset
-from datetime import datetime
 
 # @login_required
 def historical_dataset_upload_list(request):
@@ -1192,13 +1153,7 @@ def historical_dataset_upload_list(request):
 
 
 
-from django.shortcuts import render, redirect
-from django.contrib import messages
-from django.http import HttpResponse
-import pandas as pd
-from .models import HistoricalDataset
-from .randomForest import train_random_forest_model
-from datetime import datetime
+
 
 # @login_required
 def historical_dataset_export(request):
@@ -1228,35 +1183,26 @@ def historical_dataset_export(request):
     df.to_csv(path_or_buf=response, index=False)
 
     print(f"Export successful! File sent: {filename}")
+    log_action(request, 'Export Historical Dataset', f"User {request.user.first_name} {request.user.last_name} exported historical dataset.")
+
     return response
 
 
 # views.py
-from django.shortcuts import redirect
-from django.contrib import messages
-from .models import HistoricalDataset
+
 
 # @login_required
 def delete_all_historical_datasets(request):
     if request.method == "POST":
         HistoricalDataset.objects.all().delete()
-        messages.success(request, "All historical datasets have been deleted.")
+        messages.success(request, "All historical datasets have been deleted.") 
+
+    log_action(request, 'Delete All Historical Datasets', f"User {request.user.first_name} {request.user.last_name} deleted all historical datasets.")
     return redirect('historical_dataset_event_list')  # Redirect back to the dataset list
 
 
 
-import os
-import glob
-import joblib
-from django.conf import settings
-from django.utils.timezone import now
-from .randomForest import train_random_forest_model
-from .models import ModelTrainingHistory
 
-from django.shortcuts import redirect
-from django.contrib import messages
-
-from .supabase_utils import download_and_load_file, list_supabase_files
 
 
 def train_random_forest_model_view(request):
@@ -1312,6 +1258,7 @@ def train_random_forest_model_view(request):
             # messages.error(request, f"Error during model training: {str(e)}")
             return redirect('historical_dataset_event_list')
 
+    log_action(request, 'Train Random Forest Model', f"User {request.user.first_name} {request.user.last_name} trained the random forest model.")
     return JsonResponse({'error': 'Invalid request method'}, status=405)
 
 
@@ -1394,10 +1341,7 @@ def add_historical_event(request):
             return JsonResponse({'status': 'error', 'message': 'Server error.'}, status=500)
 
 
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-import json
+
 
 User = get_user_model()
 @login_required
@@ -1437,12 +1381,7 @@ def edit_historical_event(request):
             print(f"Error editing historical event: {e}")
             return JsonResponse({'status': 'error', 'message': str(e)}, status=400)
 
-from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth import get_user_model
-from django.http import JsonResponse
-from django.shortcuts import get_object_or_404
-import json
-from .models import HistoricalTemporalEvent  # ✅ Correct model
+
 
 User = get_user_model()
 
@@ -1503,7 +1442,6 @@ def group_semester_dates_historical():
     return grouped_dates
 
 
-from datetime import timedelta
 
 def get_historical_university_semester_flags(target_date):
     flags = {
@@ -1555,28 +1493,11 @@ def get_historical_university_semester_flags(target_date):
 #-------------------------------------------------------------------------
 
 # Dashboard
-from django.shortcuts import render
-from datetime import datetime, timedelta
+
 
 @login_required
 def dashboard(request):
-    # upcoming_events_view(request)
-    ##MODIFY THIS LATER BUT CANNOT REMOVE THESE TEMP VALUES YET
-    # Placeholder values – replace these with real queries later
-    # avg_commuters = 1200
-    # rf_prediction = 1280
 
-    # # Generate mock 2-week predictions
-    # today = datetime.now().date()
-    # predictions = []
-    # for i in range(14):
-    #     date = today + timedelta(days=i)
-    #     predictions.append({
-    #         'date': date.strftime('%Y-%m-%d'),
-    #         'route': 'A to B' if i % 2 == 0 else 'A to C',
-    #         'time': '07:00 AM',
-    #         'predicted_commuters': 100 + i * 10  # dummy numbers
-    #     })
 
     context = {
         'test': None
@@ -1589,12 +1510,7 @@ def dashboard(request):
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
-from django.http import JsonResponse
-from .models import HistoricalDataset
-from django.db.models import Sum
-from collections import OrderedDict
 
-@login_required
 def monthly_commuter_stats(request):
     qs = HistoricalDataset.objects.order_by("-date").values_list("date", flat=True)
 
@@ -1648,12 +1564,7 @@ def monthly_commuter_stats(request):
 
 
 
-from django.http import JsonResponse
-from django.db.models import Sum, Max
-from .models import HistoricalDataset
-import calendar
 
-@login_required
 def route_commuter_percentages(request):
     print("✅ Route commuter percentages view called")
 
@@ -1696,12 +1607,9 @@ def route_commuter_percentages(request):
     })
 
 
-from django.http import JsonResponse
-from django.db.models import Sum, Max
-from datetime import timedelta
-from .models import HistoricalDataset  # Adjust import as needed
 
-@login_required
+
+
 def top_commuter_times(request):
     # Get the latest date in the dataset
     latest_date = HistoricalDataset.objects.aggregate(latest=Max('date'))['latest']
@@ -1730,13 +1638,8 @@ def top_commuter_times(request):
 
 
 
-from django.http import JsonResponse
-from django.db.models import Sum
-from django.db.models.functions import TruncDate
-from .models import HistoricalDataset
-from datetime import timedelta
 
-@login_required
+
 def commuters_heatmap_data(request):
     # Get the most recent date in the dataset
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
@@ -1804,13 +1707,8 @@ def commuters_heatmap_data(request):
     })
 
 
-from django.http import JsonResponse
-from django.db.models import Sum
-from django.db.models.functions import TruncDate
-from datetime import timedelta
-from .models import HistoricalDataset
 
-@login_required
+
 def daily_commuter_trend(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -1838,12 +1736,8 @@ def daily_commuter_trend(request):
 
 
 
-from collections import defaultdict
-from django.db.models.functions import TruncDate
-from django.db.models import Sum
-from datetime import timedelta
 
-@login_required
+
 def daily_commuter_trend_per_route(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -1887,14 +1781,9 @@ def daily_commuter_trend_per_route(request):
     })
 
 
-from django.http import JsonResponse
-from django.db.models import Sum
-from django.db.models.functions import TruncDate
-from datetime import timedelta
-from collections import defaultdict
-from .models import HistoricalDataset
 
-@login_required
+
+
 def daily_commuter_trend_per_time(request):
     latest_entry = HistoricalDataset.objects.order_by('-date').first()
     if not latest_entry:
@@ -1936,20 +1825,9 @@ def daily_commuter_trend_per_time(request):
     })
 
 
-from django.http import JsonResponse
-from django.utils.timezone import now
-from .models import ModelTrainingHistory
-
-from datetime import timezone
-
-from .models import CustomUser 
 
 
-from django.http import JsonResponse
-from .models import ModelTrainingHistory, CustomUser
-from datetime import datetime
 
-@login_required
 def get_latest_model_info(request):
     latest_model = ModelTrainingHistory.objects.order_by('-trained_at').first()
 
@@ -1976,11 +1854,7 @@ def get_latest_model_info(request):
     })
 
 
-# from django.http import JsonResponse
-# from datetime import date, timedelta
-# from .models import HolidayEvent, TemporalEvent
 
-@login_required
 def upcoming_events_view(request):
     events = []
     # today = date.today()
