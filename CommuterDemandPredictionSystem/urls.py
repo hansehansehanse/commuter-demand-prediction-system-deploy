@@ -9,12 +9,12 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(next_page='/cdps/login/'), name='logout'),
     path('signup/', views.signup_view, name='signup'),
 
-    path('profile/', profile_view, name='profile_view'),
+    path('admin/profile/', profile_view, name='profile_view'),
+    path('busManager/profile/', profile_view2, name='profile_view2'),
     
 
-
-
     path('admin/dashboard/', views.dashboard, name='dashboard'),
+    path('busManager/dashboard/', views.dashboard2, name='dashboard2'),
 
     path("admin/dashboard/monthlyCommuterStats/", views.monthly_commuter_stats, name="monthly_commuter_stats"),
     path("admin/dashboard/commutersPerRoute/", views.route_commuter_percentages, name="route_commuter_percentages"),
@@ -51,6 +51,7 @@ urlpatterns = [
 
    
     path('admin/datasetGraph/', views.dataset_graph, name='dataset_graph'),
+    path('busManager/datasetGraph/', views.dataset_graph2, name='dataset_graph2'),
 
     path('admin/historicalDatasetUpload/upload', views.historical_dataset_upload_list, name='historical_dataset_upload_list'),
     path('admin/historicalDatasetUpload/delete', views.delete_all_historical_datasets, name='delete_historical_datasets'),

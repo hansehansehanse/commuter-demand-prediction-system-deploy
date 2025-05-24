@@ -259,13 +259,21 @@ def login_view(request):
                 login(request, user, backend=backend.__class__.__module__ + "." + backend.__class__.__name__)
 
                 if user.access_level == 'Admin':
+                    # messages.success(request, 'Admin Login successful!')
                     log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
-                    
                     return redirect(reverse('dashboard'))
-                
+            
                 elif user.access_level == 'Bus Manager':
-                    log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
-                    return redirect('cdps_admin_dashboard')                             # update!!!
+                    print("🔎 Access level is Bus Manager")
+                    if not user.verified:
+                        messages.error(request, 'Your account is NOT yet verified. Please contact the administrator.')
+                        return redirect('login')  
+                    
+                    else:
+                        # messages.success(request, 'Bus Manager Login successful!')
+                        log_action(request, 'Login', f"User {user.first_name} {user.last_name} logged in.")
+                        print("🔎 Redirecting to dashboard2")
+                        return redirect(reverse('dashboard2'))                                                        #!!
                 
                 else:
                     print("❓ Unknown access level")
@@ -294,6 +302,9 @@ def logout_view(request):
 # @login_required
 def profile_view(request):
     return render(request, 'admin/profile.html')
+
+def profile_view2(request):
+    return render(request, 'busManager/profile2.html')
 
 
 from django.contrib import messages
@@ -448,11 +459,19 @@ def delete_user(request):
         return JsonResponse({"error": str(e)}, status=400)
 
 #-------------------------------------------------------------------------
-
-def clear_action_logs():
+def deleteAll():
+    
     ActionLog.objects.all().delete()                                            # for testing cleaning
+    TemporalEvent.objects.all().delete()                                       # for testing cleaning
+    HolidayEvent.objects.all().delete()                                       # for testing cleaning
+    HistoricalDataset.objects.all().delete()                                   # for testing cleaning
+    HistoricalTemporalEvent.objects.all().delete()                            # for testing cleaning
+    
 
 #-------------------------------------------------------------------------
+
+from datetime import datetime
+import pytz
 
 User = get_user_model()
 
@@ -460,14 +479,14 @@ User = get_user_model()
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
     user = request.user  # This is the correct way to access the logged-in user
-
-    # clear_action_logs()
+    # deleteAll()                                                                               # !!! for testing cleaning
 
     if user.is_authenticated:  # Now check on user, not request
         action_log = ActionLog(
             user_code=user,
             action=action_type,
-            details=details
+            details=details,
+            
         )
         action_log.save()
     else:
@@ -739,6 +758,50 @@ def dataset_graph(request):
             "A to C": ["5:30AM"]
         }
     })
+
+
+@login_required
+def dataset_graph2(request):
+    log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
+    if request.method == "POST":
+        graph_type = request.POST.get("graph_type")  
+        route = request.POST.get("route")
+        time_str = request.POST.get("time")
+        selected_date = request.POST.get("date")  
+
+        # print(f"Graph Type: {graph_type}")
+        # print(f"1 Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
+
+        if not route or not time_str:
+            return JsonResponse({'error': 'Missing route or time'})
+
+        # Handle different graph types
+        if graph_type == "last7":
+            print("FROM: last7")
+            return get_last_7_records_chart_data(route, time_str)
+
+        elif graph_type == "average_from_date":
+            print("FROM: average_from_date")
+            # print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
+            return get_average_commuters_from_date(route, time_str, selected_date)
+        
+        elif graph_type == "rf_prediction":
+            print("FROM: rf_prediction")
+            return rf_predict_commuters(route, time_str, selected_date)
+
+        elif graph_type == 'two_week_predictions':
+            print("FROM: two_week_predictions")
+            return rf_predict_commuters_2weeks(route, time_str, selected_date)
+
+        return JsonResponse({'error': 'Unknown graph_type'})
+
+    return render(request, 'busManager/datasetGraph2.html', {
+        'bus_schedule': {
+            "A to B": ["5:00AM", "1:00PM", "6:00PM"],
+            "A to C": ["5:30AM"]
+        }
+    })
+
 
 # @login_required
 def get_last_7_records_chart_data(route, time_str):
@@ -1545,7 +1608,6 @@ def get_historical_university_semester_flags(target_date):
 @login_required
 def dashboard(request):
 
-
     context = {
         'test': None
     }
@@ -1553,7 +1615,15 @@ def dashboard(request):
     # return render(request, 'admin/dashboard.html', context)
     return render(request, 'admin/dashboard.html', context)
 
+@login_required
+def dashboard2(request):
 
+    context = {
+        'test': None
+    }
+
+    # return render(request, 'admin/dashboard.html', context)
+    return render(request, 'busManager/dashboard2.html', context)
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
 
