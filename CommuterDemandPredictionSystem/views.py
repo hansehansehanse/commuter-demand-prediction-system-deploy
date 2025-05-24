@@ -449,12 +449,20 @@ def delete_user(request):
 
 #-------------------------------------------------------------------------
 
+def clear_action_logs():
+    ActionLog.objects.all().delete()                                            # for testing cleaning
+
+#-------------------------------------------------------------------------
+
 User = get_user_model()
 
 # @login_required
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
     user = request.user  # This is the correct way to access the logged-in user
+    
+    clear_action_logs()
+
     if user.is_authenticated:  # Now check on user, not request
         action_log = ActionLog(
             user_code=user,
