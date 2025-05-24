@@ -280,13 +280,6 @@ def login_view(request):
     return render(request, 'login.html')
 
 
-
-# @login_required
-# def logout_view(request):
-#     log_action(request, 'Logout', f"User {request.user.first_name} {request.user.last_name} logged out.")
-
-#     logout(request)
-#     return redirect('login')  # Use the name from your url pattern
 from django.contrib.auth import logout
 from django.shortcuts import redirect
 
@@ -301,7 +294,51 @@ def logout_view(request):
 # @login_required
 def profile_view(request):
     return render(request, 'admin/profile.html')
-    
+
+
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.db import IntegrityError
+from .models import CustomUser  # make sure you're using your CustomUser model
+
+def signup_view(request):
+    if request.method == 'POST':
+        first_name = request.POST.get('first_name', '').strip()
+        last_name = request.POST.get('last_name', '').strip()
+        email = request.POST.get('email', '').strip().lower()
+        phone_number = request.POST.get('phone_number', '').strip()
+        password1 = request.POST.get('password1')
+        password2 = request.POST.get('password2')
+
+        # Basic validations
+
+
+        if CustomUser.objects.filter(email=email).exists():
+            messages.error(request, "Email already registered.")
+            return redirect('signup')
+
+        if password1 != password2:
+            messages.error(request, "Passwords do not match.")
+            return redirect('signup')
+
+        try:
+            user = CustomUser.objects.create_user(
+                username=email,  # using email as username
+                email=email,
+                password=password1,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone_number  # Include phone number here
+            )
+            user.save()
+            messages.success(request, "Account created! You can now log in.")
+            return redirect('login')  # Redirect to login page
+        except IntegrityError:
+            messages.error(request, "Something went wrong. Please try again.")
+            return redirect('signup')
+
+    return render(request, 'signup.html')  # replace with your actual template
+
 
 #-------------------------------------------------------------------------
 
@@ -315,6 +352,7 @@ def user_list(request):
 
 #-------------------------------------------------------------------------
 
+import re
 
 logger = logging.getLogger(__name__)
 
@@ -335,6 +373,7 @@ def add_user(request):
             if User.objects.filter(email=email).exists():
                 print("Email already in use!")
                 return JsonResponse({'status': 'error', 'message': 'Email is already in use.'}, status=400)
+           
 
             # If no error, create the user
             user = User.objects.create_user(

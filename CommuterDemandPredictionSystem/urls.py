@@ -6,9 +6,11 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
 
     path('login/', login_view, name='login'),
-    # path('logout/', logout_view, name='logout'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/cdps/login/'), name='logout'),
+    path('signup/', views.signup_view, name='signup'),
+
     path('profile/', profile_view, name='profile_view'),
+    
 
 
 
@@ -38,9 +40,6 @@ urlpatterns = [
 
     path('admin/actionLog/', views.action_log_list, name='action_log_list'), 
     
-
-
-
 
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list
     path('admin/datasetTemporal/addEvent/', views.add_event, name='add_event'),  # Add event

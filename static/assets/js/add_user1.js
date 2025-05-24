@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const form = document.getElementById("addUserForm");
 
     if (!form) return;
-    console.log("i see form");
+    // console.log("i see form");
 
     form.addEventListener("submit", function (e) {
         e.preventDefault();  // stop the normal POST
@@ -146,4 +146,6 @@ document.querySelectorAll(".delete-user-btn").forEach((button) => {
 });
 
 //-------------------------------------------------------------------------
+
+
 //-------------------------------------------------------------------------
