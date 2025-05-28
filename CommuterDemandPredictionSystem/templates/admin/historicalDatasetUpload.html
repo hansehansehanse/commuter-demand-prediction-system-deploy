@@ -144,8 +144,8 @@
                                     <p>Would you like to continue with the upload?</p>
                                 </div>
                                 <div class="modal-footer">
-                                    <button type="button" class="btn btn-secondary" id="cancel-upload" data-bs-dismiss="modal">Cancel</button>
-                                    <button type="button" class="btn btn-primary" id="confirmUploadBtn">Confirm</button>
+                                    <button type="button" class="btn btn-secondary" id="cancel-upload" data-bs-dismiss="modal" onclick="location.reload();">Cancel</button>
+                                    <button type="button" class="btn btn-primary" id="confirmUploadBtn" data-bs-dismiss="modal">Confirm</button>
                                 </div>
                             </div>
                         </div>
@@ -765,9 +765,6 @@
         <h5 class="modal-title" id="deleteEventModalLabel{{ event.id }}">Delete Event</h5>
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
-    <!-- <div class="modal-body">
-        Are you sure you want to delete event <strong>{{ event.event_name }}</strong> on <strong>{{ event.date }}</strong>?
-    </div> -->
     <div class="modal-body">
         Are you sure you want to delete event <strong>{{ event.event_name }}</strong> on <strong>{{ event.date }}</strong>?
         
@@ -775,7 +772,6 @@
             <strong>Event Code:</strong> {{ event.event_code }}
         </div>
     </div>
-
     <div class="modal-footer">
         <input type="hidden" id="delete_event_code{{ event.id }}" value="{{ event.event_code }}">
         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
