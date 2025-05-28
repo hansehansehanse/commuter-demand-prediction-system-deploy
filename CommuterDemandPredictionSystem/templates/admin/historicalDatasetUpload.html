@@ -165,6 +165,12 @@
                         <h4 class="fw-bold mb-0">
                             <span class="text-muted fw-light">Dataset /</span> Historical
                         </h4>
+
+                        <!-- Add Data Button -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addSingleDataModal">
+                            <i class="ti ti-plus me-2"></i> Add Data
+                        </button>
+
                     </div>
                 </div>
 
@@ -248,9 +254,9 @@
                             <tr>
                                 <!-- <th>ID</th> -->
                                 <!-- <th>Event Code</th> -->
+                                <th>Date</th>
                                 <th>Event Name</th>
                                 <th>Event Type</th>
-                                <th>Date</th>
                                 <th>Created By</th>
                                 <th>Updated By</th>
                                 <th>Actions</th>
@@ -261,9 +267,9 @@
                                 <tr>
                                     <!-- <td>{{ event.id }}</td> -->
                                     <!-- <td>{{ event.event_code }}</td> -->
+                                    <td>{{ event.date|date:"F j, Y" }}</td>
                                     <td>{{ event.event_name }}</td>
                                     <td>{{ event.get_event_type_display }}</td>
-                                    <td>{{ event.date|date:"Y-m-d" }}</td>
                                     <td>
                                         {% if event.created_by_user %}
                                             {% with user=event.created_by_user %}
@@ -332,9 +338,10 @@
                         <thead>
                             <tr>
                                 <!-- <th>Holiday Event Code</th> -->
+                                 <th>Date</th>
                                 <th>Holiday Event Name</th>
                                 <th>Holiday Event Type</th>
-                                <th>Date</th>
+                                
                                 <!-- <th>Updated By</th> -->
                                 <th>Actions</th>
                             </tr>
@@ -343,9 +350,10 @@
                             {% for holiday in holidays %}
                             <tr>
                                 <!-- <td>{{ holiday.event_code }}</td> -->
+                                 <td>{{ holiday.date|date:"F d" }}</td>
                                 <td>{{ holiday.event_name }}</td>
                                 <td>{{ holiday.get_event_type_display }}</td>
-                                <td>{{ holiday.date|date:"F d" }}</td>
+                                
                                 <!-- <td>
                                     {% if holiday.updated_by %}
                                         {{ holiday.updated_by }}
@@ -398,9 +406,9 @@
                         <thead>
                             <tr>
                                 <!-- <th>Event Code</th> -->
+                                <th>Date</th>
                                 <th>Event Name</th>
                                 <th>Event Type</th>
-                                <th>Date</th>
                                 <th>Created By</th>
                                 <th>Updated By</th>
                                 <th>Actions</th>
@@ -410,9 +418,9 @@
                             {% for event in historical_events %}
                                 <tr>
                                     <!-- <td>{{ event.event_code }}</td> -->
+                                    <td>{{ event.date|date:"F j, Y" }}</td>
                                     <td>{{ event.event_name }}</td>
                                     <td>{{ event.get_event_type_display }}</td>
-                                    <td>{{ event.date|date:"Y-m-d" }}</td>
                                     <td>
                                         {% if event.created_by_user %}
                                             {% with user=event.created_by_user %}
@@ -457,6 +465,59 @@
 
     </div>
 </div>
+
+<!-- Add Single Data Modal -->
+<div class="modal fade" id="addSingleDataModal" tabindex="-1" aria-labelledby="addSingleDataLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="addSingleDataForm">
+                {% csrf_token %}
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addSingleDataLabel">Add Historical Data</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+
+                    <div class="mb-3">
+                        <label for="single_date" class="form-label">Date</label>
+                        <input type="date" class="form-control" id="single_date" name="date" required>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="single_route" class="form-label">Route</label>
+                        <select class="form-select" id="single_route" name="route" required>
+                            <option value="">Select route</option>
+                            <option value="UPLB to UPD">UPLB to UPD</option>
+                            <option value="UPLB to Buendia">UPLB to Buendia</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="single_time" class="form-label">Time</label>
+                        <select class="form-select" id="single_time" name="time" required>
+                            <option value="">Select time</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="single_commuters" class="form-label">Number of Commuters</label>
+                        <input type="number" class="form-control" id="single_commuters" name="num_commuters" min="1" max="50" required>
+                        <small class="text-muted">Maximum 50 commuters allowed</small>
+
+
+                    </div>
+
+                    <div id="singleDataResponse" class="alert" style="display:none;"></div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-primary">Add Entry</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 
 <!-- Delete Dataset Confirmation Modal -->
 <div class="modal fade" id="deleteDatasetModal" tabindex="-1" aria-labelledby="deleteDatasetModalLabel" aria-hidden="true">
@@ -840,79 +901,94 @@
 
 
 
+
+
 <!-- Initialize DataTables AFTER DOM is fully loaded -->
 <script>
-    $(document).ready(function() {
-        $('#historicalDatasetTable').DataTable({
-            "order": [[0, "desc"]],
-
-            "pageLength": 5,
-            "scrollY": "400px",
-            "scrollCollapse": true,
-            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
-
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search historical dataset..."
-            }
-        });
+    jQuery.extend(jQuery.fn.dataTable.ext.type.order, {
+        "custom-date-pre": function (dateString) {
+            // Convert "April 1, 2023" to timestamp
+            let date = new Date(dateString);
+            return date.getTime() || 0;
+        }
     });
 
-    $(document).ready(function() {
-        $('#recentEventTable').DataTable({
-            "order": [[0, "desc"]],
-            "pageLength": 5,
-            "scrollY": "400px",
-            "scrollCollapse": true,
-            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search events..."
+    // Initialize DataTable with the custom date column sorting
+    $('#historicalDatasetTable').DataTable({
+        pageLength: 5,
+        scrollY: '400px',
+        scrollCollapse: true,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+        language: {
+            search: '_INPUT_',
+            searchPlaceholder: 'Search historical dataset...'
+        },
+        columnDefs: [
+            {
+                targets: 0,             // your date column index, adjust if different
+                type: 'custom-date'     // use the custom sorting type here
             }
-        });
+        ],
+        order: [[0, 'desc']]          // sort by date descending by default
     });
 
-    $(document).ready(function() {
-        $('#holidayTable').DataTable({
-            "order": [[0, "desc"]],
-            "pageLength": 5,
-            "scrollY": "400px",
-            "scrollCollapse": true,
-            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search holiday..."
+    $('#recentEventTable').DataTable({
+        pageLength: 5,
+        scrollY: '400px',
+        scrollCollapse: true,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+        language: {
+            search: '_INPUT_',
+            searchPlaceholder: 'Search events...'
+        },
+        columnDefs: [
+            {
+                targets: 0,
+                type: 'custom-date'
             }
-        });
+        ],
+        order: [[0, 'desc']]
+    });
+    
+    $('#holidayTable').DataTable({
+        pageLength: 5,
+        scrollY: '400px',
+        scrollCollapse: true,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+        language: {
+            search: '_INPUT_',
+            searchPlaceholder: 'Search holiday...'
+        },
+        columnDefs: [
+            {
+                targets: 0,
+                type: 'custom-date'
+            }
+        ],
+        order: [[0, 'desc']]
     });
 
-    $(document).ready(function() {
-        $('#historicalEventTable').DataTable({
-            "order": [[0, "desc"]],
-
-            "pageLength": 5,
-            "scrollY": "400px",
-            "scrollCollapse": true,
-            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
-
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search historical events..."
+    $('#historicalEventTable').DataTable({
+        pageLength: 5,
+        scrollY: '400px',
+        scrollCollapse: true,
+        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+        language: {
+            search: '_INPUT_',
+            searchPlaceholder: 'Search historical events...'
+        },
+        columnDefs: [
+            {
+                targets: 0,
+                type: 'custom-date'
             }
-        });
+        ],
+        order: [[0, 'desc']]
     });
 
 
-    // document.addEventListener("DOMContentLoaded", function () {
-    //     const trainBtn = document.querySelector("#train-model-btn");
 
-    //     const hasMissingDates = "{{ has_missing_dates|yesno:'true,false' }}" === "true";
-    //     const isEventListEmpty = "{{ is_event_list_empty|yesno:'true,false' }}" === "true";
 
-    //     if (!hasMissingDates && !isEventListEmpty) {
-    //         trainBtn.removeAttribute("disabled");
-    //     }
-    // });
 
     
     document.addEventListener("DOMContentLoaded", function () {
@@ -977,6 +1053,90 @@
         });
     });
 </script>
-    
+
+<script>
+    // document.addEventListener("DOMContentLoaded", function () {
+    //     const routeTimes = {
+    //         "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+    //         "UPLB to Buendia": ["5:30AM"]
+    //     };
+
+    //     const routeSelect = document.getElementById("single_route");
+    //     const timeSelect = document.getElementById("single_time");
+
+    //     routeSelect.addEventListener("change", function () {
+    //         const selectedRoute = this.value;
+    //         timeSelect.innerHTML = '<option value="">Select time</option>';
+
+    //         if (routeTimes[selectedRoute]) {
+    //             routeTimes[selectedRoute].forEach(function (time) {
+    //                 const option = document.createElement("option");
+    //                 option.value = time;
+    //                 option.textContent = time;
+    //                 timeSelect.appendChild(option);
+    //             });
+    //         }
+    //     });
+    // });
+
+
+    const routeTimes = {
+        "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+        "UPLB to Buendia": ["5:30AM"]
+    };
+
+    document.getElementById('single_route').addEventListener('change', function () {
+        const selectedRoute = this.value;
+        const timeSelect = document.getElementById('single_time');
+        timeSelect.innerHTML = '<option value="">Select time</option>';
+
+        if (routeTimes[selectedRoute]) {
+            routeTimes[selectedRoute].forEach(time => {
+                const option = document.createElement('option');
+                option.value = time;
+                option.textContent = time;
+                timeSelect.appendChild(option);
+            });
+        }
+    });
+
+    document.getElementById('addSingleDataForm').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const form = e.target;
+        const formData = {
+            date: form.date.value,
+            route: form.route.value,
+            time: form.time.value,
+            num_commuters: form.num_commuters.value
+        };
+
+        try {
+            const response = await fetch("{% url 'add_single_historical_data' %}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRFToken": "{{ csrf_token }}"
+                },
+                body: JSON.stringify(formData)
+            });
+
+            const result = await response.json();
+            const alertBox = document.getElementById("singleDataResponse");
+            alertBox.style.display = "block";
+            alertBox.className = response.ok ? "alert alert-success" : "alert alert-danger";
+            alertBox.innerText = result.message;
+
+            if (response.ok) {
+                setTimeout(() => location.reload(), 1500);  // Refresh on success
+            }
+
+        } catch (error) {
+            console.error("Error:", error);
+        }
+    });
+
+
+</script>
+
 
 {% endblock %}

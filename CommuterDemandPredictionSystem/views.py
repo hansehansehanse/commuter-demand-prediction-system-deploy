@@ -638,19 +638,6 @@ def edit_event(request):
 def delete_event(request):
     print("Delete event view triggered!")
 
-
-    #----------------------------------------------------------------------------------------------
-    print(f"Request method: {request.method}")
-    print(f"User: {request.user}, Auth: {request.user.is_authenticated}")
-    print(f"Raw request body: {request.body}")
-
-    try:
-        print(f"All event codes: {[str(e.event_code) for e in TemporalEvent.objects.all()]}")
-    except Exception as db_err:
-        print(f"DB access error: {db_err}")
-    #----------------------------------------------------------------------------------------------
-
-
     if request.method == "POST":
         try:
             data = json.loads(request.body)
@@ -2058,3 +2045,61 @@ def upcoming_events_view(request):
 
 #-------------------------------------------------------------------------
 #-------------------------------------------------------------------------
+
+from django.views.decorators.csrf import csrf_exempt
+import json
+
+# @csrf_exempt
+# @login_required
+def add_single_historical_data(request):
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            user = request.user
+
+            date_val = parse_date_strict(data.get('date'))
+            route = data.get('route')
+            time_str = datetime.strptime(data.get('time'), "%I:%M%p").strftime("%H:%M")
+            num_commuters = int(data.get('num_commuters'))
+
+            # You may reuse your flag logic here
+            holiday_set = build_holiday_set()
+            local_holiday_set = build_local_holiday_set()
+            semester_flags = get_historical_university_semester_flags(date_val)
+            weekday = date_val.weekday()
+
+            dataset = HistoricalDataset.objects.create(
+                date=date_val,
+                route=route,
+                time=time_str,
+                num_commuters=num_commuters,
+                user_code=user.user_code,
+                filename="-",
+                day_of_week=date_val.strftime("%A"),
+                month=date_val.strftime("%B"),
+                is_friday=weekday == 4,
+                is_saturday=weekday == 5,
+                is_holiday=is_any_holiday(date_val, holiday_set, local_holiday_set),
+                is_day_before_holiday=is_day_before_any_holiday(date_val, holiday_set, local_holiday_set),
+                is_long_weekend=is_any_long_weekend(date_val, holiday_set, local_holiday_set),
+                is_day_before_long_weekend=is_day_before_any_long_weekend(date_val, holiday_set, local_holiday_set),
+                is_local_holiday=check_local_holiday_flag(date_val),
+                is_university_event=check_university_event_flag(date_val),
+                is_local_event=check_local_event_flag(date_val),
+                is_others=check_others_event_flag(date_val),
+                is_within_ay=semester_flags['is_within_ay'],
+                is_start_of_sem=semester_flags['is_start_of_sem'],
+                is_day_before_end_of_sem=semester_flags['is_day_before_end_of_sem'],
+                is_week_before_end_of_sem=semester_flags['is_week_before_end_of_sem'],
+                is_end_of_sem=semester_flags['is_end_of_sem'],
+                is_day_after_end_of_sem=semester_flags['is_day_after_end_of_sem'],
+                is_2days_after_end_of_sem=semester_flags['is_2days_after_end_of_sem'],
+                is_week_after_end_of_sem=semester_flags['is_week_after_end_of_sem'],
+            )
+
+            log_action(request, 'Manual Add Historical Dataset', f"User {user.first_name} {user.last_name} manually added dataset.")
+            return JsonResponse({'message': 'Data added successfully.'}, status=201)
+
+        except Exception as e:
+            print("Error:", e)
+            return JsonResponse({'message': 'Error while adding data.'}, status=500)

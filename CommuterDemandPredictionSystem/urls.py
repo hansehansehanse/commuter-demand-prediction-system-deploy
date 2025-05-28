@@ -61,6 +61,9 @@ urlpatterns = [
 
     path('admin/historicalDatasetUpload/admin/train-model/', views.train_random_forest_model_view, name='train_random_forest_model'),
 
+    path('admin/historicalDatasetUpload/addSingle/', views.add_single_historical_data, name='add_single_historical_data'),
+
+
     path('admin/historicalDatasetUpload/addHistoricalEvent/', views.add_historical_event, name='add_historical_event'),
     path('admin/historicalDatasetUpload/editHistoricalEvent/', views.edit_historical_event, name='edit_historical_event'),
     path('admin/historicalDatasetUpload/deleteHistoricalEvent/', views.delete_historical_event, name='delete_historical_event'),
