@@ -479,7 +479,7 @@ User = get_user_model()
 def log_action(request, action_type, details=""):
     # Access the currently logged-in user
     user = request.user  # This is the correct way to access the logged-in user
-    deleteAll()                                                                               # !!! for testing cleaning
+    # deleteAll()                                                                               # !!! for testing cleaning
 
     if user.is_authenticated:  # Now check on user, not request
         action_log = ActionLog(
