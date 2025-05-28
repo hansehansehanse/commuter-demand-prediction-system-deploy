@@ -928,23 +928,26 @@
         }
     });
 
-    // Initialize DataTable with the custom date column sorting
-    $('#historicalDatasetTable').DataTable({
-        pageLength: 5,
-        scrollY: '400px',
-        scrollCollapse: true,
-        lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
-        language: {
-            search: '_INPUT_',
-            searchPlaceholder: 'Search historical dataset...'
-        },
-        columnDefs: [
-            {
-                targets: 0,             // your date column index, adjust if different
-                type: 'custom-date'     // use the custom sorting type here
-            }
-        ],
-        order: [[0, 'desc']]          // sort by date descending by default
+    $(document).ready(function () {
+        // $.fn.dataTable.ext.errMode = 'none';
+        $('#historicalDatasetTable').DataTable({
+            pageLength: 5,
+            scrollY: '400px',
+            scrollCollapse: true,
+            lengthMenu: [[5, 10, 25, 50, -1], [5, 10, 25, 50, 'All']],
+            language: {
+                search: '_INPUT_',
+                searchPlaceholder: 'Search historical dataset...'
+            },
+            columnDefs: [
+                {
+                    targets: 0,             // your date column index, adjust if different
+                    type: 'custom-date'     // use the custom sorting type here
+                }
+            ],
+            order: [[0, 'desc']]          // sort by date descending by default
+        });
+    
     });
 
     $('#recentEventTable').DataTable({
