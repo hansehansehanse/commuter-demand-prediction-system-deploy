@@ -28,8 +28,8 @@
               <div class="position-relative">
                 <select id="route" class="select2 form-select form-select-lg" data-allow-clear="true" onchange="updateTimeOptions()">
                   <option value="">Select Route</option>
-                  <option value="A to B" {% if route == 'A to B' %}selected{% endif %}>A to B</option>
-                  <option value="A to C" {% if route == 'A to C' %}selected{% endif %}>A to C</option>
+                  <option value="UPLB to UPD" {% if route == 'UPLB to UPD' %}selected{% endif %}>UPLB to UPD</option>
+                  <option value="UPLB to Buendia" {% if route == 'UPLB to Buendia' %}selected{% endif %}>UPLB to Buendia</option>
                 </select>
               </div>
             </div>
@@ -235,8 +235,8 @@
   
     //Bar Graph
     const routeTimes = {
-      "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-      "A to C": ["5:30AM"]
+      "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+      "UPLB to Buendia": ["5:30AM"]
     };
   
     let lastSelectedRoute = "";

@@ -719,7 +719,7 @@ def edit_holiday_event(request):
 #datasetGraph.html
 @login_required
 def dataset_graph(request):
-    log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
+    # log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
     if request.method == "POST":
         graph_type = request.POST.get("graph_type")  
         route = request.POST.get("route")
@@ -754,8 +754,8 @@ def dataset_graph(request):
 
     return render(request, 'admin/datasetGraph.html', {
         'bus_schedule': {
-            "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-            "A to C": ["5:30AM"]
+            "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+            "UPLB to Buendia": ["5:30AM"]
         }
     })
 
@@ -797,8 +797,8 @@ def dataset_graph2(request):
 
     return render(request, 'busManager/datasetGraph2.html', {
         'bus_schedule': {
-            "A to B": ["5:00AM", "1:00PM", "6:00PM"],
-            "A to C": ["5:30AM"]
+            "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+            "UPLB to Buendia": ["5:30AM"]
         }
     })
 
