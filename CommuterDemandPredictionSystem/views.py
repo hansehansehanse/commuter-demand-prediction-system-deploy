@@ -638,6 +638,19 @@ def edit_event(request):
 def delete_event(request):
     print("Delete event view triggered!")
 
+
+    #----------------------------------------------------------------------------------------------
+    print(f"Request method: {request.method}")
+    print(f"User: {request.user}, Auth: {request.user.is_authenticated}")
+    print(f"Raw request body: {request.body}")
+
+    try:
+        print(f"All event codes: {[str(e.event_code) for e in TemporalEvent.objects.all()]}")
+    except Exception as db_err:
+        print(f"DB access error: {db_err}")
+    #----------------------------------------------------------------------------------------------
+
+
     if request.method == "POST":
         try:
             data = json.loads(request.body)
