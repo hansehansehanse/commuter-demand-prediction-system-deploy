@@ -39,6 +39,8 @@ urlpatterns = [
 
 
     path('admin/actionLog/', views.action_log_list, name='action_log_list'), 
+    path('admin/actionLog/exportActionLog', views.action_log_export, name='action_log_export'),
+
     
 
     path('admin/datasetTemporal/', views.event_list, name='event_list'),  # Event list

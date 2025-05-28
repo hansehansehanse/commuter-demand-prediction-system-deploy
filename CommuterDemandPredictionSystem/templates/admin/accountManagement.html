@@ -8,16 +8,28 @@
         <div class="col-12 mb-3">
           <div class="d-flex justify-content-between">
             <!-- Add User Button -->
-            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
-              <i class="ti ti-plus me-2"></i> Add User
-            </button>
+
             
           </div>
         </div>
     
         <!-- User Table -->
         <div class="col-12">
-          <div class="card" style="min-height: 600px;">
+          <div class="card" style="min-height: 300px;">
+
+            <div class="card-body pb-0">
+                <!-- Heading and Button on the same row -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h4 class="fw-bold mb-0">
+                        <span class="text-muted fw-light"> Account Management /</span> Users
+                    </h4>
+                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addUserModal">
+                      <i class="ti ti-plus me-2"></i> Add User
+                    </button>
+                </div>
+        
+            </div>
+
             <div class="table-responsive card-datatable" style="overflow-x: auto;">
               <table id="accountManagement" class="table border-top w-100">
                 <thead>

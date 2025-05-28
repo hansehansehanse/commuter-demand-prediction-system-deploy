@@ -2103,3 +2103,24 @@ def add_single_historical_data(request):
         except Exception as e:
             print("Error:", e)
             return JsonResponse({'message': 'Error while adding data.'}, status=500)
+
+
+def action_log_export(request):
+
+    logs = ActionLog.objects.all().values()
+    df = pd.DataFrame(list(logs))
+
+    if df.empty:
+        return HttpResponse("No logs to export.", status=204)
+
+    df.drop(columns=['id'], inplace=True, errors='ignore')
+
+    now = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    filename = f"action_logs_{now}.csv"
+
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    df.to_csv(path_or_buf=response, index=False)
+
+    log_action(request, 'Export Action Logs', f"{request.user.get_full_name()} exported action logs.")
+    return response

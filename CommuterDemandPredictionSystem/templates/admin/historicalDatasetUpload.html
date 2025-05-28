@@ -175,7 +175,6 @@
                 </div>
 
 
-
                 <div class="table-responsive card-datatable" style="overflow-x: auto;">
                     <table id="historicalDatasetTable" class="table border-top w-100">
                         <thead>
@@ -186,8 +185,9 @@
                                 <th>Number of Commuters</th>
                                 <th>Filename</th>
                                 <th>Date Uploaded</th>
-                                <th>Dataset Code</th>
+                                <!-- <th>Dataset Code</th> -->
                                 <th>Uploaded By</th>
+                                <!-- <th>Actions</th> -->
                             </tr>
                         </thead>
                         <tbody>
@@ -199,7 +199,7 @@
                                     <td>{{ data.num_commuters }}</td>
                                     <td>{{ data.filename }}</td>
                                     <td>{{ data.date_uploaded|date:"Y-m-d H:i" }}</td>
-                                    <td>{{ data.dataset_code }}</td>
+                                    <!-- <td>{{ data.dataset_code }}</td> -->
                                     <td>
                                         {% if data.resolved_user %}
                                             {{ data.resolved_user.first_name }} {{ data.resolved_user.last_name }}
@@ -207,6 +207,19 @@
                                             Unknown
                                         {% endif %}
                                     </td>
+
+                                    <!-- <td class="text-nowrap">
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewHistoricalDatasetModal{{ event.id }}">
+                                            <i class="ti ti-eye ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editHistoricalDatasetModal{{ event.id }}">
+                                            <i class="ti ti-pencil ti-xs"></i>
+                                        </button>
+                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteHistoricalDatasetModal-1{{ event.id }}">
+                                            <i class="ti ti-trash ti-xs"></i>
+                                        </button>
+                                    </td> -->
+                                    
 
 
 
@@ -340,10 +353,10 @@
                                 <!-- <th>Holiday Event Code</th> -->
                                  <th>Date</th>
                                 <th>Holiday Event Name</th>
-                                <th>Holiday Event Type</th>
+                                <!-- <th>Holiday Event Type</th> -->
                                 
                                 <!-- <th>Updated By</th> -->
-                                <th>Actions</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -352,7 +365,7 @@
                                 <!-- <td>{{ holiday.event_code }}</td> -->
                                  <td>{{ holiday.date|date:"F d" }}</td>
                                 <td>{{ holiday.event_name }}</td>
-                                <td>{{ holiday.get_event_type_display }}</td>
+                                <!-- <td>{{ holiday.get_event_type_display }}</td> -->
                                 
                                 <!-- <td>
                                     {% if holiday.updated_by %}
@@ -396,8 +409,7 @@
                             <i class="ti ti-plus me-2"></i> Add Event
                         </button>
                     </div>
-                
-
+            
                 </div>
 
                 <div class="table-responsive card-datatable" style="overflow-x: auto;">
@@ -517,6 +529,9 @@
         </div>
     </div>
 </div>
+
+
+
 
 
 <!-- Delete Dataset Confirmation Modal -->
@@ -1055,30 +1070,6 @@
 </script>
 
 <script>
-    // document.addEventListener("DOMContentLoaded", function () {
-    //     const routeTimes = {
-    //         "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
-    //         "UPLB to Buendia": ["5:30AM"]
-    //     };
-
-    //     const routeSelect = document.getElementById("single_route");
-    //     const timeSelect = document.getElementById("single_time");
-
-    //     routeSelect.addEventListener("change", function () {
-    //         const selectedRoute = this.value;
-    //         timeSelect.innerHTML = '<option value="">Select time</option>';
-
-    //         if (routeTimes[selectedRoute]) {
-    //             routeTimes[selectedRoute].forEach(function (time) {
-    //                 const option = document.createElement("option");
-    //                 option.value = time;
-    //                 option.textContent = time;
-    //                 timeSelect.appendChild(option);
-    //             });
-    //         }
-    //     });
-    // });
-
 
     const routeTimes = {
         "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],

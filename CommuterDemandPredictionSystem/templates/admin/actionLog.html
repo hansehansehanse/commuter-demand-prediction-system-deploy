@@ -8,7 +8,25 @@
       
           <!-- Action Log Table -->
           <div class="col-12">
-            <div class="card" style="min-height: 600px;">
+            <div class="card" style="min-height: 300px;">
+
+              <div class="card-body pb-0">
+                    <!-- Heading and Button on the same row -->
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h4 class="fw-bold mb-0">
+                            <span class="text-muted fw-light"> Action Log /</span> Log List
+                        </h4>
+                        <form method="GET" action="{% url 'action_log_export' %}">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="ti ti-plus me-2"></i> Export Logs
+                            </button>
+                        </form>
+
+                    </div>
+            
+                </div>
+
+
               <div class="table-responsive card-datatable" style="overflow-x: auto;">
                 <table id="actionLog" class="table border-top w-100">
                   <thead>
@@ -72,5 +90,7 @@
       });
   });
 </script>
+
+
 
 {% endblock %}
