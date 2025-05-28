@@ -195,12 +195,16 @@
                                     <td>{{ data.date_uploaded|date:"Y-m-d H:i" }}</td>
                                     <td>{{ data.dataset_code }}</td>
                                     <td>
-                                        {% if data.uploader %}
-                                            {{ data.uploader.first_name }} {{ data.uploader.last_name }}
+                                        {% if data.resolved_user %}
+                                            {{ data.resolved_user.first_name }} {{ data.resolved_user.last_name }}
                                         {% else %}
                                             Unknown
                                         {% endif %}
                                     </td>
+
+
+
+
                                 </tr>
                             {% empty %}
                                 <tr>

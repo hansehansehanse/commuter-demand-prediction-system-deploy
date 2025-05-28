@@ -1410,6 +1410,9 @@ def historical_dataset_event_list(request):
         event.created_by_user = user_map.get(event.created_by)
         event.updated_by_user = user_map.get(event.updated_by)
 
+    for data in datasets:
+        data.resolved_user = user_map.get(data.user_code)
+
     context = {
         'historical_datasets': datasets,
         'recent_events': recent_events,
