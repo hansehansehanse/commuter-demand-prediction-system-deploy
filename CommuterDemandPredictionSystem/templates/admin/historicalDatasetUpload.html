@@ -187,7 +187,6 @@
                                 <th>Date Uploaded</th>
                                 <!-- <th>Dataset Code</th> -->
                                 <th>Uploaded By</th>
-                                <!-- <th>Actions</th> -->
                             </tr>
                         </thead>
                         <tbody>
@@ -207,32 +206,16 @@
                                             Unknown
                                         {% endif %}
                                     </td>
-
-                                    <!-- <td class="text-nowrap">
-                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#viewHistoricalDatasetModal{{ event.id }}">
-                                            <i class="ti ti-eye ti-xs"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#editHistoricalDatasetModal{{ event.id }}">
-                                            <i class="ti ti-pencil ti-xs"></i>
-                                        </button>
-                                        <button class="btn btn-sm btn-secondary" data-bs-toggle="modal" data-bs-target="#deleteHistoricalDatasetModal-1{{ event.id }}">
-                                            <i class="ti ti-trash ti-xs"></i>
-                                        </button>
-                                    </td> -->
-                                    
-
-
-
-
                                 </tr>
                             {% empty %}
                                 <tr>
-                                    <td colspan="8" class="text-center">No historical dataset entries available.</td>
+                                    <td colspan="4" class="text-center">No historical dataset entries available.</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+
             </div>
         </div>
 
@@ -266,7 +249,7 @@
                         <thead>
                             <tr>
                                 <!-- <th>ID</th> -->
-                                <!-- <th>Event Code</th> -->
+                                <th>Event Code</th>
                                 <th>Date</th>
                                 <th>Event Name</th>
                                 <th>Event Type</th>
@@ -279,7 +262,7 @@
                             {% for event in recent_events %}
                                 <tr>
                                     <!-- <td>{{ event.id }}</td> -->
-                                    <!-- <td>{{ event.event_code }}</td> -->
+                                    <td>{{ event.event_code }}</td>
                                     <td>{{ event.date|date:"F j, Y" }}</td>
                                     <td>{{ event.event_name }}</td>
                                     <td>{{ event.get_event_type_display }}</td>
@@ -353,7 +336,7 @@
                                 <!-- <th>Holiday Event Code</th> -->
                                  <th>Date</th>
                                 <th>Holiday Event Name</th>
-                                <!-- <th>Holiday Event Type</th> -->
+                                <th>Holiday Event Type</th>
                                 
                                 <!-- <th>Updated By</th> -->
                                 <th>Action</th>
@@ -365,7 +348,7 @@
                                 <!-- <td>{{ holiday.event_code }}</td> -->
                                  <td>{{ holiday.date|date:"F d" }}</td>
                                 <td>{{ holiday.event_name }}</td>
-                                <!-- <td>{{ holiday.get_event_type_display }}</td> -->
+                                <td>{{ holiday.get_event_type_display }}</td>
                                 
                                 <!-- <td>
                                     {% if holiday.updated_by %}
@@ -950,6 +933,7 @@
     
     });
 
+
     $('#recentEventTable').DataTable({
         pageLength: 5,
         scrollY: '400px',
@@ -1116,9 +1100,9 @@
 
             const result = await response.json();
             const alertBox = document.getElementById("singleDataResponse");
-            alertBox.style.display = "block";
-            alertBox.className = response.ok ? "alert alert-success" : "alert alert-danger";
-            alertBox.innerText = result.message;
+            // alertBox.style.display = "block";
+            // alertBox.className = response.ok ? "alert alert-success" : "alert alert-danger";
+            // alertBox.innerText = result.message;
 
             if (response.ok) {
                 setTimeout(() => location.reload(), 1500);  // Refresh on success
