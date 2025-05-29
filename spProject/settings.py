@@ -43,8 +43,8 @@ ROUTE_ENCODER_PATH = config('ROUTE_ENCODER_PATH')
 FEATURES_PATH = config('FEATURES_PATH')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
-# DEBUG = config('DEBUG', default=False, cast=bool)
+# DEBUG = False
+DEBUG = config('DEBUG', default=False, cast=bool)
 # DEBUG = False
 # ALLOWED_HOSTS = ['cdps-deploy.onrender.com', 'localhost', '127.0.0.1']
 
