@@ -52,6 +52,7 @@ from .randomForest import train_random_forest_model
 from .supabase_utils import download_and_load_file, list_supabase_files
 
 
+from .decorators import access_level_required
 
 
 #-------------------------------------------------------------------------
@@ -239,7 +240,7 @@ def get_university_semester_flags(target_date):
 #-------------------------------------------------------------------------
 User = get_user_model()
 
-# @login_required
+
 def login_view(request):
     if request.method == 'POST':
         email = request.POST.get('email')
@@ -300,9 +301,11 @@ def logout_view(request):
 
 #--
 # @login_required
+@access_level_required('Admin')
 def profile_view(request):
     return render(request, 'admin/profile.html')
 
+@access_level_required('Bus Manager')
 def profile_view2(request):
     return render(request, 'busManager/profile2.html')
 
@@ -355,6 +358,7 @@ def signup_view(request):
 
 
 @login_required
+@access_level_required('Admin')
 def user_list(request):
     print("✅ user_list being called")
     users = CustomUser.objects.all()
@@ -494,6 +498,7 @@ def log_action(request, action_type, details=""):
 
 
 @login_required
+@access_level_required('Admin')
 def action_log_list(request):
     print("✅ action_log_list being called")
     
@@ -718,6 +723,7 @@ def edit_holiday_event(request):
 #-------------------------------------------------------------------------
 #datasetGraph.html
 @login_required
+@access_level_required('Admin')
 def dataset_graph(request):
     # log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
     if request.method == "POST":
@@ -757,6 +763,7 @@ def dataset_graph(request):
 
 
 @login_required
+@access_level_required('Bus Manager')
 def dataset_graph2(request):
     log_action(request, 'Access Dataset Graph', f"User {request.user.first_name} {request.user.last_name} accessed the dataset graph page.")
     if request.method == "POST":
@@ -1367,6 +1374,7 @@ def train_random_forest_model_view(request):
 #-------------------------------------------------------------------------
 
 @login_required
+@access_level_required('Admin')
 def historical_dataset_event_list(request):
     # Load data
     datasets = HistoricalDataset.objects.all().order_by('-id')
@@ -1412,6 +1420,7 @@ def historical_dataset_event_list(request):
     return render(request, 'admin/historicalDatasetUpload.html', context)
 
 @login_required
+@access_level_required('Admin')
 def add_historical_event(request):
     if request.method == 'POST':
         try:
@@ -1450,6 +1459,7 @@ def add_historical_event(request):
 
 User = get_user_model()
 @login_required
+@access_level_required('Admin')
 def edit_historical_event(request):
     print("Edit historical event view triggered!") 
     if request.method == "POST":
@@ -1492,6 +1502,7 @@ User = get_user_model()
 
 # @csrf_exempt
 @login_required
+@access_level_required('Admin')
 def delete_historical_event(request):
     
     if request.method == "POST":
@@ -1601,6 +1612,7 @@ def get_historical_university_semester_flags(target_date):
 
 
 @login_required
+@access_level_required('Admin')
 def dashboard(request):
 
     context = {
@@ -1611,6 +1623,7 @@ def dashboard(request):
     return render(request, 'admin/dashboard.html', context)
 
 @login_required
+@access_level_required('Bus Manager')
 def dashboard2(request):
 
     context = {
@@ -2116,3 +2129,12 @@ def action_log_export(request):
 
     log_action(request, 'Export Action Logs', f"{request.user.get_full_name()} exported action logs.")
     return response
+
+
+
+from django.shortcuts import render
+
+def custom_404_view(request, exception):
+    return render(request, '404.html', status=404)
+
+

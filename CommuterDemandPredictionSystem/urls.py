@@ -6,7 +6,9 @@ from django.views.generic import RedirectView
 
 urlpatterns = [
     path('', RedirectView.as_view(url='login/', permanent=False)),  
-    path('/cdps', RedirectView.as_view(url='login/', permanent=False)),
+    path('cdps/', RedirectView.as_view(url='login/', permanent=False)),
+
+    path('404/', views.custom_404_view, name='custom_404_view'),
 
     path('login/', login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/cdps/login/'), name='logout'),
@@ -73,42 +75,19 @@ urlpatterns = [
     path('admin/historicalDatasetUpload/editHistoricalEvent/', views.edit_historical_event, name='edit_historical_event'),
     path('admin/historicalDatasetUpload/deleteHistoricalEvent/', views.delete_historical_event, name='delete_historical_event'),
 
-
-    
-   
-
-
-
-    
-
-
-
-    
-    
-    
-
-
-
-
-    
-
-
-
-
-    
-
-
-
-
-
-    
-    
-
-
-
-    
-
-
-
     
 ]
+
+
+
+from django.conf.urls import handler403
+from django.shortcuts import render
+
+def custom_permission_denied_view(request, exception=None):
+    return render(request, '403.html', status=403)
+
+handler403 = custom_permission_denied_view
+
+
+
+handler404 = 'yourapp.views.custom_404_view'
