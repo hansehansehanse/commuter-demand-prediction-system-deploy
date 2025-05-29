@@ -733,21 +733,17 @@ def dataset_graph(request):
             return JsonResponse({'error': 'Missing route or time'})
 
         # Handle different graph types
-        if graph_type == "last7":
-            print("FROM: last7")
-            return get_last_7_records_chart_data(route, time_str)
-
-        elif graph_type == "average_from_date":
-            print("FROM: average_from_date")
+        if graph_type == "average_from_date":
+            print("----------------------------FROM: average_from_date")
             # print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
             return get_average_commuters_from_date(route, time_str, selected_date)
         
         elif graph_type == "rf_prediction":
-            print("FROM: rf_prediction")
+            print("----------------------------FROM: rf_prediction")
             return rf_predict_commuters(route, time_str, selected_date)
 
         elif graph_type == 'two_week_predictions':
-            print("FROM: two_week_predictions")
+            print("----------------------------FROM: two_week_predictions")
             return rf_predict_commuters_2weeks(route, time_str, selected_date)
 
         return JsonResponse({'error': 'Unknown graph_type'})
@@ -776,11 +772,7 @@ def dataset_graph2(request):
             return JsonResponse({'error': 'Missing route or time'})
 
         # Handle different graph types
-        if graph_type == "last7":
-            print("FROM: last7")
-            return get_last_7_records_chart_data(route, time_str)
-
-        elif graph_type == "average_from_date":
+        if graph_type == "average_from_date":
             print("FROM: average_from_date")
             # print(f"Route: {route}, Time: {time_str}, Selected Date: {selected_date}")
             return get_average_commuters_from_date(route, time_str, selected_date)
@@ -881,12 +873,12 @@ def get_average_commuters_from_date(route, time_str, selected_date):
             average = total / count
             print(f"\n✅ Final Total: {total}")
             print(f"📌 Final Count: {count}")
-            print(f"📊 Computed Average: {round(average)}")
+            print(f"📊 Computed Average: {round(average,2)}")
         else:
             average = 0
             print("⚠️ No records to compute average from.")
 
-        return JsonResponse({'average': round(average)})
+        return JsonResponse({'average': round(average, 2)})
 
 
     except Exception as e:
@@ -897,23 +889,23 @@ def get_average_commuters_from_date(route, time_str, selected_date):
 
 
 def load_pretrained_model():
-    print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
+    # print("📦 Attempting to download and load pre-trained model from Supabase (models/random_forest_model.pkl)...")
     model = download_and_load_file("random_forest_model.pkl")
-    print("✅ Random Forest Model downloaded and loaded successfully from Supabase.")
+    # print("✅ Random Forest Model downloaded and loaded successfully from Supabase.")
     return model
 
 
 def load_feature_list():
-    print("📦 Attempting to download and load feature list from Supabase (models/features_used.pkl)...")
+    # print("📦 Attempting to download and load feature list from Supabase (models/features_used.pkl)...")
     features = download_and_load_file("features_used.pkl")
-    print("✅ Feature list downloaded and loaded successfully from Supabase.")
+    # print("✅ Feature list downloaded and loaded successfully from Supabase.")
     return features
 
 
 def load_route_encoder():
-    print("📦 Attempting to download and load route encoder from Supabase (models/route_encoder.pkl)...")
+    # print("📦 Attempting to download and load route encoder from Supabase (models/route_encoder.pkl)...")
     encoder = download_and_load_file("route_encoder.pkl")
-    print("✅ Route encoder downloaded and loaded successfully from Supabase.")
+    # print("✅ Route encoder downloaded and loaded successfully from Supabase.")
     return encoder
 
 
@@ -981,7 +973,7 @@ def rf_predict_commuters(route, time_str, selected_date):
     try:
         ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
         predicted_commuters = model.predict(ordered_input)[0]
-        predicted_commuters = round(predicted_commuters)
+        predicted_commuters = round(predicted_commuters, 2)
         print(f"📍 Predicted commuters: {predicted_commuters}")
         return JsonResponse({'prediction': predicted_commuters})
 
@@ -1055,7 +1047,7 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
         try:
             ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
             predicted_commuters = model.predict(ordered_input)[0]
-            predicted_commuters = round(predicted_commuters)
+            predicted_commuters = round(predicted_commuters, 2)
         except Exception as e:
             return JsonResponse({'error': f'Prediction failed on {current_date}: {e}'}, status=500)
 
@@ -1065,7 +1057,7 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
             'time': time_str,
             'predicted_commuters': predicted_commuters
         })
-        print(f"{current_date.strftime('%Y-%m-%d')} | Route: {route} | Time: {time_str} | Predicted: {predicted_commuters}")
+        # print(f"{current_date.strftime('%Y-%m-%d')} | Route: {route} | Time: {time_str} | Predicted: {predicted_commuters}")
 
 
     return JsonResponse({'predictions': predictions})

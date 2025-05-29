@@ -15,7 +15,7 @@
           <div class="row">
             
             <!-- Date Picker -->
-            <div class="col-md-4 mb-4">
+            <div class="col-md-3 mb-4">
               <label for="datePicker" class="form-label">Select Date:</label>
               <div class="input-group">
                 <input type="date" id="datePicker" class="form-control form-control-lg">
@@ -23,7 +23,7 @@
               </div>
             </div>
 
-            <div class="col-md-4 mb-4">
+            <div class="col-md-3 mb-4">
               <label for="route" class="form-label">Select Route:</label>
               <div class="position-relative">
                 <select id="route" class="select2 form-select form-select-lg" data-allow-clear="true" onchange="updateTimeOptions()">
@@ -35,7 +35,7 @@
             </div>
             
           
-            <div class="col-md-4 mb-4">
+            <div class="col-md-3 mb-4">
               <label for="time" class="form-label">Select Time:</label>
               <div class="position-relative">
                 <select id="time" class="select2 form-select form-select-lg" data-allow-clear="true">
@@ -44,6 +44,13 @@
                 </select>
               </div>
             </div>
+
+            <div class="col-md-3 mb-4 d-flex align-items-end justify-content-center">
+              <button id="runPredictionsBtn" class="btn btn-primary btn-lg w-100">Run Predictions</button>
+              
+            </div>
+
+
             
           </div>
           
@@ -136,250 +143,181 @@
 
 <!-- Scipt  -->
 <script>
-    //Calendar Today
-    function setToday() {
+  function setToday() {
     const today = new Date().toISOString().split('T')[0];
     document.getElementById('datePicker').value = today;
-    }
-    //!Calendar Today
-    let selectedRoute = '';
-    let selectedTime = '';
-    let selectedDate = '';
+  }
 
-    let prevRoute = '';
-    let prevTime = '';
-    let prevDate = '';
+  let selectedRoute = '';
+  let selectedTime = '';
+  let selectedDate = '';
 
-    // Add event listeners
-    document.getElementById('route').addEventListener('change', handleInputChange);
-    document.getElementById('time').addEventListener('change', handleInputChange);
-    document.getElementById('datePicker').addEventListener('change', handleInputChange);
+  const routeTimes = {
+    "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
+    "UPLB to Buendia": ["5:30AM"]
+  };
 
-    function handleInputChange() {
-        selectedRoute = document.getElementById('route').value;
-        selectedTime = document.getElementById('time').value;
-        selectedDate = document.getElementById('datePicker').value;
+  document.getElementById('route').addEventListener('change', updateTimeOptions);
 
-        // Ensure all values are present before making AJAX calls
-        if (selectedRoute !== '' && selectedTime !== '' && selectedDate !== '') {
-            // Trigger AJAX if it's the first run or if any input has changed
-            const inputChanged = (
-                selectedRoute !== prevRoute ||
-                selectedTime !== prevTime ||
-                selectedDate !== prevDate ||
-                prevRoute === '' // Ensure it's the first run
-            );
+  function updateTimeOptions() {
+    const routeSelect = document.getElementById('route');
+    const timeSelect = document.getElementById('time');
+    const route = routeSelect.value;
 
-            if (inputChanged) {
-                console.log(`Selected Route: ${selectedRoute}`);
-                console.log(`Selected Time: ${selectedTime}`);
-                console.log(`Selected Date: ${selectedDate}`);
-
-                sendAverageCommuterAjax();
-                sendRfPredictionAjax();
-                fetchTwoWeekPredictions();
-                
-
-                // Update previous values
-                prevRoute = selectedRoute;
-                prevTime = selectedTime;
-                prevDate = selectedDate;
-            }
-        }
-    }
-
-    // Average Commuter Count
-    function sendAverageCommuterAjax() {
-        $.ajax({
-            url: "{% url 'dataset_graph' %}",
-            type: "POST",
-            data: {
-                graph_type: "average_from_date",
-                route: selectedRoute,
-                time: selectedTime,
-                date: selectedDate,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-            },
-            success: function (response) {
-                // console.log("✅ Successful Average Commuter Count");
-                console.log("✅ average_from_date: " + response.average);
-                document.getElementById("avgCommutersValue").textContent = response.average ?? "--";
-            },
-            error: () => {
-                alert("Error retrieving average commuters!");
-            }
-        });
-    }
-
-    // Random Forest Prediction
-    function sendRfPredictionAjax() {
-        $.ajax({
-            url: "{% url 'dataset_graph' %}",
-            type: "POST",
-            data: {
-                graph_type: "rf_prediction",
-                route: selectedRoute,
-                time: selectedTime,
-                date: selectedDate,
-                csrfmiddlewaretoken: '{{ csrf_token }}',
-            },
-            success: function (response) {
-                console.log("✅ rfPredictionValue: " + response.prediction);
-                document.getElementById("rfPredictionValue").textContent = response.prediction ?? "--";
-            },
-            error: () => {
-                alert("Error retrieving RF prediction!");
-            }
-        });
-    }
-  
-    //Bar Graph
-    const routeTimes = {
-      "UPLB to UPD": ["5:00AM", "1:00PM", "6:00PM"],
-      "UPLB to Buendia": ["5:30AM"]
-    };
-  
-    let lastSelectedRoute = "";
-    let lastSelectedTime = "";
-  
-    function updateChart() {
-      if (lastSelectedRoute && lastSelectedTime) {
-        $.ajax({
-          url: "{% url 'dataset_graph' %}",
-          type: "POST",
-          data: {
-            'graph_type': 'last7',  // Tell backend which graph you want
-            'route': lastSelectedRoute,
-            'time': lastSelectedTime,
-            'csrfmiddlewaretoken': '{{ csrf_token }}',
-          },
-          success: function (response) {
-            const data = JSON.parse(response.chart_data);
-            const chartElement = document.querySelector("#chart1");
-            chartElement.innerHTML = "";
-            const chart = new ApexCharts(chartElement, {
-              chart: { type: 'line', height: 350 },
-              series: [{ name: `${lastSelectedRoute} (${lastSelectedTime})`, data: data.num_commuters }],
-              xaxis: { categories: data.dates },
-              title: { text: `${lastSelectedRoute} - ${lastSelectedTime} (Last 7 Records)`, align: 'center' }
-            });
-            chart.render();
-          },
-          error: () => alert("Error fetching data")
-        });
-      }
-    }
-
-    function updateTimeOptions() {
-      const routeSelect = document.getElementById('route');
-      const timeSelect = document.getElementById('time');
-      const route = routeSelect.value;
-      lastSelectedRoute = route;
-      lastSelectedTime = "";
-  
-      timeSelect.innerHTML = '<option value="">Select Time</option>';
-      if (route && routeTimes[route]) {
-        routeTimes[route].forEach(time => {
-          const opt = document.createElement("option");
-          opt.value = time;
-          opt.textContent = time;
-          timeSelect.appendChild(opt);
-        });
-      }
-      handleInputChange()
-      updateChart();
-    }
-  
-    // Initialize chart with default zero values (for 7 days)
-    function initializeEmptyChart() {
-      const chartElement = document.querySelector("#chart1");
-      chartElement.innerHTML = "";
-
-      const defaultDates = ["Day 1", "Day 2", "Day 3", "Day 4", "Day 5", "Day 6", "Day 7"];
-      const zeroData = [0, 0, 0, 0, 0, 0, 0];
-
-      const chart = new ApexCharts(chartElement, {
-        chart: { type: 'line', height: 350 },
-        series: [{ name: "No Data", data: zeroData }],
-        xaxis: { categories: defaultDates },
-        title: { text: "Commuter Trend (No Filter Selected)", align: 'center' }
+    timeSelect.innerHTML = '<option value="">Select Time</option>';
+    if (route && routeTimes[route]) {
+      routeTimes[route].forEach(time => {
+        const opt = document.createElement("option");
+        opt.value = time;
+        opt.textContent = time;
+        timeSelect.appendChild(opt);
       });
-
-      chart.render();
     }
-    
+  }
 
-    //
-    $(document).ready(function() {
-        $('#predictionsTable').DataTable({
-            "order": [[0, "desc"]],
-            "pageLength": 5,
-            "scrollY": "400px",
-            "scrollCollapse": true,
-            "lengthMenu": [ [5, 10, 25, 50, -1], [5, 10, 25, 50, "All"] ],
-            "language": {
-                "search": "_INPUT_",
-                "searchPlaceholder": "Search..."
-            }
-        });
+  function triggerPredictionActions() {
+    selectedRoute = document.getElementById('route').value;
+    selectedTime = document.getElementById('time').value;
+    selectedDate = document.getElementById('datePicker').value;
+
+    if (!selectedRoute || !selectedTime || !selectedDate) {
+      alert("Please select a route, time, and date.");
+      return;
+    }
+
+    console.log(`Selected Route: ${selectedRoute}`);
+    console.log(`Selected Time: ${selectedTime}`);
+    console.log(`Selected Date: ${selectedDate}`);
+
+    generateAllGraphs();
+  }
+
+  async function generateAllGraphs() {
+    try {
+      await sendAverageCommuterAjax();
+      await sendRfPredictionAjax();
+      await fetchTwoWeekPredictions();
+    } catch (error) {
+      console.error("❌ Error in generateAllGraphs:", error);
+    }
+  }
+
+  function sendAverageCommuterAjax() {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: "{% url 'dataset_graph' %}",
+        type: "POST",
+        data: {
+          graph_type: "average_from_date",
+          route: selectedRoute,
+          time: selectedTime,
+          date: selectedDate,
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+        },
+        success: function (response) {
+          console.log("✅ average_from_date: " + response.average);
+          document.getElementById("avgCommutersValue").textContent = response.average ?? "--";
+          resolve();
+        },
+        error: (xhr, status, err) => {
+          alert("Error retrieving average commuters!");
+          reject(err);
+        }
+      });
     });
+  }
 
-    function fetchTwoWeekPredictions() {
-      if (selectedRoute && selectedTime && selectedDate) {
-        $.ajax({
-          url: "{% url 'dataset_graph' %}",
-          type: "POST",
-          data: {
-            graph_type: "two_week_predictions",
-            route: selectedRoute,
-            time: selectedTime,
-            date: selectedDate,
-            csrfmiddlewaretoken: '{{ csrf_token }}',
-          },
-          success: function (response) {
-            const tableBody = document.getElementById('predictionsTableBody');
-            tableBody.innerHTML = "";  // Clear previous rows
+  function sendRfPredictionAjax() {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: "{% url 'dataset_graph' %}",
+        type: "POST",
+        data: {
+          graph_type: "rf_prediction",
+          route: selectedRoute,
+          time: selectedTime,
+          date: selectedDate,
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+        },
+        success: function (response) {
+          console.log("✅ rfPredictionValue: " + response.prediction);
+          document.getElementById("rfPredictionValue").textContent = response.prediction ?? "--";
+          resolve();
+        },
+        error: (xhr, status, err) => {
+          alert("Error retrieving RF prediction!");
+          reject(err);
+        }
+      });
+    });
+  }
 
-            if (response.predictions && response.predictions.length > 0) {
-              response.predictions.forEach(pred => {
-                const row = `<tr>
+  function fetchTwoWeekPredictions() {
+    return new Promise((resolve, reject) => {
+      $.ajax({
+        url: "{% url 'dataset_graph' %}",
+        type: "POST",
+        data: {
+          graph_type: "two_week_predictions",
+          route: selectedRoute,
+          time: selectedTime,
+          date: selectedDate,
+          csrfmiddlewaretoken: '{{ csrf_token }}',
+        },
+        success: function (response) {
+          const tableBody = document.getElementById('predictionsTableBody');
+          tableBody.innerHTML = "";
+
+          if (response.predictions && response.predictions.length > 0) {
+            response.predictions.forEach(pred => {
+              const row = `
+                <tr>
                   <td>${pred.date}</td>
                   <td>${pred.route}</td>
                   <td>${pred.time}</td>
                   <td>${pred.predicted_commuters}</td>
                 </tr>`;
-                tableBody.innerHTML += row;
-              });
-            } else {
-              tableBody.innerHTML = "<tr><td colspan='4'>No predictions available.</td></tr>";
-            }
-          },
-          error: () => {
-            alert("Error fetching 2-week predictions.");
+              tableBody.innerHTML += row;
+            });
+          } else {
+            tableBody.innerHTML = "<tr><td colspan='4'>No predictions available.</td></tr>";
           }
-        });
-      }
-    }
-    //
+          resolve();
+        },
+        error: (xhr, status, err) => {
+          alert("Error fetching 2-week predictions.");
+          reject(err);
+        }
+      });
+    });
+  }
 
-
-    document.getElementById('route').addEventListener('change', updateTimeOptions); 
-    
-    document.getElementById('time').addEventListener('change', function () {
-      lastSelectedTime = this.value;
-      handleInputChange()
-      updateChart();
+  $(document).ready(function () {
+    $('#runPredictionsBtn').on('click', function () {
+      console.log("📌 Button clicked!");
+      triggerPredictionActions();
     });
 
+    $('#predictionsTable').DataTable({
+      "order": [[0, "desc"]],
+      "pageLength": 5,
+      "scrollY": "400px",
+      "scrollCollapse": true,
+      "lengthMenu": [[5, 10, 25, 50, -1], [5, 10, 25, 50, "All"]],
+      "language": {
+        "search": "_INPUT_",
+        "searchPlaceholder": "Search..."
+      }
+    });
+  });
 
-    window.onload = function () {
-      initializeEmptyChart();  // 
-      updateTimeOptions();
-    };
+  window.onload = function () {
+    setToday();
+    updateTimeOptions();
+  };
+</script>
 
 
-
-  </script>
 <!-- Scipt  -->
 
 </div>
