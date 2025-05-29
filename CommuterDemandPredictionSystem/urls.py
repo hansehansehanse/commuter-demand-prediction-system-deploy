@@ -2,8 +2,11 @@ from django.urls import path
 from .views import *
 from . import views
 from django.contrib.auth import views as auth_views
+from django.views.generic import RedirectView
 
 urlpatterns = [
+    path('', RedirectView.as_view(url='login/', permanent=False)),  
+    path('/cdps', RedirectView.as_view(url='login/', permanent=False)),
 
     path('login/', login_view, name='login'),
     path('logout/', auth_views.LogoutView.as_view(next_page='/cdps/login/'), name='logout'),
