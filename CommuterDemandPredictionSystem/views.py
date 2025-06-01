@@ -880,12 +880,12 @@ def get_average_commuters_from_date(route, time_str, selected_date):
             average = total / count
             print(f"\n✅ Final Total: {total}")
             print(f"📌 Final Count: {count}")
-            print(f"📊 Computed Average: {round(average,2)}")
+            print(f"📊 Computed Average: {round(average)}")
         else:
             average = 0
             print("⚠️ No records to compute average from.")
 
-        return JsonResponse({'average': round(average, 2)})
+        return JsonResponse({'average': round(average)})
 
 
     except Exception as e:
@@ -980,7 +980,7 @@ def rf_predict_commuters(route, time_str, selected_date):
     try:
         ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
         predicted_commuters = model.predict(ordered_input)[0]
-        predicted_commuters = round(predicted_commuters, 2)
+        predicted_commuters = round(predicted_commuters)
         print(f"📍 Predicted commuters: {predicted_commuters}")
         return JsonResponse({'prediction': predicted_commuters})
 
@@ -1054,7 +1054,7 @@ def rf_predict_commuters_2weeks(route, time_str, selected_date):
         try:
             ordered_input = pd.DataFrame([[input_features[feature] for feature in features_to_use]], columns=features_to_use)
             predicted_commuters = model.predict(ordered_input)[0]
-            predicted_commuters = round(predicted_commuters, 2)
+            predicted_commuters = round(predicted_commuters)
         except Exception as e:
             return JsonResponse({'error': f'Prediction failed on {current_date}: {e}'}, status=500)
 

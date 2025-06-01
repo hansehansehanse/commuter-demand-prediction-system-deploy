@@ -203,7 +203,7 @@
   function sendAverageCommuterAjax() {
     return new Promise((resolve, reject) => {
       $.ajax({
-        url: "{% url 'dataset_graph' %}",
+        url: "{% url 'dataset_graph2' %}",
         type: "POST",
         data: {
           graph_type: "average_from_date",
@@ -228,7 +228,7 @@
   function sendRfPredictionAjax() {
     return new Promise((resolve, reject) => {
       $.ajax({
-        url: "{% url 'dataset_graph' %}",
+        url: "{% url 'dataset_graph2' %}",
         type: "POST",
         data: {
           graph_type: "rf_prediction",
@@ -253,7 +253,7 @@
   function fetchTwoWeekPredictions() {
     return new Promise((resolve, reject) => {
       $.ajax({
-        url: "{% url 'dataset_graph' %}",
+        url: "{% url 'dataset_graph2' %}",
         type: "POST",
         data: {
           graph_type: "two_week_predictions",
