@@ -57,12 +57,13 @@ The CDPS follows a three-layer design:
 
 ---
 
-## 🖼 Screenshots
+##  Screenshots
 
+![Login Page Screenshot](docs/screenshots/Capture1.1.JPG)
 
 ---
 
-## 🔮 Future Work
+##  Future Work
 - Improve **admin interface** for ease of use  
 - Add **weather and university events** as features  
 - Explore **advanced ML models & hyperparameter tuning**  
