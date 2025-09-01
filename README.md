@@ -1,4 +1,4 @@
-# Commuter Demand Prediction System (CDPS) 🚍
+# 🚍 Commuter Demand Prediction System (CDPS) 🚍
 
 A web-based prototype that leverages **machine learning (Random Forest)** to predict commuter demand for the UPLB Commuter Bus Service.  
 Developed as part of my **undergraduate special problem ** at the **University of the Philippines Los Baños (UPLB)**.
@@ -59,7 +59,30 @@ The CDPS follows a three-layer design:
 
 ##  Screenshots
 
+### Login
 ![Login Page Screenshot](docs/screenshots/Capture1.1.JPG)
+
+### Signup
+![Signup Page Screenshot](docs/screenshots/Capture1.2.JPG)
+
+### Dashboard Page
+![Dashboard Page Screenshot](docs/screenshots/Capture2.JPG)
+
+### Dataset Page
+![Dataset Page Screenshot](docs/screenshots/Capture3.JPG)
+
+### Custom Forecast Page
+![Custom Forecast Page Screenshot](docs/screenshots/Capture4.1.JPG)
+![Custom Forecast Page Screenshot](docs/screenshots/Capture4.2.JPG)
+
+### Account Management Page
+![Account Management Page Screenshot](docs/screenshots/Capture5.JPG)
+
+### Action Log Page
+![Action Log Page Screenshot](docs/screenshots/Capture6.JPG)
+
+### User Profile Page
+![User Profile Page Screenshot](docs/screenshots/Capture7.JPG)
 
 ---
 
