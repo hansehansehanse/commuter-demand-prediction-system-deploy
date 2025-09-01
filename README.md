@@ -59,10 +59,10 @@ The CDPS follows a three-layer design:
 
 ##  Screenshots
 
-### Login
+### Login Page
 ![Login Page Screenshot](docs/screenshots/Capture1.1.JPG)
 
-### Signup
+### Signup Page
 ![Signup Page Screenshot](docs/screenshots/Capture1.2.JPG)
 
 ### Dashboard Page
@@ -92,3 +92,7 @@ The CDPS follows a three-layer design:
 - Explore **advanced ML models & hyperparameter tuning**  
 - Automate with **real-time data sources**  
 - Validate with **longer-term datasets** 
+
+
+## Poster
+![SP Poster](docs/SP_Poster_HernandezHanse_v2.png)
